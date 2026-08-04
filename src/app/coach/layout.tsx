@@ -7,6 +7,7 @@ export default async function CoachLayout({
   children: React.ReactNode;
 }) {
   const user = await requireUser();
+  const commissionerUi = await isCommissioner(user);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
@@ -14,7 +15,7 @@ export default async function CoachLayout({
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Coach Hub</h1>
         <p className="text-sm text-[var(--muted-foreground)]">
           Coaching identities, XP races, job security, carousel, and reputation.
-          {isCommissioner(user) ? " Commissioner actions are enabled." : ""}
+          {commissionerUi ? " Commissioner actions are enabled." : ""}
         </p>
       </div>
       <CoachNav />

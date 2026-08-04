@@ -1,6 +1,9 @@
 export const APP_NAME = "Kings Madden League";
 export const APP_SHORT = "KML";
 
+/** Cookie set when a commissioner previews the app as a regular coach. */
+export const VIEW_AS_USER_COOKIE = "kml_view_as_user";
+
 export const PROTECTED_PREFIXES = [
   "/dashboard",
   "/admin",

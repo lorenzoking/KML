@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 
 export default async function CoachIdentitiesPage() {
   const user = await requireUser();
-  const commissioner = isCommissioner(user);
+  const commissioner = await isCommissioner(user);
   const { season } = await getActiveSeason();
 
   const [teamIdentities, coachIdentities, memberships] = await Promise.all([

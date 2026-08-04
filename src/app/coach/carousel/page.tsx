@@ -15,7 +15,7 @@ import { prisma } from "@/lib/prisma";
 
 export default async function CoachCarouselPage() {
   const user = await requireUser();
-  const commissioner = isCommissioner(user);
+  const commissioner = await isCommissioner(user);
   const { season, settings } = await getActiveSeason();
 
   const [vacancies, applications, franchises, membership] = await Promise.all([

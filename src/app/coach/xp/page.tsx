@@ -11,7 +11,7 @@ import { prisma } from "@/lib/prisma";
 
 export default async function CoachXpPage() {
   const user = await requireUser();
-  const commissioner = isCommissioner(user);
+  const commissioner = await isCommissioner(user);
   const { season } = await getActiveSeason();
 
   const [rows, coaches] = await Promise.all([

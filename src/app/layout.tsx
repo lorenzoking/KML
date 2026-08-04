@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans, Oswald } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
-import { getSessionUser } from "@/lib/auth";
+import { ViewAsUserBanner } from "@/components/layout/view-mode-toggle";
+import {
+  getSessionUser,
+  isActualCommissioner,
+  isCommissioner,
+  isViewingAsUser,
+} from "@/lib/auth";
 import { APP_NAME } from "@/lib/constants";
 import "./globals.css";
 
@@ -36,12 +42,21 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const user = await getSessionUser();
+  const viewingAsUser = user ? await isViewingAsUser() : false;
+  const showAdmin = user ? await isCommissioner(user) : false;
+  const canToggleViewMode = Boolean(user && isActualCommissioner(user));
 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${display.variable} ${body.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <SiteHeader user={user} />
+          <SiteHeader
+            user={user}
+            showAdmin={showAdmin}
+            canToggleViewMode={canToggleViewMode}
+            viewingAsUser={viewingAsUser}
+          />
+          {viewingAsUser && canToggleViewMode ? <ViewAsUserBanner /> : null}
           <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
         </ThemeProvider>
       </body>

@@ -18,7 +18,7 @@ export default async function CoachProfileDetailPage({
   params: Promise<{ userId: string }>;
 }) {
   const currentUser = await requireUser();
-  const commissioner = isCommissioner(currentUser);
+  const commissioner = await isCommissioner(currentUser);
   const { userId } = await params;
   const { season } = await getActiveSeason();
 

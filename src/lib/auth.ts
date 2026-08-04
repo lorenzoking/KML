@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { writeAuditLog } from "@/lib/audit";
+import { VIEW_AS_USER_COOKIE } from "@/lib/constants";
 
 /** Shared cookie for password backup login and local demo login. */
 export const APP_SESSION_COOKIE = "kml_app_session";
@@ -117,6 +118,27 @@ export async function clearAppSession() {
   const jar = await cookies();
   jar.delete(APP_SESSION_COOKIE);
   jar.delete(DEV_SESSION_COOKIE);
+  jar.delete(VIEW_AS_USER_COOKIE);
+}
+
+export async function isViewingAsUser() {
+  const jar = await cookies();
+  return jar.get(VIEW_AS_USER_COOKIE)?.value === "1";
+}
+
+export async function setViewAsUser(enabled: boolean) {
+  const jar = await cookies();
+  if (enabled) {
+    jar.set(VIEW_AS_USER_COOKIE, "1", {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 14,
+    });
+  } else {
+    jar.delete(VIEW_AS_USER_COOKIE);
+  }
 }
 
 async function getAppSessionUser() {
@@ -168,12 +190,26 @@ export async function requireUser() {
 
 export async function requireCommissioner() {
   const user = await requireUser();
-  if (user.role !== Role.COMMISSIONER) {
+  if (!isActualCommissioner(user)) {
     redirect("/dashboard");
+  }
+  // Preview mode blocks admin pages so commissioners can see the coach UX.
+  if (await isViewingAsUser()) {
+    redirect("/dashboard?view=user");
   }
   return user;
 }
 
-export function isCommissioner(user: User) {
+/** True if the account's stored role is commissioner (ignores view mode). */
+export function isActualCommissioner(user: User) {
   return user.role === Role.COMMISSIONER;
+}
+
+/**
+ * True when commissioner UI/actions should be shown.
+ * Returns false while a commissioner is in "User mode" preview.
+ */
+export async function isCommissioner(user: User) {
+  if (!isActualCommissioner(user)) return false;
+  return !(await isViewingAsUser());
 }

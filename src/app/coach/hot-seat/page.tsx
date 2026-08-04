@@ -20,7 +20,7 @@ const severity: Record<string, number> = {
 
 export default async function CoachHotSeatPage() {
   const user = await requireUser();
-  const commissioner = isCommissioner(user);
+  const commissioner = await isCommissioner(user);
   const { season } = await getActiveSeason();
   const rows = await getCoachBoardRows(season.id);
   const ordered = [...rows].sort((a, b) => {

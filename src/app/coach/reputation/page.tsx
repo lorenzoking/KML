@@ -21,7 +21,7 @@ export default async function CoachReputationPage({
   searchParams: SearchParams;
 }) {
   const user = await requireUser();
-  const commissioner = isCommissioner(user);
+  const commissioner = await isCommissioner(user);
   const params = await searchParams;
   const q = (params.q ?? "").toLowerCase();
   const category = (params.category ?? "").toUpperCase();

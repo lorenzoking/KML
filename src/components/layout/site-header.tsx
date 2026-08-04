@@ -1,20 +1,29 @@
 import Link from "next/link";
-import { Role, type User } from "@prisma/client";
+import type { User } from "@prisma/client";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { ViewModeToggle } from "@/components/layout/view-mode-toggle";
 import { signOut } from "@/actions/auth";
 import { APP_NAME, APP_SHORT } from "@/lib/constants";
 
-export function SiteHeader({ user }: { user: User | null }) {
+export function SiteHeader({
+  user,
+  showAdmin,
+  canToggleViewMode,
+  viewingAsUser,
+}: {
+  user: User | null;
+  showAdmin: boolean;
+  canToggleViewMode: boolean;
+  viewingAsUser: boolean;
+}) {
   const links = user
     ? [
         { href: "/dashboard", label: "Dashboard" },
         { href: "/games", label: "Games" },
         { href: "/coach", label: "Coach" },
         { href: "/rules", label: "Rules" },
-        ...(user.role === Role.COMMISSIONER
-          ? [{ href: "/admin", label: "Admin" }]
-          : []),
+        ...(showAdmin ? [{ href: "/admin", label: "Admin" }] : []),
       ]
     : [
         { href: "/", label: "Home" },
@@ -44,6 +53,9 @@ export function SiteHeader({ user }: { user: User | null }) {
               {link.label}
             </Link>
           ))}
+          {canToggleViewMode ? (
+            <ViewModeToggle viewingAsUser={viewingAsUser} />
+          ) : null}
           <ThemeToggle />
           {user ? (
             <form action={signOut}>

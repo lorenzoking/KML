@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Role } from "@prisma/client";
 import {
   Card,
   CardContent,
@@ -11,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ReputationBadge, StatusBadge } from "@/components/status-badge";
-import { requireUser } from "@/lib/auth";
+import { isCommissioner, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   getActiveSeason,
@@ -29,6 +28,7 @@ import { getJobSecurityStatus } from "@/lib/coach/job-security";
 
 export default async function DashboardPage() {
   const user = await requireUser();
+  const commissionerUi = await isCommissioner(user);
   const { settings, season } = await getActiveSeason();
   const membership = await getUserMembership(user.id, season.id);
   const standings = await getSeasonStandings(season.id);
@@ -82,30 +82,28 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const pendingCount =
-    user.role === Role.COMMISSIONER
-      ? await prisma.gameSubmission.count({ where: { status: "PENDING" } })
-      : 0;
+  const pendingCount = commissionerUi
+    ? await prisma.gameSubmission.count({ where: { status: "PENDING" } })
+    : 0;
 
-  const recentLeague =
-    user.role === Role.COMMISSIONER
-      ? await prisma.gameSubmission.findMany({
-          include: {
-            submitter: true,
-            userTeam: true,
-            opponentTeam: true,
-          },
-          orderBy: { createdAt: "desc" },
-          take: 8,
-        })
-      : [];
+  const recentLeague = commissionerUi
+    ? await prisma.gameSubmission.findMany({
+        include: {
+          submitter: true,
+          userTeam: true,
+          opponentTeam: true,
+        },
+        orderBy: { createdAt: "desc" },
+        take: 8,
+      })
+    : [];
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
-            {user.role === Role.COMMISSIONER ? "Commissioner desk" : "Coach desk"}
+            {commissionerUi ? "Commissioner desk" : "Coach desk"}
           </p>
           <h1 className="text-3xl font-semibold uppercase tracking-[0.06em]">
             Welcome, {user.name ?? "Coach"}
@@ -121,7 +119,7 @@ export default async function DashboardPage() {
           <Button asChild variant="outline">
             <Link href="/games?tab=standings">Standings</Link>
           </Button>
-          {user.role === Role.COMMISSIONER ? (
+          {commissionerUi ? (
             <Button asChild variant="outline">
               <Link href="/admin/approvals">
                 Approvals{pendingCount ? ` (${pendingCount})` : ""}
@@ -170,7 +168,7 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {user.role === Role.COMMISSIONER ? (
+      {commissionerUi ? (
         <Card>
           <CardHeader>
             <CardTitle>Commissioner snapshot</CardTitle>
