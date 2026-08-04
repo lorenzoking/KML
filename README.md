@@ -143,13 +143,14 @@ query the DB at build time — update `DATABASE_URL` to the pooler URI and redep
 | --- | --- |
 | `/` | Public landing |
 | `/sign-in` | Public |
-| `/standings` | Public read-only |
+| `/games` | Public week results + standings; submit when signed in |
 | `/rules` | Public read-only |
 | `/dashboard` | Signed-in |
-| `/submissions` | Signed-in coach |
 | `/admin` | Commissioner |
 | `/admin/approvals` | Commissioner |
+| `/admin/users` | Commissioner |
 | `/admin/teams` | Commissioner |
+| `/admin/season` | Commissioner |
 | `/admin/settings` | Commissioner |
 
 ## Core business rules

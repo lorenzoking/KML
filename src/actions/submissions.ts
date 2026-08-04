@@ -99,7 +99,9 @@ export async function submitGameResult(formData: FormData) {
     },
   });
 
+  revalidatePath("/games");
   revalidatePath("/submissions");
+  revalidatePath("/standings");
   revalidatePath("/dashboard");
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");

@@ -87,7 +87,10 @@ export default async function DashboardPage() {
         </div>
         <div className="flex gap-2">
           <Button asChild>
-            <Link href="/submissions">Submit result</Link>
+            <Link href="/games?tab=week#submit-result">Submit result</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/games?tab=standings">Standings</Link>
           </Button>
           {user.role === Role.COMMISSIONER ? (
             <Button asChild variant="outline">

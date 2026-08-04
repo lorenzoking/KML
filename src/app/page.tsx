@@ -40,7 +40,7 @@ export default async function HomePage() {
               </Button>
             )}
             <Button asChild variant="outline" size="lg">
-              <Link href="/standings">View standings</Link>
+              <Link href="/games">Games & standings</Link>
             </Button>
             <Button asChild variant="ghost" size="lg">
               <Link href="/rules">League rules</Link>

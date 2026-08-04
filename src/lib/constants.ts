@@ -3,7 +3,6 @@ export const APP_SHORT = "KML";
 
 export const PROTECTED_PREFIXES = [
   "/dashboard",
-  "/submissions",
   "/admin",
 ] as const;
 

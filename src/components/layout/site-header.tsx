@@ -5,22 +5,21 @@ import { Button } from "@/components/ui/button";
 import { signOut } from "@/actions/auth";
 import { APP_NAME, APP_SHORT } from "@/lib/constants";
 
-const publicLinks = [
-  { href: "/standings", label: "Standings" },
-  { href: "/rules", label: "Rules" },
-];
-
 export function SiteHeader({ user }: { user: User | null }) {
   const links = user
     ? [
         { href: "/dashboard", label: "Dashboard" },
-        { href: "/submissions", label: "Submissions" },
-        ...publicLinks,
+        { href: "/games", label: "Games" },
+        { href: "/rules", label: "Rules" },
         ...(user.role === Role.COMMISSIONER
           ? [{ href: "/admin", label: "Admin" }]
           : []),
       ]
-    : [{ href: "/", label: "Home" }, ...publicLinks];
+    : [
+        { href: "/", label: "Home" },
+        { href: "/games", label: "Games" },
+        { href: "/rules", label: "Rules" },
+      ];
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/90 backdrop-blur">
