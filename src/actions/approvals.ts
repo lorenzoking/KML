@@ -169,6 +169,7 @@ export async function reviewSubmission(formData: FormData) {
 function revalidateAll() {
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
+  revalidatePath("/games");
   revalidatePath("/submissions");
   revalidatePath("/dashboard");
   revalidatePath("/standings");

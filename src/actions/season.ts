@@ -299,6 +299,7 @@ function revalidateSeasonPaths() {
   revalidatePath("/admin/season");
   revalidatePath("/admin/approvals");
   revalidatePath("/dashboard");
+  revalidatePath("/games");
   revalidatePath("/standings");
   revalidatePath("/submissions");
   revalidatePath("/rules");
