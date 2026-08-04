@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     "Commissioner-run Madden franchise league management — standings, approvals, XP, and coach reputation.",
 };
 
+// League pages read live DB state; never prerender against Postgres at build time.
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({
   children,
 }: Readonly<{

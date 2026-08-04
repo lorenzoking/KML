@@ -101,17 +101,23 @@ On first Google sign-in, the app upserts a `User` row. Emails listed in `COMMISS
 ## Deploy to Vercel
 
 1. Push this repo to GitHub.
-2. Import the project in Vercel.
+2. Import the project in Vercel (Framework Preset: **Next.js**).
 3. Set env vars from `.env.example`.
-4. Ensure `DATABASE_URL` points at Supabase (use the pooled connection string for serverless if needed).
-5. Set `AUTH_DEV_BYPASS=false`.
+4. For Supabase on Vercel, use **two** database URLs from  
+   **Project Settings → Database → Connection string**:
+   - `DATABASE_URL` = **Transaction** pooler (port `6543`), append `?pgbouncer=true`
+   - `DIRECT_URL` = **Direct** connection (port `5432`) for Prisma migrations
+5. Set `AUTH_DEV_BYPASS=false` and `NEXT_PUBLIC_APP_URL` to your Vercel URL.
 6. Add the Vercel URL to Supabase Auth redirect allow-list.
-7. Deploy. Run migrations against production:
+7. Deploy. Then run migrations against production (uses `DIRECT_URL`):
 
 ```bash
 npx prisma migrate deploy
 npm run db:seed
 ```
+
+If the Vercel build fails with “Can't reach database server”, the app pages no longer
+query the DB at build time — update `DATABASE_URL` to the pooler URI and redeploy.
 
 ## App routes
 
