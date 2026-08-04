@@ -18,10 +18,15 @@ export default async function TeamsAdminPage() {
   const [franchises, users, memberships] = await Promise.all([
     prisma.franchise.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.user.findMany({
+      where: { deletedAt: null, isActive: true },
       orderBy: [{ role: "asc" }, { name: "asc" }],
     }),
     prisma.leagueMembership.findMany({
-      where: { seasonId: season.id, isActive: true },
+      where: {
+        seasonId: season.id,
+        isActive: true,
+        user: { deletedAt: null },
+      },
       include: { user: true, franchise: true },
     }),
   ]);
@@ -46,7 +51,8 @@ export default async function TeamsAdminPage() {
         <CardHeader>
           <CardTitle>Assign / reassign coach</CardTitle>
           <CardDescription>
-            Selecting a team moves the user onto that franchise for the active season.
+            Reassigning ends the current coaching stint but keeps prior team stats on
+            the coach&apos;s career history.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -57,6 +63,7 @@ export default async function TeamsAdminPage() {
             }}
             className="grid gap-3 sm:grid-cols-3"
           >
+            <input type="hidden" name="returnTo" value="/admin/teams?updated=1" />
             <Select name="userId" required defaultValue="">
               <option value="" disabled>
                 Select user

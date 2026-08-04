@@ -23,11 +23,20 @@ export default async function SignInPage({
   searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   const user = await getSessionUser();
-  if (user) redirect("/dashboard");
+  if (user?.isActive) redirect("/dashboard");
 
   const params = await searchParams;
   const supabaseReady = isSupabaseConfigured();
   const devUsers = await listDevUsers();
+
+  const errorMessage =
+    params.error === "inactive" || (user && !user.isActive)
+      ? "Your account is inactive. Contact a commissioner to be reactivated."
+      : params.error === "sync"
+        ? "Signed in with Google, but we could not create your league profile. Check the database connection and try again."
+        : params.error
+          ? "Sign-in failed. Check Supabase Google provider settings and try again."
+          : null;
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
@@ -40,9 +49,9 @@ export default async function SignInPage({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {params.error ? (
+          {errorMessage ? (
             <p className="rounded-md bg-rose-500/10 px-3 py-2 text-sm text-rose-700 dark:text-rose-300">
-              Sign-in failed. Check Supabase Google provider settings and try again.
+              {errorMessage}
             </p>
           ) : null}
 

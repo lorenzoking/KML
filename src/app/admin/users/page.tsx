@@ -28,13 +28,19 @@ import {
 export default async function AdminUsersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; role?: string; active?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    role?: string;
+    active?: string;
+    removed?: string;
+  }>;
 }) {
   const params = await searchParams;
   const { season } = await getActiveSeason();
   const settings = await getLeagueSettings();
 
   const users = await prisma.user.findMany({
+    where: { deletedAt: null },
     orderBy: [{ role: "asc" }, { name: "asc" }],
     include: {
       memberships: {
@@ -67,9 +73,15 @@ export default async function AdminUsersPage({
       <div>
         <h2 className="text-xl font-semibold uppercase tracking-wide">Users</h2>
         <p className="text-sm text-[var(--muted-foreground)]">
-          Manage every coach account, role, and current-season assignment.
+          Every Google sign-in creates or updates a manageable league profile here.
         </p>
       </div>
+
+      {params.removed === "1" ? (
+        <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+          User removed.
+        </p>
+      ) : null}
 
       <Card>
         <CardHeader>
@@ -115,7 +127,10 @@ export default async function AdminUsersPage({
       </Card>
 
       {filtered.length === 0 ? (
-        <EmptyState title="No users match" description="Adjust filters or wait for coaches to sign in." />
+        <EmptyState
+          title="No users yet"
+          description="When coaches sign in with Google, they appear here automatically."
+        />
       ) : (
         <Card>
           <CardContent className="pt-5">
@@ -159,17 +174,33 @@ export default async function AdminUsersPage({
                         />
                       </TableCell>
                       <TableCell>
-                        <Badge variant={user.isActive ? "stable" : "outline"}>
-                          {user.isActive ? "Active" : "Inactive"}
+                        <Badge
+                          variant={
+                            user.deletedAt
+                              ? "outline"
+                              : user.isActive
+                                ? "stable"
+                                : "pressured"
+                          }
+                        >
+                          {user.deletedAt
+                            ? "Removed"
+                            : user.isActive
+                              ? "Active"
+                              : "Inactive"}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Link
-                          href={`/admin/users/${user.id}`}
-                          className="text-sm font-medium text-[var(--primary)] hover:underline"
-                        >
-                          Manage
-                        </Link>
+                        {!user.deletedAt ? (
+                          <Link
+                            href={`/admin/users/${user.id}`}
+                            className="text-sm font-medium text-[var(--primary)] hover:underline"
+                          >
+                            Manage
+                          </Link>
+                        ) : (
+                          "—"
+                        )}
                       </TableCell>
                     </TableRow>
                   );

@@ -86,6 +86,7 @@ export async function devSignIn(userId: string) {
 export async function listDevUsers() {
   if (!isDevAuthEnabled()) return [];
   return prisma.user.findMany({
+    where: { deletedAt: null },
     orderBy: [{ role: "asc" }, { name: "asc" }],
     select: {
       id: true,

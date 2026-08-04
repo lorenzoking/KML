@@ -34,15 +34,16 @@ enum SeasonStatus {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  image     String?
-  role      Role     @default(USER)
-  isActive  Boolean  @default(true)
+  id         String    @id @default(cuid())
+  email      String    @unique
+  name       String?
+  image      String?
+  role       Role      @default(USER)
+  isActive   Boolean   @default(true)
   adminNotes String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   memberships           LeagueMembership[]
   submissions           GameSubmission[]   @relation("SubmissionSubmitter")
@@ -90,22 +91,28 @@ model Season {
 }
 
 model LeagueMembership {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   franchiseId String
   seasonId    String
-  isActive    Boolean  @default(true)
-  assignedAt  DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean   @default(true)
+  startedWeek Int       @default(1)
+  endedWeek   Int?
+  endedAt     DateTime?
+  assignedAt  DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   franchise Franchise @relation(fields: [franchiseId], references: [id], onDelete: Cascade)
   season    Season    @relation(fields: [seasonId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, seasonId])
-  @@unique([franchiseId, seasonId])
+  // Multiple stints per user/season are allowed (fired → rehired elsewhere).
+  // Only one ACTIVE stint per user/season and per franchise/season is enforced in app code.
+  @@index([userId, seasonId])
+  @@index([franchiseId, seasonId])
   @@index([userId])
   @@index([franchiseId])
+  @@index([isActive])
 }
 
 model LeagueSetting {

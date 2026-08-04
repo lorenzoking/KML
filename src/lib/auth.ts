@@ -34,15 +34,19 @@ export async function syncUserFromAuth(params: {
         name: params.name ?? email.split("@")[0],
         image: params.image ?? undefined,
         role: isCommissioner ? Role.COMMISSIONER : Role.USER,
+        isActive: true,
+        deletedAt: null,
       },
     });
   }
 
+  // Returning Google users always reappear in the manage-users list.
   return prisma.user.update({
     where: { id: existing.id },
     data: {
       name: params.name ?? existing.name,
       image: params.image ?? existing.image,
+      deletedAt: null,
       role:
         isCommissioner && existing.role !== Role.COMMISSIONER
           ? Role.COMMISSIONER
@@ -56,7 +60,9 @@ export async function getSessionUser(): Promise<User | null> {
     const jar = await cookies();
     const devId = jar.get(DEV_SESSION_COOKIE)?.value;
     if (devId) {
-      return prisma.user.findUnique({ where: { id: devId } });
+      return prisma.user.findFirst({
+        where: { id: devId, deletedAt: null },
+      });
     }
   }
 
@@ -72,12 +78,16 @@ export async function getSessionUser(): Promise<User | null> {
 
     if (!user?.email) return null;
 
-    return syncUserFromAuth({
+    const appUser = await syncUserFromAuth({
       email: user.email,
       name: user.user_metadata?.full_name ?? user.user_metadata?.name,
       image: user.user_metadata?.avatar_url,
     });
-  } catch {
+
+    if (appUser.deletedAt) return null;
+    return appUser;
+  } catch (error) {
+    console.error("getSessionUser failed:", error);
     return null;
   }
 }
@@ -85,6 +95,7 @@ export async function getSessionUser(): Promise<User | null> {
 export async function requireUser() {
   const user = await getSessionUser();
   if (!user) redirect("/sign-in");
+  if (!user.isActive) redirect("/sign-in?error=inactive");
   return user;
 }
 

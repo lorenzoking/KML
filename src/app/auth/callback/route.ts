@@ -57,16 +57,21 @@ export async function GET(request: Request) {
       return NextResponse.redirect(errorUrl);
     }
 
-    // Persist app user row, but never block login if DB sync fails.
+    // Must persist into Prisma so the user appears in Admin → Users.
     try {
-      await syncUserFromAuth({
+      const appUser = await syncUserFromAuth({
         email: data.user.email,
         name:
           data.user.user_metadata?.full_name ?? data.user.user_metadata?.name,
         image: data.user.user_metadata?.avatar_url,
       });
+
+      if (!appUser.isActive) {
+        return NextResponse.redirect(`${redirectOrigin}/sign-in?error=inactive`);
+      }
     } catch (syncError) {
       console.error("User sync failed after OAuth:", syncError);
+      return NextResponse.redirect(`${redirectOrigin}/sign-in?error=sync`);
     }
 
     return NextResponse.redirect(successUrl);

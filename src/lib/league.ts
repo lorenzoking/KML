@@ -28,9 +28,11 @@ export async function getActiveSeason() {
 }
 
 export async function getUserMembership(userId: string, seasonId: string) {
-  return prisma.leagueMembership.findUnique({
+  return prisma.leagueMembership.findFirst({
     where: {
-      userId_seasonId: { userId, seasonId },
+      userId,
+      seasonId,
+      isActive: true,
     },
     include: { franchise: true },
   });

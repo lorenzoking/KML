@@ -26,7 +26,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason } from "@/lib/league";
 import { getUserCareerStats } from "@/lib/career";
-import { updateUser } from "@/actions/users";
+import { deleteUser, updateUser } from "@/actions/users";
 import { assignUserToTeam } from "@/actions/teams";
 import { addXpAdjustment, addReputationAdjustment } from "@/actions/adjustments";
 import { formatRecord } from "@/lib/utils";
@@ -35,18 +35,22 @@ import { format } from "date-fns";
 
 export default async function AdminUserDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ updated?: string }>;
 }) {
   const { id } = await params;
+  const query = await searchParams;
   const { season } = await getActiveSeason();
 
-  const user = await prisma.user.findUnique({
-    where: { id },
+  const user = await prisma.user.findFirst({
+    where: { id, deletedAt: null },
     include: {
       memberships: {
         where: { seasonId: season.id },
         include: { franchise: true },
+        orderBy: { assignedAt: "asc" },
       },
       submissions: {
         include: { userTeam: true, opponentTeam: true, season: true },
@@ -77,6 +81,12 @@ export default async function AdminUserDetailPage({
 
   return (
     <div className="space-y-6">
+      {query.updated === "1" ? (
+        <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+          User updated.
+        </p>
+      ) : null}
+
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
@@ -92,7 +102,7 @@ export default async function AdminUserDetailPage({
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline">{user.role}</Badge>
-          <Badge variant={user.isActive ? "stable" : "outline"}>
+          <Badge variant={user.isActive ? "stable" : "pressured"}>
             {user.isActive ? "Active" : "Inactive"}
           </Badge>
           <ReputationBadge
@@ -166,9 +176,23 @@ export default async function AdminUserDetailPage({
         <Card>
           <CardHeader>
             <CardTitle>Season {season.number} team</CardTitle>
-            <CardDescription>Assign or reassign for the active season</CardDescription>
+            <CardDescription>
+              Firing/unassigning or moving teams keeps prior stints (and those stats)
+              on this coach&apos;s career.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {user.memberships.length > 0 ? (
+              <ul className="space-y-1 text-xs text-[var(--muted-foreground)]">
+                {user.memberships.map((m) => (
+                  <li key={m.id}>
+                    {m.franchise.abbreviation}: weeks {m.startedWeek}
+                    {m.endedWeek ? `–${m.endedWeek}` : "+"}{" "}
+                    {m.isActive ? "(active)" : "(ended)"}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             <form
               action={async (formData) => {
                 "use server";
@@ -177,11 +201,16 @@ export default async function AdminUserDetailPage({
               className="space-y-3"
             >
               <input type="hidden" name="userId" value={user.id} />
+              <input
+                type="hidden"
+                name="returnTo"
+                value={`/admin/users/${user.id}?updated=1`}
+              />
               <Select
                 name="franchiseId"
                 defaultValue={currentMembership?.franchiseId ?? "unassign"}
               >
-                <option value="unassign">Unassign</option>
+                <option value="unassign">Unassign / fire</option>
                 {franchises.map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.name}
@@ -225,9 +254,10 @@ export default async function AdminUserDetailPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Career by season</CardTitle>
+          <CardTitle>Career coaching stints</CardTitle>
           <CardDescription>
-            Historical records are preserved when seasons advance or games are voided.
+            Fired/rehired coaches keep every team stint. Stats stay attached to the
+            coach across seasons and mid-season moves.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -239,6 +269,7 @@ export default async function AdminUserDetailPage({
                 <TableRow>
                   <TableHead>Season</TableHead>
                   <TableHead>Team</TableHead>
+                  <TableHead>Weeks</TableHead>
                   <TableHead>Record</TableHead>
                   <TableHead>PF</TableHead>
                   <TableHead>PA</TableHead>
@@ -247,20 +278,78 @@ export default async function AdminUserDetailPage({
               </TableHeader>
               <TableBody>
                 {[...career.bySeason].reverse().map((row) => (
-                  <TableRow key={row.seasonId}>
+                  <TableRow key={row.stintId}>
                     <TableCell>
-                      S{row.seasonNumber} · {row.seasonName}
+                      S{row.seasonNumber}
+                      {!row.isActive ? (
+                        <span className="ml-1 text-xs text-[var(--muted-foreground)]">
+                          ended
+                        </span>
+                      ) : null}
                     </TableCell>
                     <TableCell>{row.franchiseAbbr ?? "—"}</TableCell>
+                    <TableCell>
+                      {row.startedWeek}
+                      {row.endedWeek != null ? `–${row.endedWeek}` : "+"}
+                    </TableCell>
                     <TableCell>{formatRecord(row.wins, row.losses)}</TableCell>
                     <TableCell>{row.pointsFor}</TableCell>
                     <TableCell>{row.pointsAgainst}</TableCell>
-                    <TableCell>{row.xp}</TableCell>
+                    <TableCell>{row.xp || "—"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-rose-500/30">
+        <CardHeader>
+          <CardTitle>Remove user</CardTitle>
+          <CardDescription>
+            Soft remove hides them from the league but keeps career history if you
+            ever need audit data. Permanent delete erases the account and cascaded
+            rows.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 lg:grid-cols-2">
+          <form
+            action={async (formData) => {
+              "use server";
+              await deleteUser(formData);
+            }}
+            className="space-y-3 rounded-lg border border-[var(--border)] p-3"
+          >
+            <input type="hidden" name="userId" value={user.id} />
+            <input type="hidden" name="mode" value="soft" />
+            <p className="text-sm font-medium">Remove from league</p>
+            <Label htmlFor="soft-confirm">
+              Type <code>REMOVE {user.email}</code>
+            </Label>
+            <Input id="soft-confirm" name="confirm" required />
+            <SubmitButton variant="destructive" size="sm">
+              Remove user
+            </SubmitButton>
+          </form>
+          <form
+            action={async (formData) => {
+              "use server";
+              await deleteUser(formData);
+            }}
+            className="space-y-3 rounded-lg border border-rose-500/40 p-3"
+          >
+            <input type="hidden" name="userId" value={user.id} />
+            <input type="hidden" name="mode" value="hard" />
+            <p className="text-sm font-medium">Permanently delete</p>
+            <Label htmlFor="hard-confirm">
+              Type <code>DELETE {user.email}</code>
+            </Label>
+            <Input id="hard-confirm" name="confirm" required />
+            <SubmitButton variant="destructive" size="sm">
+              Permanently delete
+            </SubmitButton>
+          </form>
         </CardContent>
       </Card>
 

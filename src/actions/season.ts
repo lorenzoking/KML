@@ -213,7 +213,11 @@ export async function advanceToNextSeason(formData: FormData) {
 
   const activeMemberships = parsed.data.carryMemberships
     ? await prisma.leagueMembership.findMany({
-        where: { seasonId: season.id, isActive: true },
+        where: {
+          seasonId: season.id,
+          isActive: true,
+          user: { isActive: true, deletedAt: null },
+        },
       })
     : [];
 
@@ -254,6 +258,7 @@ export async function advanceToNextSeason(formData: FormData) {
           franchiseId: m.franchiseId,
           seasonId: nextSeason.id,
           isActive: true,
+          startedWeek: 1,
         })),
       });
     }
