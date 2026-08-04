@@ -19,7 +19,7 @@ export default async function HomePage() {
     <div className="space-y-6 sm:space-y-10">
       <section className="field-stripe relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] px-5 py-10 shadow-[0_20px_60px_rgba(0,0,0,0.12)] sm:px-10 sm:py-16">
         <div className="absolute -right-20 -top-24 size-72 rounded-full bg-[var(--primary)]/10 blur-3xl" />
-        <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-[color-mix(in_oklab,var(--field-mid)_18%,transparent)] to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-[color-mix(in_srgb,var(--primary)_22%,transparent)] to-transparent" />
         <div className="relative max-w-3xl space-y-5">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
             Madden 27 Online Franchise

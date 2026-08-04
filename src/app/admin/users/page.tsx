@@ -89,13 +89,13 @@ export default async function AdminUsersPage({
       </div>
 
       {params.removed === "1" ? (
-        <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+        <p className="success-banner rounded-md px-3 py-2 text-sm">
           User removed.
         </p>
       ) : null}
 
       {params.synced === "1" ? (
-        <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+        <p className="success-banner rounded-md px-3 py-2 text-sm">
           Synced from Supabase Auth. Scanned {params.scanned ?? "0"} auth users;
           created/restored {params.restored ?? "0"} app profiles.
         </p>

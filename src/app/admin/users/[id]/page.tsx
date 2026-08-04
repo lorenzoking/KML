@@ -82,7 +82,7 @@ export default async function AdminUserDetailPage({
   return (
     <div className="space-y-6">
       {query.updated === "1" ? (
-        <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+        <p className="success-banner rounded-md px-3 py-2 text-sm">
           User updated.
         </p>
       ) : null}

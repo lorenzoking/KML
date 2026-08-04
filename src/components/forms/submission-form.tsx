@@ -127,7 +127,7 @@ export function SubmissionForm({
         </p>
       ) : null}
       {success ? (
-        <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+        <p className="success-banner rounded-md px-3 py-2 text-sm">
           {success}
         </p>
       ) : null}
