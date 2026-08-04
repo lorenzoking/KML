@@ -98,6 +98,21 @@ COMMISSIONER_EMAILS=your-gmail@gmail.com
 
 On first Google sign-in, the app upserts a `User` row. Emails listed in `COMMISSIONER_EMAILS` are promoted to `COMMISSIONER`.
 
+### Commissioner accounts (recommended)
+
+Use **one Google account per commissioner** (their real Gmail). Put those emails in `COMMISSIONER_EMAILS`.  
+The same account can also be assigned a franchise — so you can coach the Bills and still access Admin.
+
+Avoid a single shared “admin login” for day-to-day use: audit logs won’t show who approved games, and you can’t remove one commissioner without rotating the password for everyone.
+
+Optional emergency backup login (shared email/password) can be enabled with:
+
+```env
+COMMISSIONER_BACKUP_EMAIL=commissioners@yourleague.com
+COMMISSIONER_BACKUP_PASSWORD=a-long-shared-password
+COMMISSIONER_BACKUP_NAME=League Commissioners
+```
+
 ## Deploy to Vercel
 
 1. Push this repo to GitHub.

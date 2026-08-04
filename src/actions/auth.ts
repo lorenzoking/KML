@@ -1,11 +1,19 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
+import { createHash, timingSafeEqual } from "crypto";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { DEV_SESSION_COOKIE, isDevAuthEnabled } from "@/lib/auth";
+import {
+  clearAppSession,
+  isCommissionerBackupLoginEnabled,
+  isDevAuthEnabled,
+  setAppSession,
+  syncUserFromAuth,
+} from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { writeAuditLog } from "@/lib/audit";
 
 function normalizeOrigin(raw: string) {
   return raw.replace(/\/$/, "");
@@ -30,6 +38,12 @@ async function getAppOrigin() {
   return "http://localhost:3000";
 }
 
+function passwordsMatch(input: string, expected: string) {
+  const a = createHash("sha256").update(input).digest();
+  const b = createHash("sha256").update(expected).digest();
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 export async function signInWithGoogle() {
   if (!isSupabaseConfigured()) {
     return { error: "Supabase is not configured. Use demo login locally." };
@@ -52,9 +66,55 @@ export async function signInWithGoogle() {
   redirect(data.url);
 }
 
+export async function signInWithCommissionerPassword(formData: FormData) {
+  if (!isCommissionerBackupLoginEnabled()) {
+    return { error: "Commissioner password login is not configured." };
+  }
+
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
+  const password = String(formData.get("password") || "");
+
+  const expectedEmail = process.env.COMMISSIONER_BACKUP_EMAIL!.trim().toLowerCase();
+  const expectedPassword = process.env.COMMISSIONER_BACKUP_PASSWORD!;
+
+  if (!email || !password) {
+    return { error: "Email and password are required." };
+  }
+
+  if (
+    !passwordsMatch(email, expectedEmail) ||
+    !passwordsMatch(password, expectedPassword)
+  ) {
+    return { error: "Invalid commissioner credentials." };
+  }
+
+  const user = await syncUserFromAuth({
+    email: expectedEmail,
+    name: process.env.COMMISSIONER_BACKUP_NAME || "League Commissioners",
+    forceCommissioner: true,
+  });
+
+  if (!user.isActive) {
+    return { error: "This commissioner account is inactive." };
+  }
+
+  await setAppSession(user.id);
+
+  await writeAuditLog({
+    actorId: user.id,
+    action: "COMMISSIONER_PASSWORD_LOGIN",
+    entityType: "User",
+    entityId: user.id,
+    metadata: { method: "backup_password" },
+  });
+
+  redirect("/dashboard");
+}
+
 export async function signOut() {
-  const jar = await cookies();
-  jar.delete(DEV_SESSION_COOKIE);
+  await clearAppSession();
 
   if (isSupabaseConfigured()) {
     const supabase = await createClient();
@@ -70,16 +130,9 @@ export async function devSignIn(userId: string) {
   }
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) return { error: "User not found" };
+  if (!user || user.deletedAt) return { error: "User not found" };
 
-  const jar = await cookies();
-  jar.set(DEV_SESSION_COOKIE, user.id, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 14,
-  });
-
+  await setAppSession(user.id);
   redirect("/dashboard");
 }
 

@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 
+/** Shared cookie for password backup login and local demo login. */
+export const APP_SESSION_COOKIE = "kml_app_session";
+/** @deprecated kept cleared on sign-out for older sessions */
 export const DEV_SESSION_COOKIE = "kml_dev_user";
 
 function commissionerEmails() {
@@ -18,13 +21,22 @@ export function isDevAuthEnabled() {
   return process.env.AUTH_DEV_BYPASS === "true";
 }
 
+export function isCommissionerBackupLoginEnabled() {
+  return Boolean(
+    process.env.COMMISSIONER_BACKUP_EMAIL?.trim() &&
+      process.env.COMMISSIONER_BACKUP_PASSWORD
+  );
+}
+
 export async function syncUserFromAuth(params: {
   email: string;
   name?: string | null;
   image?: string | null;
+  forceCommissioner?: boolean;
 }) {
   const email = params.email.toLowerCase();
-  const isCommissioner = commissionerEmails().includes(email);
+  const isCommissioner =
+    params.forceCommissioner || commissionerEmails().includes(email);
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (!existing) {
@@ -40,7 +52,6 @@ export async function syncUserFromAuth(params: {
     });
   }
 
-  // Returning Google users always reappear in the manage-users list.
   return prisma.user.update({
     where: { id: existing.id },
     data: {
@@ -55,16 +66,36 @@ export async function syncUserFromAuth(params: {
   });
 }
 
+export async function setAppSession(userId: string) {
+  const jar = await cookies();
+  jar.set(APP_SESSION_COOKIE, userId, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 14,
+  });
+}
+
+export async function clearAppSession() {
+  const jar = await cookies();
+  jar.delete(APP_SESSION_COOKIE);
+  jar.delete(DEV_SESSION_COOKIE);
+}
+
+async function getAppSessionUser() {
+  const jar = await cookies();
+  const userId =
+    jar.get(APP_SESSION_COOKIE)?.value ?? jar.get(DEV_SESSION_COOKIE)?.value;
+  if (!userId) return null;
+  return prisma.user.findFirst({
+    where: { id: userId, deletedAt: null },
+  });
+}
+
 export async function getSessionUser(): Promise<User | null> {
-  if (isDevAuthEnabled()) {
-    const jar = await cookies();
-    const devId = jar.get(DEV_SESSION_COOKIE)?.value;
-    if (devId) {
-      return prisma.user.findFirst({
-        where: { id: devId, deletedAt: null },
-      });
-    }
-  }
+  const appSessionUser = await getAppSessionUser();
+  if (appSessionUser) return appSessionUser;
 
   if (!isSupabaseConfigured()) {
     return null;

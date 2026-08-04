@@ -8,12 +8,17 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/forms/submit-button";
+import { CommissionerPasswordForm } from "@/components/forms/commissioner-password-form";
 import {
   devSignIn,
   listDevUsers,
   signInWithGoogle,
 } from "@/actions/auth";
-import { getSessionUser, isDevAuthEnabled } from "@/lib/auth";
+import {
+  getSessionUser,
+  isCommissionerBackupLoginEnabled,
+  isDevAuthEnabled,
+} from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 
@@ -27,6 +32,7 @@ export default async function SignInPage({
 
   const params = await searchParams;
   const supabaseReady = isSupabaseConfigured();
+  const backupLoginEnabled = isCommissionerBackupLoginEnabled();
   const devUsers = await listDevUsers();
 
   const errorMessage =
@@ -44,8 +50,9 @@ export default async function SignInPage({
         <CardHeader>
           <CardTitle>Sign in</CardTitle>
           <CardDescription>
-            Google OAuth for production. Demo login available when local bypass
-            is enabled.
+            Coaches and commissioners should use their own Google accounts. Add a
+            commissioner&apos;s Gmail to <code>COMMISSIONER_EMAILS</code> — they can
+            also be assigned a franchise and coach on that same account.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -74,6 +81,21 @@ export default async function SignInPage({
           )}
         </CardContent>
       </Card>
+
+      {backupLoginEnabled ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Commissioner backup login</CardTitle>
+            <CardDescription>
+              Optional shared email/password for emergencies. Prefer personal Google
+              commissioner accounts so audit logs show who approved what.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CommissionerPasswordForm />
+          </CardContent>
+        </Card>
+      ) : null}
 
       {isDevAuthEnabled() ? (
         <Card>
