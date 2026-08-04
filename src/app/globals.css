@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f6f3;
+  --foreground: #142018;
+  --card: #ffffff;
+  --card-foreground: #142018;
+  --primary: #1f6b45;
+  --primary-foreground: #f4fff8;
+  --secondary: #dce8df;
+  --secondary-foreground: #163222;
+  --muted: #e7eee8;
+  --muted-foreground: #5a6b5f;
+  --border: #c9d5cc;
+  --ring: #2f8f5b;
+  --destructive: #b42318;
+  --field-deep: #0f2a1c;
+  --field-mid: #1f6b45;
+  --field-light: #8fbf9a;
+}
+
+.dark {
+  --background: #0c1410;
+  --foreground: #e7f0ea;
+  --card: #121c16;
+  --card-foreground: #e7f0ea;
+  --primary: #3fa86c;
+  --primary-foreground: #07140d;
+  --secondary: #1b2a21;
+  --secondary-foreground: #d7e8dd;
+  --muted: #172119;
+  --muted-foreground: #9bb0a2;
+  --border: #243329;
+  --ring: #4db87c;
+  --destructive: #ef5a4f;
+  --field-deep: #07140d;
+  --field-mid: #245c3c;
+  --field-light: #3fa86c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background:
+    radial-gradient(1200px 500px at 10% -10%, color-mix(in oklab, var(--field-light) 28%, transparent), transparent 60%),
+    radial-gradient(900px 420px at 100% 0%, color-mix(in oklab, var(--field-mid) 18%, transparent), transparent 55%),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), ui-sans-serif, sans-serif;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-display), ui-sans-serif, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.field-stripe {
+  background-image: repeating-linear-gradient(
+    -12deg,
+    transparent,
+    transparent 18px,
+    color-mix(in oklab, var(--field-mid) 8%, transparent) 18px,
+    color-mix(in oklab, var(--field-mid) 8%, transparent) 19px
+  );
+}

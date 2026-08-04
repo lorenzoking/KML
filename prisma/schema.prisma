@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  COMMISSIONER
+  USER
+}
+
+enum GameType {
+  REGULAR_SEASON
+  PLAYOFF
+  SUPER_BOWL
+  PRESEASON
+  OTHER
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  image     String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships           LeagueMembership[]
+  submissions           GameSubmission[]   @relation("SubmissionSubmitter")
+  reviewedSubmissions   GameSubmission[]   @relation("SubmissionReviewer")
+  xpAdjustmentsReceived XPAdjustment[]     @relation("XPTarget")
+  xpAdjustmentsCreated  XPAdjustment[]     @relation("XPCreator")
+  reputationReceived    ReputationAdjustment[] @relation("RepTarget")
+  reputationCreated     ReputationAdjustment[] @relation("RepCreator")
+  auditLogs             AuditLog[]
+}
+
+model Franchise {
+  id           String @id @default(cuid())
+  name         String @unique
+  abbreviation String @unique
+  city         String
+  conference   String
+  division     String
+  primaryColor String @default("#1a1a1a")
+  sortOrder    Int    @default(0)
+
+  memberships          LeagueMembership[]
+  submissionsAsUser    GameSubmission[]   @relation("UserTeam")
+  submissionsAsOpp     GameSubmission[]   @relation("OpponentTeam")
+  resultsAsHome        GameResult[]       @relation("ResultHome")
+  resultsAsAway        GameResult[]       @relation("ResultAway")
+  resultsAsWinner      GameResult[]       @relation("ResultWinner")
+  xpAdjustments        XPAdjustment[]
+}
+
+model Season {
+  id        String   @id @default(cuid())
+  number    Int      @unique
+  name      String
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  memberships  LeagueMembership[]
+  submissions  GameSubmission[]
+  results      GameResult[]
+  xpAdjustments XPAdjustment[]
+}
+
+model LeagueMembership {
+  id          String   @id @default(cuid())
+  userId      String
+  franchiseId String
+  seasonId    String
+  isActive    Boolean  @default(true)
+  assignedAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  franchise Franchise @relation(fields: [franchiseId], references: [id], onDelete: Cascade)
+  season    Season    @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, seasonId])
+  @@unique([franchiseId, seasonId])
+  @@index([userId])
+  @@index([franchiseId])
+}
+
+model LeagueSetting {
+  id               String   @id @default(cuid())
+  key              String   @unique @default("default")
+  leagueName       String   @default("Kings Madden League")
+  currentSeason    Int      @default(1)
+  currentWeek      Int      @default(1)
+  xpGamePlayed     Int      @default(1)
+  xpWinBonus       Int      @default(4)
+  startingRepScore Int      @default(75)
+  rulesMarkdown    String   @default("")
+  updatedAt        DateTime @updatedAt
+}
+
+model GameSubmission {
+  id              String           @id @default(cuid())
+  seasonId        String
+  week            Int
+  gameType        GameType         @default(REGULAR_SEASON)
+  submitterId     String
+  userTeamId      String
+  opponentTeamId  String
+  userScore       Int
+  opponentScore   Int
+  notes           String?
+  status          SubmissionStatus @default(PENDING)
+  reviewedById    String?
+  reviewedAt      DateTime?
+  decisionNote    String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  season     Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  submitter  User        @relation("SubmissionSubmitter", fields: [submitterId], references: [id], onDelete: Cascade)
+  userTeam   Franchise   @relation("UserTeam", fields: [userTeamId], references: [id])
+  opponentTeam Franchise @relation("OpponentTeam", fields: [opponentTeamId], references: [id])
+  reviewedBy User?       @relation("SubmissionReviewer", fields: [reviewedById], references: [id])
+  result     GameResult?
+
+  @@index([status])
+  @@index([seasonId, week])
+  @@index([submitterId])
+  @@index([userTeamId, opponentTeamId, seasonId, week])
+}
+
+model GameResult {
+  id             String   @id @default(cuid())
+  submissionId   String   @unique
+  seasonId       String
+  week           Int
+  gameType       GameType
+  homeTeamId     String
+  awayTeamId     String
+  homeScore      Int
+  awayScore      Int
+  winnerTeamId   String?
+  createdAt      DateTime @default(now())
+
+  submission GameSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  season     Season         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  homeTeam   Franchise      @relation("ResultHome", fields: [homeTeamId], references: [id])
+  awayTeam   Franchise      @relation("ResultAway", fields: [awayTeamId], references: [id])
+  winnerTeam Franchise?     @relation("ResultWinner", fields: [winnerTeamId], references: [id])
+
+  @@index([seasonId])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+}
+
+model XPAdjustment {
+  id           String   @id @default(cuid())
+  userId       String
+  franchiseId  String?
+  seasonId     String?
+  amount       Int
+  reason       String
+  isAutomatic  Boolean  @default(false)
+  submissionId String?
+  createdById  String?
+  createdAt    DateTime @default(now())
+
+  user      User       @relation("XPTarget", fields: [userId], references: [id], onDelete: Cascade)
+  franchise Franchise? @relation(fields: [franchiseId], references: [id])
+  season    Season?    @relation(fields: [seasonId], references: [id])
+  createdBy User?      @relation("XPCreator", fields: [createdById], references: [id])
+
+  @@index([userId])
+  @@index([seasonId])
+}
+
+model ReputationAdjustment {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Int
+  reason      String
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  user      User  @relation("RepTarget", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User? @relation("RepCreator", fields: [createdById], references: [id])
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}
