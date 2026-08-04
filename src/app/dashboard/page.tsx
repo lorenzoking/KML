@@ -19,6 +19,7 @@ import {
   getUserMembership,
   getXpTotal,
 } from "@/lib/league";
+import { getUserCareerStats } from "@/lib/career";
 import { formatRecord } from "@/lib/utils";
 import { GAME_TYPE_LABELS } from "@/lib/constants";
 
@@ -32,6 +33,7 @@ export default async function DashboardPage() {
     : undefined;
   const xpTotal = await getXpTotal(user.id);
   const reputation = await getReputation(user.id);
+  const career = await getUserCareerStats(user.id);
 
   const recentApproved = membership
     ? await prisma.gameSubmission.findMany({
@@ -97,14 +99,14 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <StatCard
           label="Assigned team"
           value={membership?.franchise.name ?? "Unassigned"}
           hint={membership?.franchise.abbreviation ?? "Ask commissioner for a team"}
         />
         <StatCard
-          label="Record"
+          label="Season record"
           value={
             teamStanding
               ? formatRecord(teamStanding.wins, teamStanding.losses)
@@ -112,7 +114,19 @@ export default async function DashboardPage() {
           }
           hint={teamStanding?.form ? `Form ${teamStanding.form}` : "No games yet"}
         />
-        <StatCard label="Total XP" value={String(xpTotal)} hint="Approved games + adjustments" />
+        <StatCard
+          label="Career record"
+          value={formatRecord(career.wins, career.losses)}
+          hint={`${career.seasonsPlayed} season${career.seasonsPlayed === 1 ? "" : "s"}`}
+        />
+        <StatCard
+          label="Season XP"
+          value={String(
+            career.bySeason.find((s) => s.seasonId === season.id)?.xp ?? 0
+          )}
+          hint={`Career XP ${xpTotal}`}
+        />
+        <StatCard label="Career XP" value={String(career.careerXp)} hint="All seasons combined" />
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Coach reputation</CardDescription>

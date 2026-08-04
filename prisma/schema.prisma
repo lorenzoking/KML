@@ -25,6 +25,12 @@ enum SubmissionStatus {
   PENDING
   APPROVED
   REJECTED
+  VOIDED
+}
+
+enum SeasonStatus {
+  ACTIVE
+  ARCHIVED
 }
 
 model User {
@@ -33,6 +39,8 @@ model User {
   name      String?
   image     String?
   role      Role     @default(USER)
+  isActive  Boolean  @default(true)
+  adminNotes String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -43,6 +51,7 @@ model User {
   xpAdjustmentsCreated  XPAdjustment[]     @relation("XPCreator")
   reputationReceived    ReputationAdjustment[] @relation("RepTarget")
   reputationCreated     ReputationAdjustment[] @relation("RepCreator")
+  voidedResults         GameResult[]       @relation("ResultVoidedBy")
   auditLogs             AuditLog[]
 }
 
@@ -66,15 +75,17 @@ model Franchise {
 }
 
 model Season {
-  id        String   @id @default(cuid())
-  number    Int      @unique
-  name      String
-  isActive  Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id         String       @id @default(cuid())
+  number     Int          @unique
+  name       String
+  isActive   Boolean      @default(false)
+  status     SeasonStatus @default(ACTIVE)
+  archivedAt DateTime?
+  createdAt  DateTime     @default(now())
 
-  memberships  LeagueMembership[]
-  submissions  GameSubmission[]
-  results      GameResult[]
+  memberships   LeagueMembership[]
+  submissions   GameSubmission[]
+  results       GameResult[]
   xpAdjustments XPAdjustment[]
 }
 
@@ -142,8 +153,8 @@ model GameSubmission {
 }
 
 model GameResult {
-  id             String   @id @default(cuid())
-  submissionId   String   @unique
+  id             String    @id @default(cuid())
+  submissionId   String    @unique
   seasonId       String
   week           Int
   gameType       GameType
@@ -152,17 +163,23 @@ model GameResult {
   homeScore      Int
   awayScore      Int
   winnerTeamId   String?
-  createdAt      DateTime @default(now())
+  isVoided       Boolean   @default(false)
+  voidedAt       DateTime?
+  voidedById     String?
+  voidReason     String?
+  createdAt      DateTime  @default(now())
 
   submission GameSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   season     Season         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   homeTeam   Franchise      @relation("ResultHome", fields: [homeTeamId], references: [id])
   awayTeam   Franchise      @relation("ResultAway", fields: [awayTeamId], references: [id])
   winnerTeam Franchise?     @relation("ResultWinner", fields: [winnerTeamId], references: [id])
+  voidedBy   User?          @relation("ResultVoidedBy", fields: [voidedById], references: [id])
 
   @@index([seasonId])
   @@index([homeTeamId])
   @@index([awayTeamId])
+  @@index([isVoided])
 }
 
 model XPAdjustment {

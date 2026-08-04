@@ -139,11 +139,13 @@ query the DB at build time — update `DATABASE_URL` to the pooler URI and redep
 
 ## Core business rules
 
-- Standings and automatic XP only use **approved** submissions.
-- Rejected submissions remain in history with a decision note.
+- Standings and automatic XP only use **approved, non-voided** submissions.
+- Rejected/voided submissions remain in history with a decision note.
 - Duplicate pending/approved submissions for the same matchup + week are blocked.
-- XP totals = sum of `XPAdjustment` rows (automatic + manual).
+- XP totals = sum of `XPAdjustment` rows (automatic + manual), kept across seasons.
 - Reputation score = `startingRepScore` + sum of `ReputationAdjustment` rows.
+- Advancing a season archives the old season and starts a new one; historical results stay for career stats.
+- Resetting season games voids current-season results only and does not erase prior seasons.
 
 ## Scripts
 

@@ -50,6 +50,7 @@ export async function submitGameResult(formData: FormData) {
     where: {
       seasonId: targetSeason.id,
       week: data.week,
+      // Voided/rejected games may be resubmitted
       status: { in: [SubmissionStatus.PENDING, SubmissionStatus.APPROVED] },
       OR: [
         {

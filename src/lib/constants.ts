@@ -21,4 +21,5 @@ export const STATUS_LABELS: Record<string, string> = {
   PENDING: "Pending",
   APPROVED: "Approved",
   REJECTED: "Rejected",
+  VOIDED: "Voided",
 };

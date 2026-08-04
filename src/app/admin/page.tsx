@@ -69,7 +69,13 @@ export default async function AdminPage() {
           <Link href="/admin/approvals">Review approvals</Link>
         </Button>
         <Button asChild variant="outline">
+          <Link href="/admin/users">Manage users</Link>
+        </Button>
+        <Button asChild variant="outline">
           <Link href="/admin/teams">Manage teams</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/admin/season">Season controls</Link>
         </Button>
         <Button asChild variant="outline">
           <Link href="/admin/settings">Edit settings</Link>

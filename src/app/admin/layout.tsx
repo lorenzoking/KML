@@ -4,7 +4,9 @@ import { requireCommissioner } from "@/lib/auth";
 const links = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/approvals", label: "Approvals" },
+  { href: "/admin/users", label: "Users" },
   { href: "/admin/teams", label: "Teams" },
+  { href: "/admin/season", label: "Season" },
   { href: "/admin/settings", label: "Settings" },
 ];
 

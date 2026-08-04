@@ -64,7 +64,15 @@ export async function getReputation(userId: string) {
 export async function getSeasonStandings(seasonId: string) {
   const [franchises, results] = await Promise.all([
     prisma.franchise.findMany({ orderBy: { sortOrder: "asc" } }),
-    prisma.gameResult.findMany({ where: { seasonId } }),
+    prisma.gameResult.findMany({
+      where: { seasonId, isVoided: false },
+    }),
   ]);
   return computeStandings(franchises, results);
+}
+
+export async function listSeasons() {
+  return prisma.season.findMany({
+    orderBy: { number: "desc" },
+  });
 }

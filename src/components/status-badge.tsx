@@ -12,7 +12,9 @@ export function StatusBadge({ status }: { status: SubmissionStatus }) {
       ? "pending"
       : status === "APPROVED"
         ? "approved"
-        : "rejected";
+        : status === "VOIDED"
+          ? "outline"
+          : "rejected";
   return <Badge variant={variant}>{STATUS_LABELS[status]}</Badge>;
 }
 

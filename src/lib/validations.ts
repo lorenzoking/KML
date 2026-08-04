@@ -52,3 +52,26 @@ export const reputationAdjustmentSchema = z.object({
   amount: z.coerce.number().int().min(-50).max(50),
   reason: z.string().min(2).max(300),
 });
+
+export const updateUserSchema = z.object({
+  userId: z.string().min(1),
+  name: z.string().min(1).max(80).optional(),
+  role: z.enum(["COMMISSIONER", "USER"]),
+  isActive: z.coerce.boolean(),
+  adminNotes: z.string().max(2000).optional(),
+});
+
+export const voidGameSchema = z.object({
+  submissionId: z.string().min(1),
+  voidReason: z.string().min(2).max(300),
+});
+
+export const resetSeasonGamesSchema = z.object({
+  confirm: z.literal("RESET_GAMES"),
+  reason: z.string().min(2).max(300),
+});
+
+export const advanceSeasonSchema = z.object({
+  confirm: z.literal("ADVANCE_SEASON"),
+  carryMemberships: z.coerce.boolean().default(true),
+});

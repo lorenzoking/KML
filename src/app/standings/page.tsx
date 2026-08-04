@@ -9,7 +9,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
-import { getActiveSeason, getSeasonStandings } from "@/lib/league";
+import {
+  getActiveSeason,
+  getSeasonStandings,
+  listSeasons,
+} from "@/lib/league";
 import { prisma } from "@/lib/prisma";
 import { sumXp } from "@/lib/xp";
 import {
@@ -21,10 +25,16 @@ import { ReputationBadge } from "@/components/status-badge";
 export default async function StandingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ conference?: string; q?: string }>;
+  searchParams: Promise<{ conference?: string; q?: string; season?: string }>;
 }) {
   const params = await searchParams;
-  const { settings, season } = await getActiveSeason();
+  const { settings, season: activeSeason } = await getActiveSeason();
+  const seasons = await listSeasons();
+  const selectedNumber = params.season
+    ? Number(params.season)
+    : activeSeason.number;
+  const season =
+    seasons.find((s) => s.number === selectedNumber) ?? activeSeason;
   let standings = await getSeasonStandings(season.id);
 
   if (params.conference === "AFC" || params.conference === "NFC") {
@@ -44,7 +54,9 @@ export default async function StandingsPage({
     include: {
       user: {
         include: {
-          xpAdjustmentsReceived: true,
+          xpAdjustmentsReceived: {
+            select: { amount: true, seasonId: true },
+          },
           reputationReceived: true,
         },
       },
@@ -53,7 +65,9 @@ export default async function StandingsPage({
 
   const coachByFranchise = Object.fromEntries(
     memberships.map((m) => {
-      const xp = sumXp(m.user.xpAdjustmentsReceived);
+      const seasonXp = sumXp(
+        m.user.xpAdjustmentsReceived.filter((x) => x.seasonId === season.id)
+      );
       const score = computeReputationScore(
         settings.startingRepScore,
         m.user.reputationReceived
@@ -62,7 +76,7 @@ export default async function StandingsPage({
         m.franchiseId,
         {
           name: m.user.name ?? m.user.email,
-          xp,
+          xp: seasonXp,
           score,
           label: getReputationLabel(score),
         },
@@ -77,8 +91,11 @@ export default async function StandingsPage({
           Standings
         </h1>
         <p className="text-sm text-[var(--muted-foreground)]">
-          Season {settings.currentSeason} · Approved results only · Week{" "}
-          {settings.currentWeek}
+          Viewing Season {season.number}
+          {season.id === activeSeason.id
+            ? ` · Week ${settings.currentWeek}`
+            : " · archived"}{" "}
+          · Approved (non-voided) results only
         </p>
       </div>
 
@@ -88,6 +105,18 @@ export default async function StandingsPage({
         </CardHeader>
         <CardContent>
           <form className="flex flex-wrap gap-2">
+            <select
+              name="season"
+              defaultValue={String(season.number)}
+              className="h-10 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 text-sm"
+            >
+              {seasons.map((s) => (
+                <option key={s.id} value={s.number}>
+                  Season {s.number}
+                  {s.status === "ARCHIVED" ? " (archived)" : " (active)"}
+                </option>
+              ))}
+            </select>
             <input
               name="q"
               defaultValue={params.q}
