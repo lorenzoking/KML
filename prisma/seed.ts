@@ -82,6 +82,23 @@ const DEFAULT_RULES = `# Kings Madden League — Rulebook
 async function main() {
   console.log("Seeding Kings Madden League...");
 
+  // Destructive seed deletes ALL app users (not Supabase Auth accounts).
+  // Require an explicit opt-in so production Google users are not wiped.
+  if (process.env.ALLOW_DB_RESET !== "true") {
+    throw new Error(
+      [
+        "Refusing to seed: this script wipes app users and league data.",
+        "Set ALLOW_DB_RESET=true only for local/demo resets.",
+        "For production schema updates use: npx prisma migrate deploy",
+        "To restore Auth users into Manage users, use Admin → Sync from Supabase Auth.",
+      ].join("\n")
+    );
+  }
+
+  console.warn(
+    "ALLOW_DB_RESET=true — wiping app tables (Supabase Auth users are NOT deleted)."
+  );
+
   await prisma.carouselApplication.deleteMany();
   await prisma.carouselVacancy.deleteMany();
   await prisma.coachSeasonReview.deleteMany();

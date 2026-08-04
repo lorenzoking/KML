@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 import { Role } from "@prisma/client";
-import { requireCommissioner } from "@/lib/auth";
+import { requireCommissioner, syncUserFromAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason } from "@/lib/league";
 import { updateUserSchema } from "@/lib/validations";
@@ -177,4 +178,141 @@ export async function deleteUser(formData: FormData) {
   revalidatePath("/admin/teams");
   revalidatePath("/admin");
   redirect("/admin/users?removed=1");
+}
+
+/**
+ * Upsert every Supabase Auth user into the app User table.
+ * Use this after a seed wipe or when Auth users are missing from Manage users.
+ * Existing roles/history are preserved; soft-deleted rows are restored.
+ */
+export async function syncUsersFromSupabaseAuth() {
+  const commissioner = await requireCommissioner();
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceRole) {
+    redirect(
+      `/admin/users?error=${encodeURIComponent(
+        "Missing SUPABASE_SERVICE_ROLE_KEY. Add it in Vercel/local env, then retry sync."
+      )}`
+    );
+  }
+
+  const admin = createClient(url, serviceRole, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  let page = 1;
+  const perPage = 200;
+  let createdOrRestored = 0;
+  let scanned = 0;
+
+  while (true) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
+    if (error) {
+      redirect(
+        `/admin/users?error=${encodeURIComponent(
+          `Supabase Auth sync failed: ${error.message}`
+        )}`
+      );
+    }
+
+    const users = data.users ?? [];
+    if (users.length === 0) break;
+
+    for (const authUser of users) {
+      if (!authUser.email) continue;
+      scanned += 1;
+      const before = await prisma.user.findUnique({
+        where: { email: authUser.email.toLowerCase() },
+      });
+      await syncUserFromAuth({
+        email: authUser.email,
+        name:
+          authUser.user_metadata?.full_name ??
+          authUser.user_metadata?.name ??
+          authUser.email.split("@")[0],
+        image: authUser.user_metadata?.avatar_url,
+      });
+      if (!before || before.deletedAt) createdOrRestored += 1;
+    }
+
+    if (users.length < perPage) break;
+    page += 1;
+  }
+
+  await writeAuditLog({
+    actorId: commissioner.id,
+    action: "SYNC_USERS_FROM_SUPABASE_AUTH",
+    entityType: "User",
+    entityId: "bulk",
+    metadata: { scanned, createdOrRestored },
+  });
+
+  revalidatePath("/admin/users");
+  revalidatePath("/admin/teams");
+  revalidatePath("/admin");
+  revalidatePath("/coach");
+  redirect(
+    `/admin/users?synced=1&scanned=${scanned}&restored=${createdOrRestored}`
+  );
+}
+
+export async function ensureUserByEmail(formData: FormData) {
+  const commissioner = await requireCommissioner();
+
+  const parsed = z
+    .object({
+      email: z.string().email(),
+      name: z.string().max(80).optional(),
+      role: z.enum(["COMMISSIONER", "USER"]).default("USER"),
+    })
+    .safeParse({
+      email: formData.get("email"),
+      name: formData.get("name") || undefined,
+      role: formData.get("role") || "USER",
+    });
+
+  if (!parsed.success) {
+    redirect(
+      `/admin/users?error=${encodeURIComponent(
+        "Enter a valid email to add/restore a user."
+      )}`
+    );
+  }
+
+  const email = parsed.data.email.toLowerCase();
+  const existing = await prisma.user.findUnique({ where: { email } });
+
+  const user = await syncUserFromAuth({
+    email,
+    name: parsed.data.name ?? existing?.name,
+    forceCommissioner: parsed.data.role === "COMMISSIONER",
+  });
+
+  if (parsed.data.role === "USER" && user.role === Role.COMMISSIONER) {
+    // Keep existing commissioner unless explicitly demoting via Manage user page.
+  } else if (parsed.data.role === "COMMISSIONER" && user.role !== Role.COMMISSIONER) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { role: Role.COMMISSIONER, deletedAt: null, isActive: true },
+    });
+  } else if (!existing) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { role: parsed.data.role },
+    });
+  }
+
+  await writeAuditLog({
+    actorId: commissioner.id,
+    action: existing ? "RESTORE_USER_BY_EMAIL" : "ENSURE_USER_BY_EMAIL",
+    entityType: "User",
+    entityId: user.id,
+    metadata: { email, role: parsed.data.role },
+  });
+
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${user.id}`);
+  redirect(`/admin/users/${user.id}?updated=1`);
 }

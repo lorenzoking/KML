@@ -29,6 +29,14 @@ export function isCommissionerBackupLoginEnabled() {
   );
 }
 
+async function ensureCoachProfile(userId: string) {
+  await prisma.coachProfile.upsert({
+    where: { userId },
+    update: {},
+    create: { userId },
+  });
+}
+
 export async function syncUserFromAuth(params: {
   email: string;
   name?: string | null;
@@ -52,6 +60,8 @@ export async function syncUserFromAuth(params: {
       },
     });
 
+    await ensureCoachProfile(created.id);
+
     await writeAuditLog({
       actorId: created.id,
       action: "USER_SIGNED_UP",
@@ -68,18 +78,28 @@ export async function syncUserFromAuth(params: {
     return created;
   }
 
-  return prisma.user.update({
+  // Never demote an existing commissioner via OAuth sync, and never drop
+  // an assigned role when a previously seeded/wiped user signs back in.
+  const nextRole =
+    isCommissioner || existing.role === Role.COMMISSIONER
+      ? Role.COMMISSIONER
+      : existing.role;
+
+  const updated = await prisma.user.update({
     where: { id: existing.id },
     data: {
       name: params.name ?? existing.name,
       image: params.image ?? existing.image,
+      // Signing in again restores soft-deleted accounts so they reappear
+      // under Manage users without losing role/history.
       deletedAt: null,
-      role:
-        isCommissioner && existing.role !== Role.COMMISSIONER
-          ? Role.COMMISSIONER
-          : existing.role,
+      isActive: existing.deletedAt ? true : existing.isActive,
+      role: nextRole,
     },
   });
+
+  await ensureCoachProfile(updated.id);
+  return updated;
 }
 
 export async function setAppSession(userId: string) {

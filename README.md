@@ -66,8 +66,12 @@ AUTH_DEV_BYPASS="true"
 
 ```bash
 npx prisma migrate dev --name init
-npm run db:seed
+ALLOW_DB_RESET=true npm run db:seed
 ```
+
+`npm run db:seed` is destructive (wipes app `User` rows and demo league data).  
+It requires `ALLOW_DB_RESET=true` and should only be used for local/demo resets.  
+It does **not** delete Supabase Auth accounts.
 
 ### 5. Run
 
@@ -98,7 +102,9 @@ AUTH_DEV_BYPASS=false
 COMMISSIONER_EMAILS=your-gmail@gmail.com
 ```
 
-On first Google sign-in, the app upserts a `User` row. Emails listed in `COMMISSIONER_EMAILS` are promoted to `COMMISSIONER`.
+On first Google sign-in, the app upserts a `User` row (and a `CoachProfile`).  
+Emails listed in `COMMISSIONER_EMAILS` are promoted to `COMMISSIONER`.  
+Existing roles are preserved on later sign-ins; soft-deleted users are restored when they sign in again.
 
 ### Commissioner accounts (recommended)
 
@@ -133,8 +139,10 @@ COMMISSIONER_BACKUP_NAME=League Commissioners
 
 ```bash
 npx prisma migrate deploy
-npm run db:seed
 ```
+
+Do **not** run `npm run db:seed` against production unless you intentionally want a full demo wipe (`ALLOW_DB_RESET=true`).  
+If Auth users are missing from **Admin → Users**, set `SUPABASE_SERVICE_ROLE_KEY` in Vercel and click **Sync users from Supabase Auth**.
 
 If the Vercel build fails with “Can't reach database server”, the app pages no longer
 query the DB at build time — update `DATABASE_URL` to the pooler URI and redeploy.

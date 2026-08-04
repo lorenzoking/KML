@@ -17,6 +17,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ReputationBadge } from "@/components/status-badge";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { SubmitButton } from "@/components/forms/submit-button";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason, getLeagueSettings } from "@/lib/league";
 import { sumXp } from "@/lib/xp";
@@ -24,6 +28,10 @@ import {
   computeReputationScore,
   getReputationLabel,
 } from "@/lib/reputation";
+import {
+  ensureUserByEmail,
+  syncUsersFromSupabaseAuth,
+} from "@/actions/users";
 
 export default async function AdminUsersPage({
   searchParams,
@@ -33,6 +41,10 @@ export default async function AdminUsersPage({
     role?: string;
     active?: string;
     removed?: string;
+    synced?: string;
+    scanned?: string;
+    restored?: string;
+    error?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -82,6 +94,73 @@ export default async function AdminUsersPage({
           User removed.
         </p>
       ) : null}
+
+      {params.synced === "1" ? (
+        <p className="rounded-md bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-300">
+          Synced from Supabase Auth. Scanned {params.scanned ?? "0"} auth users;
+          created/restored {params.restored ?? "0"} app profiles.
+        </p>
+      ) : null}
+
+      {params.error ? (
+        <p className="rounded-md bg-rose-500/10 px-3 py-2 text-sm text-rose-700 dark:text-rose-300">
+          {params.error}
+        </p>
+      ) : null}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Keep users in sync</CardTitle>
+          <CardDescription>
+            Google Auth users live in Supabase Auth. Manage users reads the app
+            User table. Sync restores any Auth accounts missing here (for example
+            after a seed wipe). Roles already saved on app users are preserved.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form
+            action={async () => {
+              "use server";
+              await syncUsersFromSupabaseAuth();
+            }}
+          >
+            <SubmitButton>Sync users from Supabase Auth</SubmitButton>
+          </form>
+
+          <form
+            action={async (formData) => {
+              "use server";
+              await ensureUserByEmail(formData);
+            }}
+            className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+          >
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="email">Add / restore by email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                placeholder="coach@gmail.com"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Display name</Label>
+              <Input id="name" name="name" placeholder="Optional" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select id="role" name="role" defaultValue="USER">
+                <option value="USER">Coach</option>
+                <option value="COMMISSIONER">Commissioner</option>
+              </Select>
+            </div>
+            <div className="sm:col-span-2 lg:col-span-4">
+              <SubmitButton variant="outline">Save user profile</SubmitButton>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
