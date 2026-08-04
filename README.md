@@ -15,6 +15,8 @@ This MVP replaces the spreadsheet / Google Forms workflow with a standalone Next
 - Standings derived from approved results only
 - Automatic XP on approval + manual XP adjustments
 - Coach reputation adjustments with Elite / Stable / Pressured / Hot Seat labels
+- Coach Hub (`/coach/*`) with XP standings, profiles, identities, hot seat board,
+  carousel applications, and reputation log
 - League rules + editable season/week/XP settings
 - Audit log for major admin actions
 
@@ -146,6 +148,14 @@ query the DB at build time — update `DATABASE_URL` to the pooler URI and redep
 | `/games` | Public week results + standings; submit when signed in |
 | `/rules` | Public read-only |
 | `/dashboard` | Signed-in |
+| `/coach` | Signed-in |
+| `/coach/xp` | Signed-in |
+| `/coach/profiles` | Signed-in |
+| `/coach/profiles/[userId]` | Signed-in |
+| `/coach/identities` | Signed-in |
+| `/coach/hot-seat` | Signed-in |
+| `/coach/carousel` | Signed-in |
+| `/coach/reputation` | Signed-in |
 | `/admin` | Commissioner |
 | `/admin/approvals` | Commissioner |
 | `/admin/users` | Commissioner |
@@ -160,8 +170,11 @@ query the DB at build time — update `DATABASE_URL` to the pooler URI and redep
 - Duplicate pending/approved submissions for the same matchup + week are blocked.
 - XP totals = sum of `XPAdjustment` rows (automatic + manual), kept across seasons.
 - Reputation score = `startingRepScore` + sum of `ReputationAdjustment` rows.
+- GM reputation score = `startingGmRepScore` + sum of `ReputationAdjustment.gmAmount`.
 - Advancing a season archives the old season and starts a new one; historical results stay for career stats.
 - Resetting season games voids current-season results only and does not erase prior seasons.
+- Identity lock/change rules are **warning-based** in this phase; commissioner can override.
+- Carousel actions write auditable application/decision history and preserve stint history.
 
 ## Scripts
 

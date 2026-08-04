@@ -10,6 +10,7 @@ export function SiteHeader({ user }: { user: User | null }) {
     ? [
         { href: "/dashboard", label: "Dashboard" },
         { href: "/games", label: "Games" },
+        { href: "/coach", label: "Coach" },
         { href: "/rules", label: "Rules" },
         ...(user.role === Role.COMMISSIONER
           ? [{ href: "/admin", label: "Admin" }]

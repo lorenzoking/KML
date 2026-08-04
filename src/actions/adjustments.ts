@@ -48,6 +48,9 @@ export async function addXpAdjustment(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
+  revalidatePath("/coach");
+  revalidatePath("/coach/xp");
+  revalidatePath("/coach/profiles");
   return { success: true };
 }
 
@@ -85,5 +88,8 @@ export async function addReputationAdjustment(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/dashboard");
+  revalidatePath("/coach");
+  revalidatePath("/coach/reputation");
+  revalidatePath("/coach/profiles");
   return { success: true };
 }

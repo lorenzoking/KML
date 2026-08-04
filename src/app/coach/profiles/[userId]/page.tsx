@@ -1,0 +1,340 @@
+import { notFound } from "next/navigation";
+import { addCoachLedgerEntry, assignCoachIdentity, saveCoachSeasonReview, updateCoachProfile } from "@/actions/coach";
+import { SubmitButton } from "@/components/forms/submit-button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { isCommissioner, requireUser } from "@/lib/auth";
+import { getUserCareerStats } from "@/lib/career";
+import { getCoachBoardRows } from "@/lib/coach/coach-board";
+import { getActiveSeason } from "@/lib/league";
+import { prisma } from "@/lib/prisma";
+
+export default async function CoachProfileDetailPage({
+  params,
+}: {
+  params: Promise<{ userId: string }>;
+}) {
+  const currentUser = await requireUser();
+  const commissioner = isCommissioner(currentUser);
+  const { userId } = await params;
+  const { season } = await getActiveSeason();
+
+  const [user, career, board, identities, review, reputationRows] = await Promise.all([
+    prisma.user.findFirst({
+      where: { id: userId, deletedAt: null },
+      include: {
+        coachProfile: true,
+        memberships: {
+          where: { seasonId: season.id, isActive: true },
+          include: { franchise: { include: { teamIdentity: true } } },
+          take: 1,
+        },
+      },
+    }),
+    getUserCareerStats(userId),
+    getCoachBoardRows(season.id),
+    prisma.identityCatalog.findMany({
+      where: { type: "COACH" },
+      orderBy: { name: "asc" },
+    }),
+    prisma.coachSeasonReview.findUnique({
+      where: { userId_seasonId: { userId, seasonId: season.id } },
+    }),
+    prisma.reputationAdjustment.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+    }),
+  ]);
+  if (!user) notFound();
+
+  const row = board.find((r) => r.userId === user.id);
+  const activeMembership = user.memberships[0];
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Metric title="Team" value={activeMembership?.franchise.abbreviation ?? "Unassigned"} />
+        <Metric title="Career record" value={`${career.wins}-${career.losses}-${career.ties}`} />
+        <Metric title="Career XP" value={String(career.careerXp)} />
+        <Metric title="Job security" value={row?.jobStatus.replaceAll("_", " ") ?? "N/A"} />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{user.name ?? user.email}</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
+          <p>Coach rep: {row ? `${row.coachRepScore} (${row.coachRepGrade})` : "N/A"}</p>
+          <p>GM rep: {row ? `${row.gmRepScore} (${row.gmRepGrade})` : "N/A"}</p>
+          <p>Coach identity: {row?.coachIdentity ?? "Unassigned"}</p>
+          <p>Team identity: {row?.teamIdentity ?? "Unassigned"}</p>
+          <p>Contract years left: {row?.contractYearsLeft ?? 3}</p>
+          <p>Recovery note: {row?.jobRecoveryNote ?? "N/A"}</p>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Career stints</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {career.bySeason.map((s) => (
+              <div key={s.stintId} className="rounded-md border p-2">
+                S{s.seasonNumber} {s.franchiseAbbr ?? "—"} · Wk {s.startedWeek}
+                {s.endedWeek ? `-${s.endedWeek}` : "+"} · {s.wins}-{s.losses}-{s.ties}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent ledgers</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {reputationRows.map((entry) => (
+              <div key={entry.id} className="rounded-md border p-2">
+                <p>{entry.reason}</p>
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  Coach {entry.amount > 0 ? "+" : ""}
+                  {entry.amount}, GM {entry.gmAmount > 0 ? "+" : ""}
+                  {entry.gmAmount}
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {commissioner ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Commissioner edits</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form
+                action={async (formData) => {
+                  "use server";
+                  await updateCoachProfile(formData);
+                }}
+                className="space-y-2"
+              >
+                <input type="hidden" name="userId" value={user.id} />
+                <Label htmlFor="discordName">Discord name</Label>
+                <Input
+                  id="discordName"
+                  name="discordName"
+                  defaultValue={user.coachProfile?.discordName ?? ""}
+                />
+                <Label htmlFor="selectionPick">Selection pick</Label>
+                <Input
+                  id="selectionPick"
+                  name="selectionPick"
+                  type="number"
+                  defaultValue={user.coachProfile?.selectionPick ?? undefined}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="contractYearsLeft">Contract years</Label>
+                    <Input
+                      id="contractYearsLeft"
+                      name="contractYearsLeft"
+                      type="number"
+                      defaultValue={user.coachProfile?.contractYearsLeft ?? 3}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="expectationScore">Expectation score</Label>
+                    <Input
+                      id="expectationScore"
+                      name="expectationScore"
+                      type="number"
+                      defaultValue={user.coachProfile?.expectationScore ?? 0}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="tankingStrikes">Tanking strikes</Label>
+                    <Input
+                      id="tankingStrikes"
+                      name="tankingStrikes"
+                      type="number"
+                      defaultValue={user.coachProfile?.tankingStrikes ?? 0}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="gmStrikes">GM strikes</Label>
+                    <Input
+                      id="gmStrikes"
+                      name="gmStrikes"
+                      type="number"
+                      defaultValue={user.coachProfile?.gmStrikes ?? 0}
+                    />
+                  </div>
+                </div>
+                <Label htmlFor="hotSeatStatusOverride">Hot seat override</Label>
+                <Select
+                  id="hotSeatStatusOverride"
+                  name="hotSeatStatusOverride"
+                  defaultValue={user.coachProfile?.hotSeatStatusOverride ?? ""}
+                >
+                  <option value="">Auto (no override)</option>
+                  {["SECURE", "STABLE", "WATCH", "PRESSURED", "HOT_SEAT", "FIRING_ELIGIBLE"].map(
+                    (option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    )
+                  )}
+                </Select>
+                <Label htmlFor="hotSeatNote">Hot seat note</Label>
+                <Textarea
+                  id="hotSeatNote"
+                  name="hotSeatNote"
+                  defaultValue={user.coachProfile?.hotSeatNote ?? ""}
+                />
+                <SubmitButton>Save profile</SubmitButton>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Identity, review, and ledger</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <form
+                action={async (formData) => {
+                  "use server";
+                  await assignCoachIdentity(formData);
+                }}
+                className="space-y-2"
+              >
+                <input type="hidden" name="userId" value={user.id} />
+                <Label htmlFor="identityId">Coach identity</Label>
+                <Select
+                  id="identityId"
+                  name="identityId"
+                  defaultValue={user.coachProfile?.coachIdentityId ?? ""}
+                >
+                  <option value="">Unassigned</option>
+                  {identities.map((identity) => (
+                    <option key={identity.id} value={identity.id}>
+                      {identity.name} (Cost {identity.xpCost})
+                    </option>
+                  ))}
+                </Select>
+                <Label htmlFor="applyXpCost">Apply XP cost?</Label>
+                <Select id="applyXpCost" name="applyXpCost" defaultValue="false">
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </Select>
+                <SubmitButton>Save identity</SubmitButton>
+              </form>
+
+              <form
+                action={async (formData) => {
+                  "use server";
+                  await saveCoachSeasonReview(formData);
+                }}
+                className="space-y-2"
+              >
+                <input type="hidden" name="userId" value={user.id} />
+                <input type="hidden" name="seasonId" value={season.id} />
+                <Label htmlFor="playoffResult">Playoff result</Label>
+                <Select id="playoffResult" name="playoffResult" defaultValue={review?.playoffResult ?? "NONE"}>
+                  {["NONE", "WILD_CARD", "DIVISIONAL", "CONFERENCE", "SUPER_BOWL", "CHAMPION"].map(
+                    (option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    )
+                  )}
+                </Select>
+                <Label htmlFor="expectationResult">Expectation result</Label>
+                <Select
+                  id="expectationResult"
+                  name="expectationResult"
+                  defaultValue={review?.expectationResult ?? "PENDING"}
+                >
+                  {["PENDING", "MISSED", "MET", "EXCEEDED"].map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </Select>
+                <Label htmlFor="reviewNotes">Review notes</Label>
+                <Textarea id="reviewNotes" name="reviewNotes" defaultValue={review?.reviewNotes ?? ""} />
+                <SubmitButton>Save season review</SubmitButton>
+              </form>
+
+              <form
+                action={async (formData) => {
+                  "use server";
+                  await addCoachLedgerEntry(formData);
+                }}
+                className="space-y-2"
+              >
+                <input type="hidden" name="userId" value={user.id} />
+                <Label htmlFor="amount">Coach rep delta</Label>
+                <Input id="amount" name="amount" type="number" defaultValue={0} />
+                <Label htmlFor="gmAmount">GM rep delta</Label>
+                <Input id="gmAmount" name="gmAmount" type="number" defaultValue={0} />
+                <Label htmlFor="xpAmount">XP delta</Label>
+                <Input id="xpAmount" name="xpAmount" type="number" defaultValue={0} />
+                <Label htmlFor="category">Category</Label>
+                <Select id="category" name="category" defaultValue="GENERAL">
+                  {[
+                    "GENERAL",
+                    "CONDUCT",
+                    "EXPECTATION",
+                    "GAME_MANAGEMENT",
+                    "ROSTER",
+                    "TANKING",
+                    "TRADE",
+                    "DRAFT",
+                    "OWNERSHIP_REVIEW",
+                    "CAROUSEL",
+                    "BONUS",
+                    "PENALTY",
+                  ].map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </Select>
+                <Label htmlFor="reason">Reason</Label>
+                <Input id="reason" name="reason" required />
+                <Label htmlFor="week">Week (optional)</Label>
+                <Input id="week" name="week" type="number" />
+                <Label htmlFor="evidenceUrl">Evidence URL (optional)</Label>
+                <Input id="evidenceUrl" name="evidenceUrl" />
+                <SubmitButton>Add ledger entry</SubmitButton>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function Metric({ title, value }: { title: string; value: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm text-[var(--muted-foreground)]">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <p className="text-xl font-semibold">{value}</p>
+      </CardContent>
+    </Card>
+  );
+}

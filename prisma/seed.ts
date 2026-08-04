@@ -1,4 +1,16 @@
-import { PrismaClient, Role, GameType, SubmissionStatus } from "@prisma/client";
+import {
+  PrismaClient,
+  Role,
+  GameType,
+  SubmissionStatus,
+  IdentityType,
+  IdentityStatus,
+  ReputationCategory,
+  CarouselMoveType,
+  CarouselApplicationStatus,
+  PlayoffResult,
+  ExpectationResult,
+} from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -70,6 +82,11 @@ const DEFAULT_RULES = `# Kings Madden League — Rulebook
 async function main() {
   console.log("Seeding Kings Madden League...");
 
+  await prisma.carouselApplication.deleteMany();
+  await prisma.carouselVacancy.deleteMany();
+  await prisma.coachSeasonReview.deleteMany();
+  await prisma.coachProfile.deleteMany();
+  await prisma.identityCatalog.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.xPAdjustment.deleteMany();
   await prisma.reputationAdjustment.deleteMany();
@@ -102,6 +119,13 @@ async function main() {
       xpGamePlayed: 1,
       xpWinBonus: 4,
       startingRepScore: 75,
+      startingGmRepScore: 75,
+      hotSeatThreshold: 59,
+      firingThreshold: 44,
+      watchThreshold: 70,
+      buyoutMinCoachRep: 85,
+      buyoutXpCost: 25,
+      carouselOpen: true,
       rulesMarkdown: DEFAULT_RULES,
     },
   });
@@ -131,13 +155,152 @@ async function main() {
   const franchises = await prisma.franchise.findMany();
   const byAbbr = Object.fromEntries(franchises.map((f) => [f.abbreviation, f]));
 
-  for (const { user, abbr } of coaches) {
+  const teamIdentities = await Promise.all(
+    [
+      {
+        name: "Win Now",
+        slug: "team-win-now",
+        coreBenefit: "Aggressive veteran moves and playoff push focus.",
+        restriction: "Must target playoffs in 2 of every 3 seasons.",
+        changeRule: "Offseason only, once every 2 seasons.",
+        xpCost: 15,
+        level: "Elite",
+        minRepScore: 85,
+      },
+      {
+        name: "Balanced",
+        slug: "team-balanced",
+        coreBenefit: "Flexible roster strategy with moderate expectations.",
+        restriction: "Avoid repeated bottom-tier finishes.",
+        changeRule: "Offseason only, once every 2 seasons.",
+        xpCost: 10,
+        level: "Strong",
+        minRepScore: 70,
+      },
+      {
+        name: "Rebuilding",
+        slug: "team-rebuilding",
+        coreBenefit: "Youth development patience and long-term planning.",
+        restriction: "Progress required year-over-year.",
+        changeRule: "Locked for 2 seasons once chosen.",
+        xpCost: 5,
+        level: "Secure",
+        minRepScore: 55,
+      },
+      {
+        name: "Draft & Develop",
+        slug: "team-draft-develop",
+        coreBenefit: "Extra rookie development focus and scheme continuity.",
+        restriction: "Limited splash veteran acquisitions.",
+        changeRule: "Offseason only.",
+        xpCost: 8,
+        level: "Builder",
+        minRepScore: 60,
+      },
+    ].map((identity) =>
+      prisma.identityCatalog.create({
+        data: {
+          ...identity,
+          type: IdentityType.TEAM,
+          status: IdentityStatus.AVAILABLE,
+        },
+      })
+    )
+  );
+
+  const coachIdentities = await Promise.all(
+    [
+      {
+        name: "QB Whisperer",
+        slug: "coach-qb-whisperer",
+        coreBenefit: "Quarterback growth and passing consistency emphasis.",
+        restriction: "Must keep pass efficiency above league baseline.",
+        changeRule: "Offseason only unless commissioner waiver.",
+        xpCost: 10,
+        level: "Specialist",
+        minRepScore: 70,
+      },
+      {
+        name: "RB Guru",
+        slug: "coach-rb-guru",
+        coreBenefit: "Run-game efficiency and RB progression boosts.",
+        restriction: "Must maintain run-game identity share.",
+        changeRule: "Offseason only unless commissioner waiver.",
+        xpCost: 10,
+        level: "Specialist",
+        minRepScore: 70,
+      },
+      {
+        name: "Skill Developer",
+        slug: "coach-skill-developer",
+        coreBenefit: "WR/TE development and depth acceleration.",
+        restriction: "Requires active rotation management.",
+        changeRule: "Offseason only.",
+        xpCost: 8,
+        level: "Builder",
+        minRepScore: 60,
+      },
+      {
+        name: "Trench Builder",
+        slug: "coach-trench-builder",
+        coreBenefit: "OL/DL unit progression and physical identity.",
+        restriction: "Prioritize line investment over splash skill adds.",
+        changeRule: "Offseason only.",
+        xpCost: 8,
+        level: "Builder",
+        minRepScore: 60,
+      },
+      {
+        name: "Defensive Guru",
+        slug: "coach-defensive-guru",
+        coreBenefit: "Defensive consistency and takeaway pressure.",
+        restriction: "Must maintain top-half defensive standards.",
+        changeRule: "Offseason only unless waiver.",
+        xpCost: 12,
+        level: "Elite",
+        minRepScore: 75,
+      },
+    ].map((identity) =>
+      prisma.identityCatalog.create({
+        data: {
+          ...identity,
+          type: IdentityType.COACH,
+          status: IdentityStatus.AVAILABLE,
+        },
+      })
+    )
+  );
+
+  // Assign a few team identities for demo visibility.
+  await prisma.franchise.update({
+    where: { id: byAbbr.BUF.id },
+    data: { teamIdentityId: teamIdentities[0].id },
+  });
+  await prisma.franchise.update({
+    where: { id: byAbbr.KC.id },
+    data: { teamIdentityId: teamIdentities[0].id },
+  });
+  await prisma.franchise.update({
+    where: { id: byAbbr.PHI.id },
+    data: { teamIdentityId: teamIdentities[1].id },
+  });
+  await prisma.franchise.update({
+    where: { id: byAbbr.SF.id },
+    data: { teamIdentityId: teamIdentities[3].id },
+  });
+  await prisma.franchise.update({
+    where: { id: byAbbr.DET.id },
+    data: { teamIdentityId: teamIdentities[2].id },
+  });
+
+  for (const [index, { user, abbr }] of coaches.entries()) {
     await prisma.leagueMembership.create({
       data: {
         userId: user.id,
         franchiseId: byAbbr[abbr].id,
         seasonId: season.id,
         isActive: true,
+        startedWeek: 1,
       },
     });
 
@@ -145,8 +308,32 @@ async function main() {
       data: {
         userId: user.id,
         amount: 0,
+        gmAmount: 0,
+        category: ReputationCategory.GENERAL,
+        seasonId: season.id,
+        week: 1,
         reason: "Starting reputation baseline",
         createdById: commissioner.id,
+      },
+    });
+
+    await prisma.coachProfile.create({
+      data: {
+        userId: user.id,
+        discordName: `@${(user.name ?? "coach").toLowerCase().replace(/\s+/g, "")}`,
+        selectionPick: index + 1,
+        coachIdentityId: coachIdentities[index % coachIdentities.length].id,
+        expectationScore: 72 - index * 2,
+        contractYearsLeft: 3,
+      },
+    });
+
+    await prisma.coachSeasonReview.create({
+      data: {
+        userId: user.id,
+        seasonId: season.id,
+        playoffResult: PlayoffResult.NONE,
+        expectationResult: ExpectationResult.PENDING,
       },
     });
   }
@@ -259,7 +446,12 @@ async function main() {
     data: {
       userId: coaches[2].user.id,
       amount: -5,
+      gmAmount: -2,
+      category: ReputationCategory.CONDUCT,
+      seasonId: season.id,
+      week: 2,
       reason: "Late game without communication",
+      evidenceUrl: "https://example.com/league/late-game-note",
       createdById: commissioner.id,
     },
   });
@@ -268,8 +460,36 @@ async function main() {
     data: {
       userId: coaches[3].user.id,
       amount: 8,
+      gmAmount: 3,
+      category: ReputationCategory.BONUS,
+      seasonId: season.id,
+      week: 2,
       reason: "Strong sportsmanship and timely submissions",
       createdById: commissioner.id,
+    },
+  });
+
+  const vacancy = await prisma.carouselVacancy.create({
+    data: {
+      seasonId: season.id,
+      franchiseId: byAbbr.CHI.id,
+      reason: "Opening after offseason firing",
+      isOpen: true,
+    },
+  });
+
+  await prisma.carouselApplication.create({
+    data: {
+      seasonId: season.id,
+      applicantId: coaches[0].user.id,
+      currentTeamId: byAbbr.BUF.id,
+      vacancyId: vacancy.id,
+      requestedTeamId: byAbbr.CHI.id,
+      moveType: CarouselMoveType.VACANCY_APPLICATION,
+      buyoutEligible: true,
+      xpCost: 25,
+      priorityScore: 81.2,
+      status: CarouselApplicationStatus.PENDING,
     },
   });
 
@@ -279,7 +499,13 @@ async function main() {
       action: "SEED_DATABASE",
       entityType: "League",
       entityId: "default",
-      metadata: { season: 1, teams: 32, sampleUsers: coaches.length + 1 },
+      metadata: {
+        season: 1,
+        teams: 32,
+        sampleUsers: coaches.length + 1,
+        coachIdentityCatalog: coachIdentities.length,
+        teamIdentityCatalog: teamIdentities.length,
+      },
     },
   });
 

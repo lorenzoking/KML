@@ -4,6 +4,7 @@ export const APP_SHORT = "KML";
 export const PROTECTED_PREFIXES = [
   "/dashboard",
   "/admin",
+  "/coach",
 ] as const;
 
 export const COMMISSIONER_PREFIXES = ["/admin"] as const;

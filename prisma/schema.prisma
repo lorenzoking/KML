@@ -33,6 +33,70 @@ enum SeasonStatus {
   ARCHIVED
 }
 
+enum IdentityType {
+  TEAM
+  COACH
+}
+
+enum IdentityStatus {
+  AVAILABLE
+  RESTRICTED
+  LEGACY
+}
+
+enum HotSeatStatus {
+  SECURE
+  STABLE
+  WATCH
+  PRESSURED
+  HOT_SEAT
+  FIRING_ELIGIBLE
+}
+
+enum ReputationCategory {
+  GENERAL
+  CONDUCT
+  EXPECTATION
+  GAME_MANAGEMENT
+  ROSTER
+  TANKING
+  TRADE
+  DRAFT
+  OWNERSHIP_REVIEW
+  CAROUSEL
+  BONUS
+  PENALTY
+}
+
+enum CarouselMoveType {
+  VOLUNTARY_BUYOUT
+  VACANCY_APPLICATION
+  REASSIGNMENT
+}
+
+enum CarouselApplicationStatus {
+  PENDING
+  APPROVED
+  DENIED
+  WITHDRAWN
+}
+
+enum PlayoffResult {
+  NONE
+  WILD_CARD
+  DIVISIONAL
+  CONFERENCE
+  SUPER_BOWL
+  CHAMPION
+}
+
+enum ExpectationResult {
+  PENDING
+  MISSED
+  MET
+  EXCEEDED
+}
+
 model User {
   id         String    @id @default(cuid())
   email      String    @unique
@@ -46,33 +110,42 @@ model User {
   updatedAt  DateTime  @updatedAt
 
   memberships           LeagueMembership[]
-  submissions           GameSubmission[]   @relation("SubmissionSubmitter")
-  reviewedSubmissions   GameSubmission[]   @relation("SubmissionReviewer")
-  xpAdjustmentsReceived XPAdjustment[]     @relation("XPTarget")
-  xpAdjustmentsCreated  XPAdjustment[]     @relation("XPCreator")
+  submissions           GameSubmission[]       @relation("SubmissionSubmitter")
+  reviewedSubmissions   GameSubmission[]       @relation("SubmissionReviewer")
+  xpAdjustmentsReceived XPAdjustment[]         @relation("XPTarget")
+  xpAdjustmentsCreated  XPAdjustment[]         @relation("XPCreator")
   reputationReceived    ReputationAdjustment[] @relation("RepTarget")
   reputationCreated     ReputationAdjustment[] @relation("RepCreator")
-  voidedResults         GameResult[]       @relation("ResultVoidedBy")
+  voidedResults         GameResult[]           @relation("ResultVoidedBy")
+  coachProfile          CoachProfile?
+  seasonReviews         CoachSeasonReview[]
+  carouselApplications  CarouselApplication[]  @relation("CarouselApplicant")
+  carouselDecisions     CarouselApplication[]  @relation("CarouselReviewer")
   auditLogs             AuditLog[]
 }
 
 model Franchise {
-  id           String @id @default(cuid())
-  name         String @unique
-  abbreviation String @unique
-  city         String
-  conference   String
-  division     String
-  primaryColor String @default("#1a1a1a")
-  sortOrder    Int    @default(0)
+  id             String  @id @default(cuid())
+  name           String  @unique
+  abbreviation   String  @unique
+  city           String
+  conference     String
+  division       String
+  primaryColor   String  @default("#1a1a1a")
+  sortOrder      Int     @default(0)
+  teamIdentityId String?
 
-  memberships          LeagueMembership[]
-  submissionsAsUser    GameSubmission[]   @relation("UserTeam")
-  submissionsAsOpp     GameSubmission[]   @relation("OpponentTeam")
-  resultsAsHome        GameResult[]       @relation("ResultHome")
-  resultsAsAway        GameResult[]       @relation("ResultAway")
-  resultsAsWinner      GameResult[]       @relation("ResultWinner")
-  xpAdjustments        XPAdjustment[]
+  memberships                   LeagueMembership[]
+  submissionsAsUser             GameSubmission[]      @relation("UserTeam")
+  submissionsAsOpp              GameSubmission[]      @relation("OpponentTeam")
+  resultsAsHome                 GameResult[]          @relation("ResultHome")
+  resultsAsAway                 GameResult[]          @relation("ResultAway")
+  resultsAsWinner               GameResult[]          @relation("ResultWinner")
+  xpAdjustments                 XPAdjustment[]
+  teamIdentity                  IdentityCatalog?      @relation("FranchiseTeamIdentity", fields: [teamIdentityId], references: [id])
+  carouselVacancies             CarouselVacancy[]
+  carouselCurrentApplications   CarouselApplication[] @relation("CarouselCurrentTeam")
+  carouselRequestedApplications CarouselApplication[] @relation("CarouselRequestedTeam")
 }
 
 model Season {
@@ -84,10 +157,14 @@ model Season {
   archivedAt DateTime?
   createdAt  DateTime     @default(now())
 
-  memberships   LeagueMembership[]
-  submissions   GameSubmission[]
-  results       GameResult[]
-  xpAdjustments XPAdjustment[]
+  memberships           LeagueMembership[]
+  submissions           GameSubmission[]
+  results               GameResult[]
+  xpAdjustments         XPAdjustment[]
+  reputationAdjustments ReputationAdjustment[]
+  coachSeasonReviews    CoachSeasonReview[]
+  carouselVacancies     CarouselVacancy[]
+  carouselApplications  CarouselApplication[]
 }
 
 model LeagueMembership {
@@ -116,42 +193,49 @@ model LeagueMembership {
 }
 
 model LeagueSetting {
-  id               String   @id @default(cuid())
-  key              String   @unique @default("default")
-  leagueName       String   @default("Kings Madden League")
-  currentSeason    Int      @default(1)
-  currentWeek      Int      @default(1)
-  xpGamePlayed     Int      @default(1)
-  xpWinBonus       Int      @default(4)
-  startingRepScore Int      @default(75)
-  rulesMarkdown    String   @default("")
-  updatedAt        DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  key                String   @unique @default("default")
+  leagueName         String   @default("Kings Madden League")
+  currentSeason      Int      @default(1)
+  currentWeek        Int      @default(1)
+  xpGamePlayed       Int      @default(1)
+  xpWinBonus         Int      @default(4)
+  startingRepScore   Int      @default(75)
+  startingGmRepScore Int      @default(75)
+  hotSeatThreshold   Int      @default(59)
+  firingThreshold    Int      @default(44)
+  watchThreshold     Int      @default(70)
+  buyoutMinCoachRep  Int      @default(85)
+  buyoutXpCost       Int      @default(25)
+  carouselOpen       Boolean  @default(false)
+  rulesMarkdown      String   @default("")
+  updatedAt          DateTime @updatedAt
 }
 
 model GameSubmission {
-  id              String           @id @default(cuid())
-  seasonId        String
-  week            Int
-  gameType        GameType         @default(REGULAR_SEASON)
-  submitterId     String
-  userTeamId      String
-  opponentTeamId  String
-  userScore       Int
-  opponentScore   Int
-  notes           String?
-  status          SubmissionStatus @default(PENDING)
-  reviewedById    String?
-  reviewedAt      DateTime?
-  decisionNote    String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id             String           @id @default(cuid())
+  seasonId       String
+  week           Int
+  gameType       GameType         @default(REGULAR_SEASON)
+  submitterId    String
+  userTeamId     String
+  opponentTeamId String
+  userScore      Int
+  opponentScore  Int
+  notes          String?
+  status         SubmissionStatus @default(PENDING)
+  reviewedById   String?
+  reviewedAt     DateTime?
+  decisionNote   String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
-  season     Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  submitter  User        @relation("SubmissionSubmitter", fields: [submitterId], references: [id], onDelete: Cascade)
-  userTeam   Franchise   @relation("UserTeam", fields: [userTeamId], references: [id])
-  opponentTeam Franchise @relation("OpponentTeam", fields: [opponentTeamId], references: [id])
-  reviewedBy User?       @relation("SubmissionReviewer", fields: [reviewedById], references: [id])
-  result     GameResult?
+  season       Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  submitter    User        @relation("SubmissionSubmitter", fields: [submitterId], references: [id], onDelete: Cascade)
+  userTeam     Franchise   @relation("UserTeam", fields: [userTeamId], references: [id])
+  opponentTeam Franchise   @relation("OpponentTeam", fields: [opponentTeamId], references: [id])
+  reviewedBy   User?       @relation("SubmissionReviewer", fields: [reviewedById], references: [id])
+  result       GameResult?
 
   @@index([status])
   @@index([seasonId, week])
@@ -160,21 +244,21 @@ model GameSubmission {
 }
 
 model GameResult {
-  id             String    @id @default(cuid())
-  submissionId   String    @unique
-  seasonId       String
-  week           Int
-  gameType       GameType
-  homeTeamId     String
-  awayTeamId     String
-  homeScore      Int
-  awayScore      Int
-  winnerTeamId   String?
-  isVoided       Boolean   @default(false)
-  voidedAt       DateTime?
-  voidedById     String?
-  voidReason     String?
-  createdAt      DateTime  @default(now())
+  id           String    @id @default(cuid())
+  submissionId String    @unique
+  seasonId     String
+  week         Int
+  gameType     GameType
+  homeTeamId   String
+  awayTeamId   String
+  homeScore    Int
+  awayScore    Int
+  winnerTeamId String?
+  isVoided     Boolean   @default(false)
+  voidedAt     DateTime?
+  voidedById   String?
+  voidReason   String?
+  createdAt    DateTime  @default(now())
 
   submission GameSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   season     Season         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
@@ -211,17 +295,136 @@ model XPAdjustment {
 }
 
 model ReputationAdjustment {
-  id          String   @id @default(cuid())
+  id          String             @id @default(cuid())
   userId      String
   amount      Int
+  gmAmount    Int                @default(0)
+  category    ReputationCategory @default(GENERAL)
+  seasonId    String?
+  week        Int?
   reason      String
+  evidenceUrl String?
   createdById String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime           @default(now())
 
-  user      User  @relation("RepTarget", fields: [userId], references: [id], onDelete: Cascade)
-  createdBy User? @relation("RepCreator", fields: [createdById], references: [id])
+  user      User    @relation("RepTarget", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User?   @relation("RepCreator", fields: [createdById], references: [id])
+  season    Season? @relation(fields: [seasonId], references: [id])
 
   @@index([userId])
+  @@index([seasonId])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model IdentityCatalog {
+  id          String         @id @default(cuid())
+  name        String
+  slug        String         @unique
+  type        IdentityType
+  coreBenefit String
+  restriction String
+  changeRule  String
+  xpCost      Int            @default(0)
+  level       String
+  minRepScore Int            @default(0)
+  status      IdentityStatus @default(AVAILABLE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  coachProfiles      CoachProfile[] @relation("CoachIdentity")
+  assignedFranchises Franchise[]    @relation("FranchiseTeamIdentity")
+
+  @@index([type])
+  @@index([status])
+}
+
+model CoachProfile {
+  id                    String         @id @default(cuid())
+  userId                String         @unique
+  discordName           String?
+  selectionPick         Int?
+  coachIdentityId       String?
+  expectationScore      Int            @default(0)
+  contractYearsLeft     Int            @default(3)
+  tankingStrikes        Int            @default(0)
+  gmStrikes             Int            @default(0)
+  hotSeatStatusOverride HotSeatStatus?
+  hotSeatNote           String?
+  lastReviewAt          DateTime?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coachIdentity IdentityCatalog? @relation("CoachIdentity", fields: [coachIdentityId], references: [id])
+
+  @@index([coachIdentityId])
+}
+
+model CoachSeasonReview {
+  id                String            @id @default(cuid())
+  userId            String
+  seasonId          String
+  playoffResult     PlayoffResult     @default(NONE)
+  expectationResult ExpectationResult @default(PENDING)
+  reviewNotes       String?
+  reviewedAt        DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, seasonId])
+  @@index([seasonId])
+}
+
+model CarouselVacancy {
+  id          String   @id @default(cuid())
+  seasonId    String
+  franchiseId String
+  reason      String
+  isOpen      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  season       Season                @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  franchise    Franchise             @relation(fields: [franchiseId], references: [id], onDelete: Cascade)
+  applications CarouselApplication[]
+
+  @@index([seasonId])
+  @@index([isOpen])
+}
+
+model CarouselApplication {
+  id              String                    @id @default(cuid())
+  seasonId        String
+  applicantId     String
+  currentTeamId   String?
+  vacancyId       String?
+  requestedTeamId String?
+  moveType        CarouselMoveType
+  buyoutEligible  Boolean                   @default(false)
+  xpCost          Int                       @default(0)
+  priorityScore   Float                     @default(0)
+  status          CarouselApplicationStatus @default(PENDING)
+  decisionNote    String?
+  assignedTeamId  String?
+  contractYears   Int?
+  reviewedById    String?
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  season        Season           @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  applicant     User             @relation("CarouselApplicant", fields: [applicantId], references: [id], onDelete: Cascade)
+  currentTeam   Franchise?       @relation("CarouselCurrentTeam", fields: [currentTeamId], references: [id])
+  requestedTeam Franchise?       @relation("CarouselRequestedTeam", fields: [requestedTeamId], references: [id])
+  vacancy       CarouselVacancy? @relation(fields: [vacancyId], references: [id], onDelete: SetNull)
+  reviewedBy    User?            @relation("CarouselReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([seasonId])
+  @@index([status])
+  @@index([applicantId])
 }
 
 model AuditLog {

@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ReputationBadge, StatusBadge } from "@/components/status-badge";
 import { requireUser } from "@/lib/auth";
@@ -22,6 +23,9 @@ import {
 import { getUserCareerStats } from "@/lib/career";
 import { formatRecord } from "@/lib/utils";
 import { GAME_TYPE_LABELS } from "@/lib/constants";
+import { computeReputationScore } from "@/lib/reputation";
+import { getReputationGrade } from "@/lib/coach/grades";
+import { getJobSecurityStatus } from "@/lib/coach/job-security";
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -34,6 +38,31 @@ export default async function DashboardPage() {
   const xpTotal = await getXpTotal(user.id);
   const reputation = await getReputation(user.id);
   const career = await getUserCareerStats(user.id);
+  const coachProfile = await prisma.coachProfile.findUnique({
+    where: { userId: user.id },
+    include: { coachIdentity: true },
+  });
+  const teamIdentity = membership
+    ? await prisma.franchise.findUnique({
+        where: { id: membership.franchiseId },
+        include: { teamIdentity: true },
+      })
+    : null;
+  const gmRepScore = computeReputationScore(
+    settings.startingGmRepScore,
+    reputation.adjustments.map((row) => ({ amount: row.gmAmount }))
+  );
+  const jobStatus = getJobSecurityStatus({
+    coachRepScore: reputation.score,
+    gmRepScore,
+    expectationScore: coachProfile?.expectationScore ?? 0,
+    tankingStrikes: coachProfile?.tankingStrikes ?? 0,
+    gmStrikes: coachProfile?.gmStrikes ?? 0,
+    hotSeatThreshold: settings.hotSeatThreshold,
+    firingThreshold: settings.firingThreshold,
+    watchThreshold: settings.watchThreshold,
+    override: coachProfile?.hotSeatStatusOverride,
+  });
 
   const recentApproved = membership
     ? await prisma.gameSubmission.findMany({
@@ -182,6 +211,63 @@ export default async function DashboardPage() {
         </Card>
       ) : null}
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Coaching profile overview</CardTitle>
+          <CardDescription>
+            Snapshot of your current coaching profile and job security.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <ProfilePill
+              label="Coach identity"
+              value={coachProfile?.coachIdentity?.name ?? "Unassigned"}
+            />
+            <ProfilePill
+              label="Team identity"
+              value={teamIdentity?.teamIdentity?.name ?? "Unassigned"}
+            />
+            <ProfilePill
+              label="Job security"
+              value={jobStatus.replaceAll("_", " ")}
+              badgeVariant={jobSecurityBadgeVariant(jobStatus)}
+            />
+            <ProfilePill
+              label="Contract years left"
+              value={String(coachProfile?.contractYearsLeft ?? 3)}
+            />
+            <ProfilePill
+              label="Expectation score"
+              value={String(coachProfile?.expectationScore ?? 0)}
+            />
+            <ProfilePill
+              label="Strikes"
+              value={`T${coachProfile?.tankingStrikes ?? 0} / G${coachProfile?.gmStrikes ?? 0}`}
+            />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-lg border border-[var(--border)] px-3 py-2">
+              <p className="text-xs text-[var(--muted-foreground)]">Coach reputation grade</p>
+              <p className="text-sm font-medium">
+                {reputation.score} ({getReputationGrade(reputation.score)})
+              </p>
+            </div>
+            <div className="rounded-lg border border-[var(--border)] px-3 py-2">
+              <p className="text-xs text-[var(--muted-foreground)]">GM reputation grade</p>
+              <p className="text-sm font-medium">
+                {gmRepScore} ({getReputationGrade(gmRepScore)})
+              </p>
+            </div>
+          </div>
+
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/coach/profiles/${user.id}`}>Open full coaching profile</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -247,6 +333,46 @@ export default async function DashboardPage() {
       </div>
     </div>
   );
+}
+
+function ProfilePill({
+  label,
+  value,
+  badgeVariant,
+}: {
+  label: string;
+  value: string;
+  badgeVariant?: "elite" | "stable" | "pressured" | "hotseat" | "outline";
+}) {
+  return (
+    <div className="rounded-lg border border-[var(--border)] px-3 py-2">
+      <p className="text-xs text-[var(--muted-foreground)]">{label}</p>
+      {badgeVariant ? (
+        <div className="mt-1">
+          <Badge variant={badgeVariant}>{value}</Badge>
+        </div>
+      ) : (
+        <p className="text-sm font-medium">{value}</p>
+      )}
+    </div>
+  );
+}
+
+function jobSecurityBadgeVariant(status: string) {
+  switch (status) {
+    case "SECURE":
+      return "elite" as const;
+    case "STABLE":
+      return "stable" as const;
+    case "WATCH":
+    case "PRESSURED":
+      return "pressured" as const;
+    case "HOT_SEAT":
+    case "FIRING_ELIGIBLE":
+      return "hotseat" as const;
+    default:
+      return "outline" as const;
+  }
 }
 
 function StatCard({
