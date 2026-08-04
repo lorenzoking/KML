@@ -107,8 +107,11 @@ On first Google sign-in, the app upserts a `User` row. Emails listed in `COMMISS
    **Project Settings → Database → Connection string**:
    - `DATABASE_URL` = **Transaction** pooler (port `6543`), append `?pgbouncer=true`
    - `DIRECT_URL` = **Direct** connection (port `5432`) for Prisma migrations
-5. Set `AUTH_DEV_BYPASS=false` and `NEXT_PUBLIC_APP_URL` to your Vercel URL.
-6. Add the Vercel URL to Supabase Auth redirect allow-list.
+5. Set `AUTH_DEV_BYPASS=false` and `NEXT_PUBLIC_APP_URL` to your Vercel URL
+   (no trailing slash), e.g. `https://kml-two.vercel.app`.
+6. In Supabase → **Authentication → URL Configuration**:
+   - **Site URL** = your Vercel URL (not localhost)
+   - **Redirect URLs** include `https://YOUR-APP.vercel.app/auth/callback`
 7. Deploy. Then run migrations against production (uses `DIRECT_URL`):
 
 ```bash

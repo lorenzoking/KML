@@ -1,11 +1,34 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { DEV_SESSION_COOKIE, isDevAuthEnabled } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
+
+function normalizeOrigin(raw: string) {
+  return raw.replace(/\/$/, "");
+}
+
+async function getAppOrigin() {
+  const headerStore = await headers();
+  const host =
+    headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+  const proto =
+    headerStore.get("x-forwarded-proto") ??
+    (host?.includes("localhost") ? "http" : "https");
+
+  if (host) {
+    return normalizeOrigin(`${proto}://${host}`);
+  }
+
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return normalizeOrigin(process.env.NEXT_PUBLIC_APP_URL);
+  }
+
+  return "http://localhost:3000";
+}
 
 export async function signInWithGoogle() {
   if (!isSupabaseConfigured()) {
@@ -13,7 +36,7 @@ export async function signInWithGoogle() {
   }
 
   const supabase = await createClient();
-  const origin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const origin = await getAppOrigin();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
