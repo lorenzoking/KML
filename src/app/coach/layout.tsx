@@ -10,7 +10,7 @@ export default async function CoachLayout({
   const commissionerUi = await isCommissioner(user);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6">
+    <div className="space-y-5 sm:space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Coach Hub</h1>
         <p className="text-sm text-[var(--muted-foreground)]">

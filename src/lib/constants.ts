@@ -17,6 +17,7 @@ export const GAME_TYPE_LABELS: Record<string, string> = {
   PLAYOFF: "Playoff",
   SUPER_BOWL: "Super Bowl",
   PRESEASON: "Preseason",
+  SIMULATED: "Simulated",
   OTHER: "Other",
 };
 

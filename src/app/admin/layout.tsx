@@ -19,21 +19,21 @@ export default async function AdminLayout({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-4">
+      <div className="grid gap-4 border-b border-[var(--border)] pb-4 lg:flex lg:items-center lg:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
             Admin
           </p>
-          <h1 className="text-2xl font-semibold uppercase tracking-[0.06em]">
+          <h1 className="text-xl font-semibold uppercase tracking-[0.04em] sm:text-2xl sm:tracking-[0.06em]">
             League operations
           </h1>
         </div>
-        <nav className="flex flex-wrap gap-2">
+        <nav className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:px-0">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm hover:bg-[var(--muted)]"
+              className="shrink-0 rounded-xl border border-[var(--border)] bg-[var(--card)]/60 px-3 py-2 text-sm font-medium hover:bg-[var(--muted)]"
             >
               {link.label}
             </Link>

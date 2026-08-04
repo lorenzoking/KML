@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getLeagueSettings } from "@/lib/league";
 import { approvalSchema } from "@/lib/validations";
 import { writeAuditLog } from "@/lib/audit";
-import { xpFromApprovedGame } from "@/lib/xp";
+import { awardsCoachXp, xpFromApprovedGame } from "@/lib/xp";
 
 export async function reviewSubmission(formData: FormData) {
   const commissioner = await requireCommissioner();
@@ -96,48 +96,20 @@ export async function reviewSubmission(formData: FormData) {
       },
     });
 
-    const xpEntries = xpFromApprovedGame({
-      xpGamePlayed: settings.xpGamePlayed,
-      xpWinBonus: settings.xpWinBonus,
-      won,
-    });
-
-    for (const entry of xpEntries) {
-      await tx.xPAdjustment.create({
-        data: {
-          userId: submission.submitterId,
-          franchiseId: submission.userTeamId,
-          seasonId: submission.seasonId,
-          amount: entry.amount,
-          reason: `Week ${submission.week} ${entry.reason.toLowerCase()}`,
-          isAutomatic: true,
-          submissionId: submission.id,
-          createdById: commissioner.id,
-        },
-      });
-    }
-
-    // Award opponent coach if assigned
-    const opponentMembership = await tx.leagueMembership.findFirst({
-      where: {
-        franchiseId: submission.opponentTeamId,
-        seasonId: submission.seasonId,
-        isActive: true,
-      },
-    });
-
-    if (opponentMembership) {
-      const oppWon = lost;
-      const oppXp = xpFromApprovedGame({
+    // Simulated games update standings/results but do not award coach XP.
+    if (awardsCoachXp(submission.gameType)) {
+      const xpEntries = xpFromApprovedGame({
         xpGamePlayed: settings.xpGamePlayed,
         xpWinBonus: settings.xpWinBonus,
-        won: oppWon,
+        won,
+        gameType: submission.gameType,
       });
-      for (const entry of oppXp) {
+
+      for (const entry of xpEntries) {
         await tx.xPAdjustment.create({
           data: {
-            userId: opponentMembership.userId,
-            franchiseId: submission.opponentTeamId,
+            userId: submission.submitterId,
+            franchiseId: submission.userTeamId,
             seasonId: submission.seasonId,
             amount: entry.amount,
             reason: `Week ${submission.week} ${entry.reason.toLowerCase()}`,
@@ -146,6 +118,39 @@ export async function reviewSubmission(formData: FormData) {
             createdById: commissioner.id,
           },
         });
+      }
+
+      // Award opponent coach if assigned
+      const opponentMembership = await tx.leagueMembership.findFirst({
+        where: {
+          franchiseId: submission.opponentTeamId,
+          seasonId: submission.seasonId,
+          isActive: true,
+        },
+      });
+
+      if (opponentMembership) {
+        const oppWon = lost;
+        const oppXp = xpFromApprovedGame({
+          xpGamePlayed: settings.xpGamePlayed,
+          xpWinBonus: settings.xpWinBonus,
+          won: oppWon,
+          gameType: submission.gameType,
+        });
+        for (const entry of oppXp) {
+          await tx.xPAdjustment.create({
+            data: {
+              userId: opponentMembership.userId,
+              franchiseId: submission.opponentTeamId,
+              seasonId: submission.seasonId,
+              amount: entry.amount,
+              reason: `Week ${submission.week} ${entry.reason.toLowerCase()}`,
+              isAutomatic: true,
+              submissionId: submission.id,
+              createdById: commissioner.id,
+            },
+          });
+        }
       }
     }
   });
@@ -159,6 +164,8 @@ export async function reviewSubmission(formData: FormData) {
       winnerTeamId,
       userScore: submission.userScore,
       opponentScore: submission.opponentScore,
+      gameType: submission.gameType,
+      awardsXp: awardsCoachXp(submission.gameType),
     },
   });
 

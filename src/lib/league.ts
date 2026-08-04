@@ -34,7 +34,7 @@ export async function getUserMembership(userId: string, seasonId: string) {
       seasonId,
       isActive: true,
     },
-    include: { franchise: true },
+    include: { franchise: { include: { teamIdentity: true } } },
   });
 }
 

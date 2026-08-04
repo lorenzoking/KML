@@ -4,25 +4,25 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-[background-color,color,border-color,box-shadow,transform,opacity] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90",
+          "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm hover:brightness-110",
         secondary:
           "bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:opacity-90",
         outline:
-          "border border-[var(--border)] bg-transparent hover:bg-[var(--muted)]",
+          "border border-[var(--border)] bg-[var(--card)]/70 shadow-sm hover:border-[color-mix(in_oklab,var(--primary)_35%,var(--border))] hover:bg-[var(--muted)]",
         ghost: "hover:bg-[var(--muted)]",
         destructive:
           "bg-[var(--destructive)] text-white hover:opacity-90",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-11 rounded-md px-6",
-        icon: "h-10 w-10",
+        default: "h-11 px-4 py-2 sm:h-10",
+        sm: "h-9 rounded-lg px-3 text-xs",
+        lg: "h-12 rounded-xl px-6",
+        icon: "h-11 w-11 sm:h-10 sm:w-10",
       },
     },
     defaultVariants: {

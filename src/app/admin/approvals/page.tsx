@@ -47,7 +47,8 @@ export default async function ApprovalsPage() {
           Pending approvals
         </h2>
         <p className="text-sm text-[var(--muted-foreground)]">
-          Approve to create official results and award XP. Reject keeps audit history.
+          Approve to create official results. Played games award XP; simulated
+          games update standings only (no coach XP). Reject keeps audit history.
         </p>
       </div>
 
@@ -67,7 +68,8 @@ export default async function ApprovalsPage() {
                 </CardTitle>
                 <CardDescription>
                   Season {s.season.number} · Week {s.week} ·{" "}
-                  {GAME_TYPE_LABELS[s.gameType]} · submitted by{" "}
+                  {GAME_TYPE_LABELS[s.gameType]}
+                  {s.gameType === "SIMULATED" ? " · no XP" : ""} · submitted by{" "}
                   {s.submitter.name ?? s.submitter.email} ·{" "}
                   {format(s.createdAt, "MMM d, h:mm a")}
                 </CardDescription>
@@ -96,7 +98,9 @@ export default async function ApprovalsPage() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <SubmitButton name="decision" value="APPROVE">
-                      Approve
+                      {s.gameType === "SIMULATED"
+                        ? "Approve (standings only)"
+                        : "Approve"}
                     </SubmitButton>
                     <SubmitButton
                       name="decision"

@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { getUserCareerStats } from "@/lib/career";
 import { getLeagueSettings, getSeasonStandings } from "@/lib/league";
 import { computeReputationScore } from "@/lib/reputation";
 import { getReputationGrade } from "@/lib/coach/grades";
@@ -33,33 +32,55 @@ export type CoachBoardRow = {
   seasonsWithTeam: number;
 };
 
-export async function getCoachBoardRows(seasonId: string): Promise<CoachBoardRow[]> {
-  const settings = await getLeagueSettings();
-  const standings = await getSeasonStandings(seasonId);
-  const standingsMap = new Map(standings.map((s) => [s.franchiseId, s]));
-
-  const memberships = await prisma.leagueMembership.findMany({
-    where: { seasonId, isActive: true, user: { deletedAt: null } },
-    include: {
-      user: {
-        include: {
-          reputationReceived: true,
-          xpAdjustmentsReceived: {
-            where: { seasonId },
-          },
-          coachProfile: {
-            include: { coachIdentity: true },
+async function loadCoachBoardRows(
+  seasonId: string,
+  userId?: string
+): Promise<CoachBoardRow[]> {
+  const [settings, standings, memberships, stintHistory] = await Promise.all([
+    getLeagueSettings(),
+    getSeasonStandings(seasonId),
+    prisma.leagueMembership.findMany({
+      where: {
+        seasonId,
+        isActive: true,
+        user: { deletedAt: null },
+        ...(userId ? { userId } : {}),
+      },
+      include: {
+        user: {
+          include: {
+            reputationReceived: true,
+            xpAdjustmentsReceived: {
+              where: { seasonId },
+            },
+            coachProfile: {
+              include: { coachIdentity: true },
+            },
           },
         },
+        franchise: {
+          include: { teamIdentity: true },
+        },
       },
-      franchise: {
-        include: { teamIdentity: true },
-      },
-    },
-  });
+    }),
+    prisma.leagueMembership.findMany({
+      where: userId ? { userId } : { user: { deletedAt: null } },
+      select: { userId: true, franchiseId: true, seasonId: true },
+    }),
+  ]);
+  const standingsMap = new Map(standings.map((s) => [s.franchiseId, s]));
 
-  const rows = await Promise.all(
-    memberships.map(async (membership) => {
+  // Count unique seasons per coach/team in one query. The prior implementation
+  // ran a full career/game scan once per coach, which became very expensive.
+  const seasonsByCoachTeam = new Map<string, Set<string>>();
+  for (const stint of stintHistory) {
+    const key = `${stint.userId}:${stint.franchiseId}`;
+    const seasons = seasonsByCoachTeam.get(key) ?? new Set<string>();
+    seasons.add(stint.seasonId);
+    seasonsByCoachTeam.set(key, seasons);
+  }
+
+  const rows = memberships.map((membership) => {
       const repRows = membership.user.reputationReceived;
       const coachRepScore = computeReputationScore(settings.startingRepScore, repRows);
       const gmRepScore = computeReputationScore(
@@ -88,10 +109,10 @@ export async function getCoachBoardRows(seasonId: string): Promise<CoachBoardRow
         watchThreshold: settings.watchThreshold,
         override: coachProfile?.hotSeatStatusOverride ?? undefined,
       });
-      const history = await getUserCareerStats(membership.userId);
-      const seasonsWithTeam = history.bySeason.filter(
-        (s) => s.franchiseId === membership.franchiseId
-      ).length;
+      const seasonsWithTeam =
+        seasonsByCoachTeam.get(
+          `${membership.userId}:${membership.franchiseId}`
+        )?.size ?? 0;
 
       return {
         userId: membership.userId,
@@ -117,8 +138,21 @@ export async function getCoachBoardRows(seasonId: string): Promise<CoachBoardRow
         teamIdentity: membership.franchise.teamIdentity?.name ?? null,
         seasonsWithTeam,
       };
-    })
-  );
+    });
 
   return rows.sort((a, b) => b.xp - a.xp);
+}
+
+export async function getCoachBoardRows(
+  seasonId: string
+): Promise<CoachBoardRow[]> {
+  return loadCoachBoardRows(seasonId);
+}
+
+export async function getCoachBoardRow(
+  userId: string,
+  seasonId: string
+): Promise<CoachBoardRow | null> {
+  const rows = await loadCoachBoardRows(seasonId, userId);
+  return rows[0] ?? null;
 }

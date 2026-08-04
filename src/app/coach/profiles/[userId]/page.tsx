@@ -8,7 +8,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { isCommissioner, requireUser } from "@/lib/auth";
 import { getUserCareerStats } from "@/lib/career";
-import { getCoachBoardRows } from "@/lib/coach/coach-board";
+import { getCoachBoardRow } from "@/lib/coach/coach-board";
 import { getActiveSeason } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
 
@@ -22,7 +22,7 @@ export default async function CoachProfileDetailPage({
   const { userId } = await params;
   const { season } = await getActiveSeason();
 
-  const [user, career, board, identities, review, reputationRows] = await Promise.all([
+  const [user, career, row, identities, review, reputationRows] = await Promise.all([
     prisma.user.findFirst({
       where: { id: userId, deletedAt: null },
       include: {
@@ -35,7 +35,7 @@ export default async function CoachProfileDetailPage({
       },
     }),
     getUserCareerStats(userId),
-    getCoachBoardRows(season.id),
+    getCoachBoardRow(userId, season.id),
     prisma.identityCatalog.findMany({
       where: { type: "COACH" },
       orderBy: { name: "asc" },
@@ -51,7 +51,6 @@ export default async function CoachProfileDetailPage({
   ]);
   if (!user) notFound();
 
-  const row = board.find((r) => r.userId === user.id);
   const activeMembership = user.memberships[0];
 
   return (

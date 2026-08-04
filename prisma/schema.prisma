@@ -18,6 +18,7 @@ enum GameType {
   PLAYOFF
   SUPER_BOWL
   PRESEASON
+  SIMULATED
   OTHER
 }
 

@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { prisma } from "@/lib/prisma";
-import { getActiveSeason, getLeagueSettings } from "@/lib/league";
+import { getActiveSeason } from "@/lib/league";
 import { sumXp } from "@/lib/xp";
 import {
   computeReputationScore,
@@ -48,8 +48,7 @@ export default async function AdminUsersPage({
   }>;
 }) {
   const params = await searchParams;
-  const { season } = await getActiveSeason();
-  const settings = await getLeagueSettings();
+  const { season, settings } = await getActiveSeason();
 
   const users = await prisma.user.findMany({
     where: { deletedAt: null },

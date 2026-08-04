@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge, ReputationBadge } from "@/components/status-badge";
 import { SubmissionForm } from "@/components/forms/submission-form";
 import { GamesTabs } from "@/components/games/games-tabs";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser, isCommissioner } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   getActiveSeason,
@@ -49,10 +49,13 @@ export default async function GamesPage({
 }) {
   const params = await searchParams;
   const tab = params.tab === "standings" ? "standings" : "week";
-  const user = await getSessionUser();
-
-  const { settings, season: activeSeason } = await getActiveSeason();
-  const seasons = await listSeasons();
+  const [user, active, seasons] = await Promise.all([
+    getSessionUser(),
+    getActiveSeason(),
+    listSeasons(),
+  ]);
+  const { settings, season: activeSeason } = active;
+  const commissionerUi = user ? await isCommissioner(user) : false;
   const selectedSeasonNumber = params.season
     ? Number(params.season)
     : activeSeason.number;
@@ -65,42 +68,69 @@ export default async function GamesPage({
       ? settings.currentWeek
       : 1;
 
-  const membership = user
-    ? await getUserMembership(user.id, activeSeason.id)
-    : null;
-
-  const franchises = await prisma.franchise.findMany({
-    orderBy: { sortOrder: "asc" },
-    select: { id: true, name: true, abbreviation: true },
-  });
-
-  const weekGames = await prisma.gameSubmission.findMany({
-    where: {
-      seasonId: season.id,
-      week: selectedWeek,
-      status: { in: ["APPROVED", "PENDING", "VOIDED", "REJECTED"] },
-    },
-    include: {
-      userTeam: true,
-      opponentTeam: true,
-      submitter: true,
-      result: true,
-    },
-    orderBy: [{ status: "asc" }, { createdAt: "asc" }],
-  });
+  const [
+    membership,
+    franchises,
+    weekGames,
+    rawStandings,
+    memberships,
+    myHistory,
+  ] = await Promise.all([
+    user ? getUserMembership(user.id, activeSeason.id) : Promise.resolve(null),
+    prisma.franchise.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, name: true, abbreviation: true },
+    }),
+    prisma.gameSubmission.findMany({
+      where: {
+        seasonId: season.id,
+        week: selectedWeek,
+        status: { in: ["APPROVED", "PENDING", "VOIDED", "REJECTED"] },
+      },
+      include: {
+        userTeam: true,
+        opponentTeam: true,
+        submitter: true,
+        result: true,
+      },
+      orderBy: [{ status: "asc" }, { createdAt: "asc" }],
+    }),
+    getSeasonStandings(season.id),
+    prisma.leagueMembership.findMany({
+      where: { seasonId: season.id, isActive: true },
+      include: {
+        user: {
+          include: {
+            xpAdjustmentsReceived: {
+              select: { amount: true, seasonId: true },
+            },
+            reputationReceived: true,
+          },
+        },
+      },
+    }),
+    user
+      ? prisma.gameSubmission.findMany({
+          where: { submitterId: user.id },
+          include: { userTeam: true, opponentTeam: true, season: true },
+          orderBy: { createdAt: "desc" },
+          take: 12,
+        })
+      : Promise.resolve([]),
+  ]);
 
   // Public viewers only see approved/voided history; coaches see their pending too.
   const visibleGames = weekGames.filter((game) => {
     if (game.status === "APPROVED" || game.status === "VOIDED") return true;
     if (!user) return false;
-    if (user.role === "COMMISSIONER") return true;
+    if (commissionerUi) return true;
     return game.submitterId === user.id;
   });
 
   const approvedWeekGames = visibleGames.filter((g) => g.status === "APPROVED");
   const pendingWeekGames = visibleGames.filter((g) => g.status === "PENDING");
 
-  let standings = await getSeasonStandings(season.id);
+  let standings = rawStandings;
   if (params.conference === "AFC" || params.conference === "NFC") {
     standings = standings.filter((s) => s.conference === params.conference);
   }
@@ -112,20 +142,6 @@ export default async function GamesPage({
         s.abbreviation.toLowerCase().includes(q)
     );
   }
-
-  const memberships = await prisma.leagueMembership.findMany({
-    where: { seasonId: season.id, isActive: true },
-    include: {
-      user: {
-        include: {
-          xpAdjustmentsReceived: {
-            select: { amount: true, seasonId: true },
-          },
-          reputationReceived: true,
-        },
-      },
-    },
-  });
 
   const coachByFranchise = Object.fromEntries(
     memberships.map((m) => {
@@ -148,15 +164,6 @@ export default async function GamesPage({
     })
   );
 
-  const myHistory = user
-    ? await prisma.gameSubmission.findMany({
-        where: { submitterId: user.id },
-        include: { userTeam: true, opponentTeam: true, season: true },
-        orderBy: { createdAt: "desc" },
-        take: 12,
-      })
-    : [];
-
   const tabQuery = {
     season: String(season.number),
     week: String(selectedWeek),
@@ -171,9 +178,9 @@ export default async function GamesPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="grid gap-4 sm:flex sm:flex-wrap sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold uppercase tracking-[0.06em]">
+          <h1 className="text-2xl font-semibold uppercase tracking-[0.04em] sm:text-3xl sm:tracking-[0.06em]">
             Games
           </h1>
           <p className="text-sm text-[var(--muted-foreground)]">
@@ -181,7 +188,7 @@ export default async function GamesPage({
           </p>
         </div>
         {canSubmit ? (
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto">
             <a href="#submit-result">Submit your result</a>
           </Button>
         ) : null}
@@ -190,13 +197,13 @@ export default async function GamesPage({
       <GamesTabs active={tab} query={tabQuery} />
 
       <Card>
-        <CardContent className="flex flex-wrap gap-2 pt-5">
-          <form className="flex flex-wrap gap-2">
+        <CardContent className="pt-4 sm:pt-5">
+          <form className="grid gap-2 sm:flex sm:flex-wrap">
             <input type="hidden" name="tab" value={tab} />
             <select
               name="season"
               defaultValue={String(season.number)}
-              className="h-10 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 text-sm"
+              className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-base shadow-sm sm:h-10 sm:w-auto sm:text-sm"
             >
               {seasons.map((s) => (
                 <option key={s.id} value={s.number}>
@@ -209,7 +216,7 @@ export default async function GamesPage({
               <select
                 name="week"
                 defaultValue={String(selectedWeek)}
-                className="h-10 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 text-sm"
+                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-base shadow-sm sm:h-10 sm:w-auto sm:text-sm"
               >
                 {Array.from({ length: 22 }, (_, i) => i + 1).map((week) => (
                   <option key={week} value={week}>
@@ -227,12 +234,12 @@ export default async function GamesPage({
                   name="q"
                   defaultValue={params.q}
                   placeholder="Search team"
-                  className="h-10 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 text-sm"
+                  className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-base shadow-sm sm:h-10 sm:w-auto sm:text-sm"
                 />
                 <select
                   name="conference"
                   defaultValue={params.conference ?? ""}
-                  className="h-10 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 text-sm"
+                  className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-base shadow-sm sm:h-10 sm:w-auto sm:text-sm"
                 >
                   <option value="">All conferences</option>
                   <option value="AFC">AFC</option>
@@ -242,7 +249,7 @@ export default async function GamesPage({
             )}
             <button
               type="submit"
-              className="h-10 rounded-md bg-[var(--primary)] px-4 text-sm font-medium text-[var(--primary-foreground)]"
+              className="h-11 w-full rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-[var(--primary-foreground)] shadow-sm transition hover:brightness-110 sm:h-10 sm:w-auto"
             >
               Apply
             </button>
@@ -368,7 +375,8 @@ export default async function GamesPage({
                           </div>
                           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
                             {game.userTeam.name} vs {game.opponentTeam.name} ·{" "}
-                            {GAME_TYPE_LABELS[game.gameType]} ·{" "}
+                            {GAME_TYPE_LABELS[game.gameType]}
+                            {game.gameType === "SIMULATED" ? " · no XP" : ""} ·{" "}
                             {game.submitter.name ?? game.submitter.email}
                             {game.reviewedAt
                               ? ` · ${format(game.reviewedAt, "MMM d")}`

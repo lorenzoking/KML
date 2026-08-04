@@ -9,6 +9,7 @@ export const gameSubmissionSchema = z
       "PLAYOFF",
       "SUPER_BOWL",
       "PRESEASON",
+      "SIMULATED",
       "OTHER",
     ]),
     opponentTeamId: z.string().min(1, "Opponent is required"),

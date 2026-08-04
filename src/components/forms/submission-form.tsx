@@ -76,8 +76,13 @@ export function SubmissionForm({
           <option value="PLAYOFF">Playoff</option>
           <option value="SUPER_BOWL">Super Bowl</option>
           <option value="PRESEASON">Preseason</option>
+          <option value="SIMULATED">Simulated (no coach XP)</option>
           <option value="OTHER">Other</option>
         </Select>
+        <p className="text-xs text-[var(--muted-foreground)]">
+          Choose <strong>Simulated</strong> for CPU sims. They still count in
+          standings after approval, but do not award coach XP.
+        </p>
       </div>
 
       <div className="space-y-2">

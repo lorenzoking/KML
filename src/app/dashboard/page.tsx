@@ -30,24 +30,33 @@ export default async function DashboardPage() {
   const user = await requireUser();
   const commissionerUi = await isCommissioner(user);
   const { settings, season } = await getActiveSeason();
-  const membership = await getUserMembership(user.id, season.id);
-  const standings = await getSeasonStandings(season.id);
+  const [
+    membership,
+    standings,
+    xpTotal,
+    reputation,
+    career,
+    coachProfile,
+    pendingMine,
+  ] = await Promise.all([
+    getUserMembership(user.id, season.id),
+    getSeasonStandings(season.id),
+    getXpTotal(user.id),
+    getReputation(user.id),
+    getUserCareerStats(user.id),
+    prisma.coachProfile.findUnique({
+      where: { userId: user.id },
+      include: { coachIdentity: true },
+    }),
+    prisma.gameSubmission.findMany({
+      where: { submitterId: user.id, status: "PENDING" },
+      include: { opponentTeam: true, userTeam: true },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
   const teamStanding = membership
     ? standings.find((s) => s.franchiseId === membership.franchiseId)
     : undefined;
-  const xpTotal = await getXpTotal(user.id);
-  const reputation = await getReputation(user.id);
-  const career = await getUserCareerStats(user.id);
-  const coachProfile = await prisma.coachProfile.findUnique({
-    where: { userId: user.id },
-    include: { coachIdentity: true },
-  });
-  const teamIdentity = membership
-    ? await prisma.franchise.findUnique({
-        where: { id: membership.franchiseId },
-        include: { teamIdentity: true },
-      })
-    : null;
   const gmRepScore = computeReputationScore(
     settings.startingGmRepScore,
     reputation.adjustments.map((row) => ({ amount: row.gmAmount }))
@@ -64,63 +73,54 @@ export default async function DashboardPage() {
     override: coachProfile?.hotSeatStatusOverride,
   });
 
-  const recentApproved = membership
-    ? await prisma.gameSubmission.findMany({
-        where: {
-          submitterId: user.id,
-          status: "APPROVED",
-        },
-        include: { opponentTeam: true, userTeam: true },
-        orderBy: { reviewedAt: "desc" },
-        take: 5,
-      })
-    : [];
-
-  const pendingMine = await prisma.gameSubmission.findMany({
-    where: { submitterId: user.id, status: "PENDING" },
-    include: { opponentTeam: true, userTeam: true },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const pendingCount = commissionerUi
-    ? await prisma.gameSubmission.count({ where: { status: "PENDING" } })
-    : 0;
-
-  const recentLeague = commissionerUi
-    ? await prisma.gameSubmission.findMany({
-        include: {
-          submitter: true,
-          userTeam: true,
-          opponentTeam: true,
-        },
-        orderBy: { createdAt: "desc" },
-        take: 8,
-      })
-    : [];
+  const [recentApproved, pendingCount, recentLeague] = await Promise.all([
+    membership
+      ? prisma.gameSubmission.findMany({
+          where: { submitterId: user.id, status: "APPROVED" },
+          include: { opponentTeam: true, userTeam: true },
+          orderBy: { reviewedAt: "desc" },
+          take: 5,
+        })
+      : Promise.resolve([]),
+    commissionerUi
+      ? prisma.gameSubmission.count({ where: { status: "PENDING" } })
+      : Promise.resolve(0),
+    commissionerUi
+      ? prisma.gameSubmission.findMany({
+          include: {
+            submitter: true,
+            userTeam: true,
+            opponentTeam: true,
+          },
+          orderBy: { createdAt: "desc" },
+          take: 8,
+        })
+      : Promise.resolve([]),
+  ]);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="grid gap-4 sm:flex sm:flex-wrap sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
             {commissionerUi ? "Commissioner desk" : "Coach desk"}
           </p>
-          <h1 className="text-3xl font-semibold uppercase tracking-[0.06em]">
+          <h1 className="text-2xl font-semibold uppercase tracking-[0.04em] sm:text-3xl sm:tracking-[0.06em]">
             Welcome, {user.name ?? "Coach"}
           </h1>
           <p className="text-sm text-[var(--muted-foreground)]">
             Season {settings.currentSeason} · Week {settings.currentWeek}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button asChild>
+        <div className="grid grid-cols-2 gap-2 sm:flex">
+          <Button asChild className="w-full sm:w-auto">
             <Link href="/games?tab=week#submit-result">Submit result</Link>
           </Button>
-          <Button asChild variant="outline">
+          <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link href="/games?tab=standings">Standings</Link>
           </Button>
           {commissionerUi ? (
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className="col-span-2 w-full sm:w-auto">
               <Link href="/admin/approvals">
                 Approvals{pendingCount ? ` (${pendingCount})` : ""}
               </Link>
@@ -129,7 +129,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
         <StatCard
           label="Assigned team"
           value={membership?.franchise.name ?? "Unassigned"}
@@ -224,7 +224,7 @@ export default async function DashboardPage() {
             />
             <ProfilePill
               label="Team identity"
-              value={teamIdentity?.teamIdentity?.name ?? "Unassigned"}
+              value={membership?.franchise.teamIdentity?.name ?? "Unassigned"}
             />
             <ProfilePill
               label="Job security"
@@ -386,7 +386,9 @@ function StatCard({
     <Card>
       <CardHeader className="pb-2">
         <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-2xl leading-tight">{value}</CardTitle>
+        <CardTitle className="break-words text-lg leading-tight sm:text-2xl">
+          {value}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <p className="text-xs text-[var(--muted-foreground)]">{hint}</p>

@@ -174,6 +174,7 @@ query the DB at build time — update `DATABASE_URL` to the pooler URI and redep
 ## Core business rules
 
 - Standings and automatic XP only use **approved, non-voided** submissions.
+- **Simulated** games can be submitted and approved for standings, but they do **not** award coach XP.
 - Rejected/voided submissions remain in history with a decision note.
 - Duplicate pending/approved submissions for the same matchup + week are blocked.
 - XP totals = sum of `XPAdjustment` rows (automatic + manual), kept across seasons.
