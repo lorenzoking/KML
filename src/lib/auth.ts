@@ -4,6 +4,7 @@ import { Role, type User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { writeAuditLog } from "@/lib/audit";
 
 /** Shared cookie for password backup login and local demo login. */
 export const APP_SESSION_COOKIE = "kml_app_session";
@@ -40,7 +41,7 @@ export async function syncUserFromAuth(params: {
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (!existing) {
-    return prisma.user.create({
+    const created = await prisma.user.create({
       data: {
         email,
         name: params.name ?? email.split("@")[0],
@@ -50,6 +51,21 @@ export async function syncUserFromAuth(params: {
         deletedAt: null,
       },
     });
+
+    await writeAuditLog({
+      actorId: created.id,
+      action: "USER_SIGNED_UP",
+      entityType: "User",
+      entityId: created.id,
+      metadata: {
+        email: created.email,
+        name: created.name,
+        role: created.role,
+        method: params.forceCommissioner ? "commissioner_backup" : "google",
+      },
+    });
+
+    return created;
   }
 
   return prisma.user.update({
