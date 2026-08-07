@@ -30,8 +30,10 @@ import {
 } from "@/lib/reputation";
 import {
   ensureUserByEmail,
+  quickRemoveUser,
   syncUsersFromSupabaseAuth,
 } from "@/actions/users";
+import { QuickRemoveUserButton } from "@/components/admin/quick-remove-user-button";
 
 export default async function AdminUsersPage({
   searchParams,
@@ -270,12 +272,22 @@ export default async function AdminUsersPage({
                       </TableCell>
                       <TableCell>
                         {!user.deletedAt ? (
-                          <Link
-                            href={`/admin/users/${user.id}`}
-                            className="text-sm font-medium text-[var(--primary)] hover:underline"
-                          >
-                            Manage
-                          </Link>
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            <Link
+                              href={`/admin/users/${user.id}`}
+                              className="text-sm font-medium text-[var(--primary)] hover:underline"
+                            >
+                              Manage
+                            </Link>
+                            <QuickRemoveUserButton
+                              userId={user.id}
+                              userLabel={user.name ?? user.email}
+                              action={async (formData) => {
+                                "use server";
+                                await quickRemoveUser(formData);
+                              }}
+                            />
+                          </div>
                         ) : (
                           "—"
                         )}

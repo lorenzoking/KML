@@ -89,40 +89,18 @@ export async function updateUser(formData: FormData) {
   redirect(`/admin/users/${userId}?updated=1`);
 }
 
-export async function deleteUser(formData: FormData) {
-  const commissioner = await requireCommissioner();
-
-  const parsed = z
-    .object({
-      userId: z.string().min(1),
-      confirm: z.string().min(1),
-      mode: z.enum(["soft", "hard"]).default("soft"),
-    })
-    .safeParse({
-      userId: formData.get("userId"),
-      confirm: formData.get("confirm"),
-      mode: formData.get("mode") || "soft",
-    });
-
-  if (!parsed.success) {
-    return { error: "Invalid delete request." };
-  }
-
-  const { userId, confirm, mode } = parsed.data;
-  if (userId === commissioner.id) {
+async function removeUserAccount(params: {
+  commissionerId: string;
+  userId: string;
+  mode: "soft" | "hard";
+}) {
+  const { commissionerId, userId, mode } = params;
+  if (userId === commissionerId) {
     return { error: "You cannot delete your own account." };
   }
 
   const existing = await prisma.user.findUnique({ where: { id: userId } });
-  if (!existing) return { error: "User not found." };
-
-  const expected =
-    mode === "hard" ? `DELETE ${existing.email}` : `REMOVE ${existing.email}`;
-  if (confirm.trim() !== expected) {
-    return {
-      error: `Type ${expected} exactly to confirm.`,
-    };
-  }
+  if (!existing || existing.deletedAt) return { error: "User not found." };
 
   if (existing.role === Role.COMMISSIONER) {
     const commissionerCount = await prisma.user.count({
@@ -146,37 +124,92 @@ export async function deleteUser(formData: FormData) {
   if (mode === "hard") {
     await prisma.user.delete({ where: { id: userId } });
     await writeAuditLog({
-      actorId: commissioner.id,
+      actorId: commissionerId,
       action: "HARD_DELETE_USER",
       entityType: "User",
       entityId: userId,
       metadata: { email: existing.email },
     });
-    revalidatePath("/admin/users");
-    revalidatePath("/admin/teams");
-    revalidatePath("/admin");
-    redirect("/admin/users?removed=1");
+  } else {
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isActive: false,
+        deletedAt: new Date(),
+      },
+    });
+
+    await writeAuditLog({
+      actorId: commissionerId,
+      action: "SOFT_DELETE_USER",
+      entityType: "User",
+      entityId: userId,
+      metadata: { email: existing.email },
+    });
   }
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      isActive: false,
-      deletedAt: new Date(),
-    },
-  });
-
-  await writeAuditLog({
-    actorId: commissioner.id,
-    action: "SOFT_DELETE_USER",
-    entityType: "User",
-    entityId: userId,
-    metadata: { email: existing.email },
-  });
 
   revalidatePath("/admin/users");
   revalidatePath("/admin/teams");
   revalidatePath("/admin");
+  return { success: true as const };
+}
+
+export async function deleteUser(formData: FormData) {
+  const commissioner = await requireCommissioner();
+
+  const parsed = z
+    .object({
+      userId: z.string().min(1),
+      confirm: z.string().min(1),
+      mode: z.enum(["soft", "hard"]).default("soft"),
+    })
+    .safeParse({
+      userId: formData.get("userId"),
+      confirm: formData.get("confirm"),
+      mode: formData.get("mode") || "soft",
+    });
+
+  if (!parsed.success) {
+    return { error: "Invalid delete request." };
+  }
+
+  const { userId, confirm, mode } = parsed.data;
+  const existing = await prisma.user.findUnique({ where: { id: userId } });
+  if (!existing) return { error: "User not found." };
+
+  const expected =
+    mode === "hard" ? `DELETE ${existing.email}` : `REMOVE ${existing.email}`;
+  if (confirm.trim() !== expected) {
+    return {
+      error: `Type ${expected} exactly to confirm.`,
+    };
+  }
+
+  const result = await removeUserAccount({
+    commissionerId: commissioner.id,
+    userId,
+    mode,
+  });
+  if (result.error) return result;
+
+  redirect("/admin/users?removed=1");
+}
+
+/** Soft-remove from the users list with a browser confirm (no typed email). */
+export async function quickRemoveUser(formData: FormData) {
+  const commissioner = await requireCommissioner();
+  const userId = String(formData.get("userId") || "");
+  if (!userId) return { error: "User is required." };
+
+  const result = await removeUserAccount({
+    commissionerId: commissioner.id,
+    userId,
+    mode: "soft",
+  });
+  if (result.error) {
+    redirect(`/admin/users?error=${encodeURIComponent(result.error)}`);
+  }
+
   redirect("/admin/users?removed=1");
 }
 
