@@ -33,7 +33,6 @@ import {
   getPublishedStories,
   STORY_CATEGORY_LABELS,
 } from "@/lib/stories";
-import { StoryBody } from "@/components/stories/story-body";
 
 export default async function DashboardPage({
   searchParams,
