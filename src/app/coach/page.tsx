@@ -85,6 +85,9 @@ export default async function CoachOverviewPage({
             <CardTitle>Quick links</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-2">
+            <Link href="/coach/me" className="rounded-md border px-3 py-2 text-center text-sm">
+              My profile
+            </Link>
             <Link href="/coach/xp" className="rounded-md border px-3 py-2 text-center text-sm">
               XP standings
             </Link>

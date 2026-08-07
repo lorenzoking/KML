@@ -18,6 +18,7 @@ import {
   createCarouselVacancySchema,
   reviewCarouselApplicationSchema,
   updateCoachProfileSchema,
+  updateMyCoachProfileSchema,
 } from "@/lib/validations";
 import { writeAuditLog } from "@/lib/audit";
 import { computeReputationScore } from "@/lib/reputation";
@@ -28,6 +29,7 @@ import { getUserCareerStats } from "@/lib/career";
 
 function revalidateCoachPaths(userId?: string) {
   revalidatePath("/coach");
+  revalidatePath("/coach/me");
   revalidatePath("/coach/xp");
   revalidatePath("/coach/profiles");
   revalidatePath("/coach/identities");
@@ -35,7 +37,9 @@ function revalidateCoachPaths(userId?: string) {
   revalidatePath("/coach/carousel");
   revalidatePath("/coach/reputation");
   if (userId) revalidatePath(`/coach/profiles/${userId}`);
+  revalidatePath("/dashboard");
   revalidatePath("/admin");
+  revalidatePath("/admin/users");
 }
 
 export async function assignCoachIdentity(formData: FormData) {
@@ -244,6 +248,74 @@ export async function updateCoachProfile(formData: FormData) {
   });
 
   revalidateCoachPaths(parsed.data.userId);
+  return { success: true };
+}
+
+export async function updateMyCoachProfile(formData: FormData) {
+  const user = await requireUser();
+
+  const parsed = updateMyCoachProfileSchema.safeParse({
+    coachName: formData.get("coachName"),
+    avatarUrl: formData.get("avatarUrl") || "",
+    discordName: formData.get("discordName") || "",
+    bio: formData.get("bio") || "",
+    motto: formData.get("motto") || "",
+    hometown: formData.get("hometown") || "",
+    favoriteScheme: formData.get("favoriteScheme") || "",
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid profile update." };
+  }
+
+  const avatarUrl = parsed.data.avatarUrl?.trim() || null;
+  const discordName = parsed.data.discordName?.trim() || null;
+  const bio = parsed.data.bio?.trim() || null;
+  const motto = parsed.data.motto?.trim() || null;
+  const hometown = parsed.data.hometown?.trim() || null;
+  const favoriteScheme = parsed.data.favoriteScheme?.trim() || null;
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: { name: parsed.data.coachName },
+    }),
+    prisma.coachProfile.upsert({
+      where: { userId: user.id },
+      update: {
+        avatarUrl,
+        discordName,
+        bio,
+        motto,
+        hometown,
+        favoriteScheme,
+      },
+      create: {
+        userId: user.id,
+        avatarUrl,
+        discordName,
+        bio,
+        motto,
+        hometown,
+        favoriteScheme,
+      },
+    }),
+  ]);
+
+  await writeAuditLog({
+    actorId: user.id,
+    action: "UPDATE_MY_COACH_PROFILE",
+    entityType: "CoachProfile",
+    entityId: user.id,
+    metadata: {
+      coachName: parsed.data.coachName,
+      avatarUrl,
+      discordName,
+      hometown,
+      favoriteScheme,
+    },
+  });
+
+  revalidateCoachPaths(user.id);
   return { success: true };
 }
 

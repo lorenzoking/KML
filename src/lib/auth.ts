@@ -89,8 +89,10 @@ export async function syncUserFromAuth(params: {
   const updated = await prisma.user.update({
     where: { id: existing.id },
     data: {
-      name: params.name ?? existing.name,
-      image: params.image ?? existing.image,
+      // Keep league coach names once set — Google display names must not overwrite them.
+      name: existing.name?.trim() ? existing.name : params.name ?? existing.name,
+      // Refresh Google avatar only when we don't already have one stored.
+      image: existing.image ?? params.image ?? undefined,
       // Signing in again restores soft-deleted accounts so they reappear
       // under Manage users without losing role/history.
       deletedAt: null,

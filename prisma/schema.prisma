@@ -368,6 +368,11 @@ model CoachProfile {
   id                    String         @id @default(cuid())
   userId                String         @unique
   discordName           String?
+  avatarUrl             String?
+  bio                   String?
+  motto                 String?
+  hometown              String?
+  favoriteScheme        String?
   selectionPick         Int?
   coachIdentityId       String?
   expectationScore      Int            @default(0)

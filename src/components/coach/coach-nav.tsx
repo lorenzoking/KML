@@ -8,6 +8,11 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/coach", label: "Overview", match: (path: string) => path === "/coach" },
   {
+    href: "/coach/me",
+    label: "My Profile",
+    match: (path: string) => path.startsWith("/coach/me"),
+  },
+  {
     href: "/coach/xp",
     label: "XP Standings",
     match: (path: string) => path.startsWith("/coach/xp"),

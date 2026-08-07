@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { addCoachLedgerEntry, assignCoachIdentity, saveCoachSeasonReview, updateCoachProfile } from "@/actions/coach";
+import { CoachAvatar } from "@/components/coach/coach-avatar";
 import { SubmitButton } from "@/components/forms/submit-button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,8 +56,37 @@ export default async function CoachProfileDetailPage({
 
   const activeMembership = user.memberships[0];
 
+  const isSelf = currentUser.id === user.id;
+  const profile = user.coachProfile;
+
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-center gap-4">
+          <CoachAvatar user={user} size="lg" />
+          <div>
+            <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold uppercase tracking-wide">
+              {user.name ?? user.email}
+            </h1>
+            {profile?.motto ? (
+              <p className="mt-1 text-sm italic text-[var(--muted-foreground)]">
+                “{profile.motto}”
+              </p>
+            ) : null}
+            {profile?.hometown ? (
+              <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+                From {profile.hometown}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        {isSelf ? (
+          <Button asChild variant="outline" size="sm">
+            <Link href="/coach/me">Edit my profile</Link>
+          </Button>
+        ) : null}
+      </div>
+
       <div className="grid gap-4 md:grid-cols-4">
         <Metric title="Team" value={activeMembership?.franchise.abbreviation ?? "Unassigned"} />
         <Metric title="Career record" value={`${career.wins}-${career.losses}-${career.ties}`} />
@@ -62,9 +94,32 @@ export default async function CoachProfileDetailPage({
         <Metric title="Job security" value={row?.jobStatus.replaceAll("_", " ") ?? "N/A"} />
       </div>
 
+      {(profile?.bio ||
+        profile?.discordName ||
+        profile?.favoriteScheme ||
+        profile?.selectionPick) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Coach details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {profile?.bio ? (
+              <p className="leading-relaxed text-[var(--muted-foreground)]">{profile.bio}</p>
+            ) : null}
+            <div className="grid gap-2 sm:grid-cols-2">
+              {profile?.discordName ? <p>Discord: {profile.discordName}</p> : null}
+              {profile?.favoriteScheme ? (
+                <p>Favorite scheme: {profile.favoriteScheme}</p>
+              ) : null}
+              {profile?.selectionPick ? <p>Draft pick: #{profile.selectionPick}</p> : null}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle>{user.name ?? user.email}</CardTitle>
+          <CardTitle>Season snapshot</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
           <p>Coach rep: {row ? `${row.coachRepScore} (${row.coachRepGrade})` : "N/A"}</p>

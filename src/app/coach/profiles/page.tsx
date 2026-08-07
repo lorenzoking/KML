@@ -27,8 +27,14 @@ export default async function CoachProfilesPage({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
         <CardTitle>Coach profiles</CardTitle>
+        <Link
+          href="/coach/me"
+          className="text-sm font-medium text-[var(--primary)] hover:underline"
+        >
+          Edit my profile
+        </Link>
       </CardHeader>
       <CardContent className="space-y-4">
         <form>

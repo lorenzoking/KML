@@ -136,6 +136,26 @@ export const updateCoachProfileSchema = z.object({
   hotSeatNote: z.string().max(300).optional(),
 });
 
+export const updateMyCoachProfileSchema = z.object({
+  coachName: z
+    .string()
+    .trim()
+    .min(2, "Coach name must be at least 2 characters")
+    .max(60, "Coach name is too long"),
+  avatarUrl: z
+    .string()
+    .trim()
+    .url("Profile picture must be a valid image URL")
+    .max(500)
+    .optional()
+    .or(z.literal("")),
+  discordName: z.string().trim().max(80).optional().or(z.literal("")),
+  bio: z.string().trim().max(500).optional().or(z.literal("")),
+  motto: z.string().trim().max(120).optional().or(z.literal("")),
+  hometown: z.string().trim().max(80).optional().or(z.literal("")),
+  favoriteScheme: z.string().trim().max(80).optional().or(z.literal("")),
+});
+
 export const coachSeasonReviewSchema = z.object({
   userId: z.string().min(1),
   seasonId: z.string().min(1),
