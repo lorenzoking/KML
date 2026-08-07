@@ -14,56 +14,108 @@ const DEFAULT_STORIES = [
   {
     slug: "season-1-team-draft-complete",
     category: StoryCategory.DRAFT,
-    title: "Final team selection is locked: 32 coaches, 32 destinies",
+    title: "The draft is locked: every coach has a franchise",
     eyebrow: "Season 1 · Draft desk",
     summary:
-      "The Kings Madden League draft is official. Curry opened on the Lions. Big Al closed on the Steelers. Now the ratings board tells us who walked into a throne — and who walked into a rebuild.",
-    body: `The board is closed. The chat is loud. And Season 1 finally has faces on every franchise.
+      "Final team selection is official. Jordan Stowe walked out with the No. 1 Rams. Mease drew the toughest rebuild in Miami. Here’s the full board — and the Madden 27 ratings that shape Season 1.",
+    body: `The Kings Madden League draft room is closed.
 
-Curry went first and took the Lions — a 87 OVR club with a 91 offense ready to cook. Wrinzo followed with the Patriots (86). Biz grabbed the Giants. Chance went Packers. Jordan Stowe landed the league’s top overall machine: the Rams at 91 OVR (93 OFF / 88 DEF).
+Thirty-two coaches. Thirty-two franchises. One season about to tip from draft chatter into real scoreboard pressure.
 
-Prime took the Raiders. Lefty secured the Eagles (88 OVR). Nick went Bengals. Qon took Titans. Puddin landed Broncos. Trent got the Chiefs. Noquestions went Ravens (87). Jsmood took Cowboys. Jaylen Stowe chose Bears. Bone went Jets. Dimez took Jaguars. Oli landed Chargers. Watermann got Texans. Gotti took Falcons. Dre went Bucs. Pryor secured Bills (85 OVR, 91 offense). Swipe took 49ers. MONEYTEAMPETEY landed Seahawks. Quon went Colts. Dooders took Cardinals. Slap got Saints. Wdub landed Panthers. Jerm took Commanders. Fitz went Vikings. Jgold got Browns. Mease closed near the end on the Dolphins (74 OVR — the toughest roster on the board). Big Al finished it with the Steelers.
+Official Madden NFL 27 team overalls (via Madden Underground) now sit next to every pick — and they tell a clear story. Some coaches inherited ready-made contenders. Others inherited long roads and longer nights.
 
-FINAL TEAM SELECTION
-1. Curry — Lions
-2. Wrinzo — Patriots
-3. Biz — Giants
-4. Chance — Packers
-5. Jordan Stowe — Rams
-6. Prime — Raiders
-7. Lefty — Eagles
-8. Nick — Bengals
-9. Qon — Titans
-10. Puddin — Broncos
-11. Trent — Chiefs
-12. Noquestions — Ravens
-13. Jsmood — Cowboys
-14. Jaylen Stowe — Bears
-15. Bone — Jets
-16. Dimez — Jaguars
-17. Oli — Chargers
-18. Watermann — Texans
-19. Gotti — Falcons
-20. Dre — Bucs
-21. Pryor — Bills
-22. Swipe — 49ers
-23. MONEYTEAMPETEY — Seahawks
-24. Quon — Colts
-25. Dooders — Cardinals
-26. Slap — Saints
-27. Wdub — Panthers
-28. Jerm — Commanders
-29. Fitz — Vikings
-30. Jgold — Browns
-31. Mease — Dolphins
-32. Big Al — Steelers
+## What the ratings say
 
-OFFICIAL MADDEN TEAM RATINGS (OVR / OFF / DEF)
-Rams 91 / 93 / 88 · Eagles 88 / 88 / 87 · Lions 87 / 91 / 83 · Ravens 87 / 90 / 87 · Broncos 86 / 85 / 87 · Patriots 86 / 87 / 85 · 49ers 85 / 90 / 82 · Bills 85 / 91 / 79 · Chiefs 84 / 90 / 80 · Seahawks 84 / 83 / 82 · Texans 84 / 80 / 87 · Bears 83 / 85 / 82 · Bengals 83 / 88 / 77 · Cowboys 83 / 87 / 80 · Chargers 82 / 85 / 79 · Colts 82 / 83 / 79 · Falcons 82 / 83 / 79 · Packers 81 / 82 / 82 · Panthers 81 / 79 / 82 · Steelers 81 / 79 / 87 · Buccaneers 80 / 83 / 79 · Vikings 80 / 82 / 79 · Commanders 79 / 80 / 77 · Giants 79 / 80 / 79 · Raiders 79 / 79 / 77 · Saints 79 / 80 / 75 · Cardinals 78 / 79 / 75 · Jaguars 78 / 79 / 79 · Browns 77 / 74 / 80 · Jets 76 / 75 / 79 · Titans 75 / 74 / 79 · Dolphins 74 / 74 / 72
+The top of the board is stacked. The **Rams (91)** are the highest-rated team in Madden 27, with a league-best **93 offense**. The **Eagles (88)** are the most complete two-way club. The **Lions (87)** and **Bills (85)** bring elite scoring offenses. The **Ravens (87)** and **Broncos (86)** can win on both sides of the ball.
 
-The top of the board is stacked: Rams, Eagles, Lions, Ravens. The bottom of the board is a proving ground: Titans, Jets, Browns, Dolphins. That gap is the whole point of this league — talent gets you in the conversation, coaching keeps you there.
+At the other end, the rebuild desk is real. The **Dolphins (74)** are the lowest-rated team in the game. The **Titans (75)**, **Jets (76)**, and **Browns (77)** will need coaching, patience, and weekly proof.
 
-Draft night is over. Contracts are live. Week 1 is next. Welcome to the Kings Madden League.`,
+That gap is the point of this league: talent gets you drafted. Coaching decides who survives.
+
+## Final team selection
+
+| Pick | Coach | Team | OVR | OFF | DEF |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Curry | Lions | 87 | 91 | 83 |
+| 2 | Wrinzo | Patriots | 86 | 87 | 85 |
+| 3 | Biz | Giants | 79 | 80 | 79 |
+| 4 | Chance | Packers | 81 | 82 | 82 |
+| 5 | Jordan Stowe | Rams | 91 | 93 | 88 |
+| 6 | Prime | Raiders | 79 | 79 | 77 |
+| 7 | Lefty | Eagles | 88 | 88 | 87 |
+| 8 | Nick | Bengals | 83 | 88 | 77 |
+| 9 | Qon | Titans | 75 | 74 | 79 |
+| 10 | Puddin | Broncos | 86 | 85 | 87 |
+| 11 | Trent | Chiefs | 84 | 90 | 80 |
+| 12 | Noquestions | Ravens | 87 | 90 | 87 |
+| 13 | Jsmood | Cowboys | 83 | 87 | 80 |
+| 14 | Jaylen Stowe | Bears | 83 | 85 | 82 |
+| 15 | Bone | Jets | 76 | 75 | 79 |
+| 16 | Dimez | Jaguars | 78 | 79 | 79 |
+| 17 | Oli | Chargers | 82 | 85 | 79 |
+| 18 | Watermann | Texans | 84 | 80 | 87 |
+| 19 | Gotti | Falcons | 82 | 83 | 79 |
+| 20 | Dre | Buccaneers | 80 | 83 | 79 |
+| 21 | Pryor | Bills | 85 | 91 | 79 |
+| 22 | Swipe | 49ers | 85 | 90 | 82 |
+| 23 | MONEYTEAMPETEY | Seahawks | 84 | 83 | 82 |
+| 24 | Quon | Colts | 82 | 83 | 79 |
+| 25 | Dooders | Cardinals | 78 | 79 | 75 |
+| 26 | Slap | Saints | 79 | 80 | 75 |
+| 27 | Wdub | Panthers | 81 | 79 | 82 |
+| 28 | Jerm | Commanders | 79 | 80 | 77 |
+| 29 | Fitz | Vikings | 80 | 82 | 79 |
+| 30 | Jgold | Browns | 77 | 74 | 80 |
+| 31 | Mease | Dolphins | 74 | 74 | 72 |
+| 32 | Big Al | Steelers | 81 | 79 | 87 |
+
+## Madden 27 team rankings (best to worst)
+
+| Rank | Team | OVR | OFF | DEF | League coach |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Rams | 91 | 93 | 88 | Jordan Stowe |
+| 2 | Eagles | 88 | 88 | 87 | Lefty |
+| 3 | Lions | 87 | 91 | 83 | Curry |
+| 4 | Ravens | 87 | 90 | 87 | Noquestions |
+| 5 | Broncos | 86 | 85 | 87 | Puddin |
+| 6 | Patriots | 86 | 87 | 85 | Wrinzo |
+| 7 | 49ers | 85 | 90 | 82 | Swipe |
+| 8 | Bills | 85 | 91 | 79 | Pryor |
+| 9 | Chiefs | 84 | 90 | 80 | Trent |
+| 10 | Seahawks | 84 | 83 | 82 | MONEYTEAMPETEY |
+| 11 | Texans | 84 | 80 | 87 | Watermann |
+| 12 | Bears | 83 | 85 | 82 | Jaylen Stowe |
+| 13 | Bengals | 83 | 88 | 77 | Nick |
+| 14 | Cowboys | 83 | 87 | 80 | Jsmood |
+| 15 | Chargers | 82 | 85 | 79 | Oli |
+| 16 | Colts | 82 | 83 | 79 | Quon |
+| 17 | Falcons | 82 | 83 | 79 | Gotti |
+| 18 | Packers | 81 | 82 | 82 | Chance |
+| 19 | Panthers | 81 | 79 | 82 | Wdub |
+| 20 | Steelers | 81 | 79 | 87 | Big Al |
+| 21 | Buccaneers | 80 | 83 | 79 | Dre |
+| 22 | Vikings | 80 | 82 | 79 | Fitz |
+| 23 | Commanders | 79 | 80 | 77 | Jerm |
+| 24 | Giants | 79 | 80 | 79 | Biz |
+| 25 | Raiders | 79 | 79 | 77 | Prime |
+| 26 | Saints | 79 | 80 | 75 | Slap |
+| 27 | Cardinals | 78 | 79 | 75 | Dooders |
+| 28 | Jaguars | 78 | 79 | 79 | Dimez |
+| 29 | Browns | 77 | 74 | 80 | Jgold |
+| 30 | Jets | 76 | 75 | 79 | Bone |
+| 31 | Titans | 75 | 74 | 79 | Qon |
+| 32 | Dolphins | 74 | 74 | 72 | Mease |
+
+## Early storylines to watch
+
+- **Win-now pressure:** Jordan Stowe (Rams), Lefty (Eagles), Curry (Lions), and Noquestions (Ravens) drafted premium clubs. Expectations arrive in Week 1.
+- **Explosive offense lanes:** Lions, Bills, Rams, 49ers, and Chiefs can light up the scoreboard fast.
+- **Defense-first identities:** Broncos, Texans, and Steelers can win ugly and force turnovers.
+- **Rebuild bosses:** Mease (Dolphins), Qon (Titans), Bone (Jets), and Jgold (Browns) just signed up for the hardest coaching jobs in the league.
+
+Draft night is over. Contracts are live. Week 1 is next.
+
+Welcome to the Kings Madden League.`,
     isFeatured: true,
     sortOrder: 0,
   },
@@ -76,7 +128,11 @@ Draft night is over. Contracts are live. Week 1 is next. Welcome to the Kings Ma
       "Opening week sets the tone — early wins build belief, early slides start the hot-seat whispers.",
     body: `Week 1 does not decide a season, but it writes the first headline.
 
-Watch the premium offenses first: Lions, Bills, Rams, 49ers, Chiefs. Then watch the traps — lower-rated clubs with something to prove.
+## What to watch
+
+- Premium offenses: **Lions**, **Bills**, **Rams**, **49ers**, **Chiefs**
+- Defense-first traps: **Broncos**, **Texans**, **Steelers**
+- Rebuild openers: **Dolphins**, **Titans**, **Jets**, **Browns**
 
 Submit your scores promptly. The story only feels alive when the results are official.`,
     isFeatured: false,
@@ -91,9 +147,11 @@ Submit your scores promptly. The story only feels alive when the results are off
       "Each week we’ll crown the standouts who changed games — and give the league a reason to argue (in a good way).",
     body: `The Players of the Week board is live.
 
-Commissioners will spotlight offensive, defensive, and coaching standouts as the season unfolds. Have a nominee after your game? Make the case in Discord and on the wire.
+## How it works
 
-Great leagues remember great weeks. This is where those names live.`,
+- Commissioners spotlight offensive, defensive, and coaching standouts
+- Nominations can come from Discord after your game
+- Great leagues remember great weeks — this is where those names live`,
     isFeatured: false,
     sortOrder: 20,
   },
@@ -104,9 +162,13 @@ Great leagues remember great weeks. This is where those names live.`,
     eyebrow: "Coaching carousel",
     summary:
       "Everyone starts with a contract and a reputation. Not everyone will keep both — especially with that ratings gap.",
-    body: `The draft handed out opportunity. The ratings board handed out expectations.
+    body: `The draft handed out opportunity. The Madden 27 ratings board handed out expectations.
 
-Coaches on 87+ clubs will be judged by January. Coaches on the bottom tier will be judged by progress. Either way, reputation, contracts, and job security are now part of the product — not just the box score.
+## The new reality
+
+- Coaches on 87+ clubs will be judged by January
+- Coaches on the bottom tier will be judged by progress
+- Reputation, contracts, and job security are now part of the product
 
 Stay locked into the Coach Hub for hot seats, carousel windows, and the long game of franchise identity.`,
     isFeatured: false,

@@ -32,6 +32,7 @@ import {
   getPublishedStories,
   STORY_CATEGORY_LABELS,
 } from "@/lib/stories";
+import { StoryBody } from "@/components/stories/story-body";
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -230,14 +231,7 @@ export default async function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4 pt-5">
-              {featured.body.split("\n\n").map((paragraph) => (
-                <p
-                  key={paragraph.slice(0, 24)}
-                  className="max-w-3xl text-sm leading-relaxed text-[var(--muted-foreground)] sm:text-[15px]"
-                >
-                  {paragraph}
-                </p>
-              ))}
+              <StoryBody body={featured.body} />
               {commissionerUi ? (
                 <Button asChild variant="outline" size="sm">
                   <Link href="/admin/stories">Edit league stories</Link>
@@ -493,15 +487,7 @@ function StoryCard({
         {story.title}
       </h3>
       <p className="mt-2 text-sm text-[var(--muted-foreground)]">{story.summary}</p>
-      {!compact ? (
-        <div className="mt-3 space-y-2">
-          {story.body.split("\n\n").slice(0, 2).map((paragraph) => (
-            <p key={paragraph.slice(0, 20)} className="text-sm text-[var(--muted-foreground)]">
-              {paragraph}
-            </p>
-          ))}
-        </div>
-      ) : null}
+      {!compact ? <StoryBody body={story.body} className="mt-3" /> : null}
     </article>
   );
 }
