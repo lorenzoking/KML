@@ -58,7 +58,9 @@ export default async function RootLayout({
           />
           {viewingAsUser && canToggleViewMode ? <ViewAsUserBanner /> : null}
           <main className="mx-auto max-w-6xl px-4 py-5 sm:py-8">
-            <div className="animate-enter">{children}</div>
+            <div key={user?.id ?? "guest"} className="animate-enter">
+              {children}
+            </div>
           </main>
         </ThemeProvider>
       </body>

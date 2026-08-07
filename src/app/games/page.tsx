@@ -35,6 +35,7 @@ import {
 } from "@/lib/reputation";
 import { GAME_TYPE_LABELS } from "@/lib/constants";
 import { format } from "date-fns";
+import { ScrollToHash } from "@/components/games/scroll-to-hash";
 
 export default async function GamesPage({
   searchParams,
@@ -68,56 +69,65 @@ export default async function GamesPage({
       ? settings.currentWeek
       : 1;
 
-  const [
-    membership,
-    franchises,
-    weekGames,
-    rawStandings,
-    memberships,
-    myHistory,
-  ] = await Promise.all([
-    user ? getUserMembership(user.id, activeSeason.id) : Promise.resolve(null),
-    prisma.franchise.findMany({
-      orderBy: { sortOrder: "asc" },
-      select: { id: true, name: true, abbreviation: true },
-    }),
-    prisma.gameSubmission.findMany({
-      where: {
-        seasonId: season.id,
-        week: selectedWeek,
-        status: { in: ["APPROVED", "PENDING", "VOIDED", "REJECTED"] },
-      },
-      include: {
-        userTeam: true,
-        opponentTeam: true,
-        submitter: true,
-        result: true,
-      },
-      orderBy: [{ status: "asc" }, { createdAt: "asc" }],
-    }),
-    getSeasonStandings(season.id),
-    prisma.leagueMembership.findMany({
-      where: { seasonId: season.id, isActive: true },
-      include: {
-        user: {
-          include: {
-            xpAdjustmentsReceived: {
-              select: { amount: true, seasonId: true },
+  const membershipPromise = user
+    ? getUserMembership(user.id, activeSeason.id)
+    : Promise.resolve(null);
+
+  const weekDataPromise =
+    tab === "week"
+      ? Promise.all([
+          prisma.franchise.findMany({
+            orderBy: { sortOrder: "asc" },
+            select: { id: true, name: true, abbreviation: true },
+          }),
+          prisma.gameSubmission.findMany({
+            where: {
+              seasonId: season.id,
+              week: selectedWeek,
+              status: { in: ["APPROVED", "PENDING", "VOIDED", "REJECTED"] },
             },
-            reputationReceived: true,
-          },
-        },
-      },
-    }),
-    user
-      ? prisma.gameSubmission.findMany({
-          where: { submitterId: user.id },
-          include: { userTeam: true, opponentTeam: true, season: true },
-          orderBy: { createdAt: "desc" },
-          take: 12,
-        })
-      : Promise.resolve([]),
-  ]);
+            include: {
+              userTeam: true,
+              opponentTeam: true,
+              submitter: true,
+              result: true,
+            },
+            orderBy: [{ status: "asc" }, { createdAt: "asc" }],
+          }),
+          user
+            ? prisma.gameSubmission.findMany({
+                where: { submitterId: user.id },
+                include: { userTeam: true, opponentTeam: true, season: true },
+                orderBy: { createdAt: "desc" },
+                take: 12,
+              })
+            : Promise.resolve([]),
+        ])
+      : Promise.resolve([[], [], []] as const);
+
+  const standingsDataPromise =
+    tab === "standings"
+      ? Promise.all([
+          getSeasonStandings(season.id),
+          prisma.leagueMembership.findMany({
+            where: { seasonId: season.id, isActive: true },
+            include: {
+              user: {
+                include: {
+                  xpAdjustmentsReceived: {
+                    where: { seasonId: season.id },
+                    select: { amount: true, seasonId: true },
+                  },
+                  reputationReceived: { select: { amount: true } },
+                },
+              },
+            },
+          }),
+        ])
+      : Promise.resolve([[], []] as const);
+
+  const [membership, [franchises, weekGames, myHistory], [rawStandings, memberships]] =
+    await Promise.all([membershipPromise, weekDataPromise, standingsDataPromise]);
 
   // Public viewers only see approved/voided history; coaches see their pending too.
   const visibleGames = weekGames.filter((game) => {
@@ -145,9 +155,7 @@ export default async function GamesPage({
 
   const coachByFranchise = Object.fromEntries(
     memberships.map((m) => {
-      const seasonXp = sumXp(
-        m.user.xpAdjustmentsReceived.filter((x) => x.seasonId === season.id)
-      );
+      const seasonXp = sumXp(m.user.xpAdjustmentsReceived);
       const score = computeReputationScore(
         settings.startingRepScore,
         m.user.reputationReceived
@@ -178,6 +186,7 @@ export default async function GamesPage({
 
   return (
     <div className="space-y-6">
+      {tab === "week" ? <ScrollToHash id="submit-result" /> : null}
       <div className="grid gap-4 sm:flex sm:flex-wrap sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold uppercase tracking-[0.04em] sm:text-3xl sm:tracking-[0.06em]">
@@ -189,7 +198,11 @@ export default async function GamesPage({
         </div>
         {canSubmit ? (
           <Button asChild className="w-full sm:w-auto">
-            <a href="#submit-result">Submit your result</a>
+            {tab === "week" ? (
+              <a href="#submit-result">Submit your result</a>
+            ) : (
+              <Link href="/games?tab=week#submit-result">Submit your result</Link>
+            )}
           </Button>
         ) : null}
       </div>
@@ -260,7 +273,7 @@ export default async function GamesPage({
       {tab === "week" ? (
         <div className="grid gap-6 lg:grid-cols-5">
           <div className="space-y-6 lg:col-span-2">
-            <Card id="submit-result">
+            <Card id="submit-result" className="scroll-mt-24 animate-rise">
               <CardHeader>
                 <CardTitle>Submit result</CardTitle>
                 <CardDescription>

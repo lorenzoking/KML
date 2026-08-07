@@ -62,28 +62,40 @@ function resultBelongsToStint(
 export async function getUserCareerStats(userId: string): Promise<CareerStats> {
   const settings = await getLeagueSettings();
 
-  const [memberships, results, xpAdjustments, repAdjustments] =
-    await Promise.all([
-      prisma.leagueMembership.findMany({
-        where: { userId },
-        include: {
-          franchise: true,
-          season: true,
-        },
-        orderBy: [{ season: { number: "asc" } }, { assignedAt: "asc" }],
-      }),
-      prisma.gameResult.findMany({
-        where: { isVoided: false },
-      }),
-      prisma.xPAdjustment.findMany({
-        where: { userId },
-        select: { amount: true, seasonId: true },
-      }),
-      prisma.reputationAdjustment.findMany({
-        where: { userId },
-        select: { amount: true },
-      }),
-    ]);
+  const [memberships, xpAdjustments, repAdjustments] = await Promise.all([
+    prisma.leagueMembership.findMany({
+      where: { userId },
+      include: {
+        franchise: true,
+        season: true,
+      },
+      orderBy: [{ season: { number: "asc" } }, { assignedAt: "asc" }],
+    }),
+    prisma.xPAdjustment.findMany({
+      where: { userId },
+      select: { amount: true, seasonId: true },
+    }),
+    prisma.reputationAdjustment.findMany({
+      where: { userId },
+      select: { amount: true },
+    }),
+  ]);
+
+  const franchiseIds = [...new Set(memberships.map((m) => m.franchiseId))];
+  const seasonIds = [...new Set(memberships.map((m) => m.seasonId))];
+  const results =
+    franchiseIds.length === 0
+      ? []
+      : await prisma.gameResult.findMany({
+          where: {
+            isVoided: false,
+            seasonId: { in: seasonIds },
+            OR: [
+              { homeTeamId: { in: franchiseIds } },
+              { awayTeamId: { in: franchiseIds } },
+            ],
+          },
+        });
 
   const countedResultIds = new Set<string>();
 

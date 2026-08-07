@@ -73,6 +73,48 @@ export async function getSeasonStandings(seasonId: string) {
   return computeStandings(franchises, results);
 }
 
+/** Lightweight W-L + form for one franchise without computing full standings. */
+export async function getFranchiseSeasonRecord(
+  seasonId: string,
+  franchiseId: string
+) {
+  const results = await prisma.gameResult.findMany({
+    where: {
+      seasonId,
+      isVoided: false,
+      OR: [{ homeTeamId: franchiseId }, { awayTeamId: franchiseId }],
+    },
+    orderBy: [{ week: "desc" }, { createdAt: "desc" }],
+  });
+
+  let wins = 0;
+  let losses = 0;
+  let ties = 0;
+  const form: string[] = [];
+
+  for (const r of results) {
+    const won = r.winnerTeamId === franchiseId;
+    const tied = !r.winnerTeamId;
+    if (tied) {
+      ties += 1;
+      form.push("T");
+    } else if (won) {
+      wins += 1;
+      form.push("W");
+    } else {
+      losses += 1;
+      form.push("L");
+    }
+  }
+
+  return {
+    wins,
+    losses,
+    ties,
+    form: form.slice(0, 5).join(""),
+  };
+}
+
 export async function listSeasons() {
   return prisma.season.findMany({
     orderBy: { number: "desc" },

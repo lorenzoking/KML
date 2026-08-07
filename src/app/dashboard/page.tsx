@@ -14,8 +14,8 @@ import { isCommissioner, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   getActiveSeason,
+  getFranchiseSeasonRecord,
   getReputation,
-  getSeasonStandings,
   getUserMembership,
   getXpTotal,
 } from "@/lib/league";
@@ -32,7 +32,6 @@ export default async function DashboardPage() {
   const { settings, season } = await getActiveSeason();
   const [
     membership,
-    standings,
     xpTotal,
     reputation,
     career,
@@ -40,7 +39,6 @@ export default async function DashboardPage() {
     pendingMine,
   ] = await Promise.all([
     getUserMembership(user.id, season.id),
-    getSeasonStandings(season.id),
     getXpTotal(user.id),
     getReputation(user.id),
     getUserCareerStats(user.id),
@@ -55,7 +53,7 @@ export default async function DashboardPage() {
     }),
   ]);
   const teamStanding = membership
-    ? standings.find((s) => s.franchiseId === membership.franchiseId)
+    ? await getFranchiseSeasonRecord(season.id, membership.franchiseId)
     : undefined;
   const gmRepScore = computeReputationScore(
     settings.startingGmRepScore,
@@ -113,9 +111,11 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex">
-          <Button asChild className="w-full sm:w-auto">
-            <Link href="/games?tab=week#submit-result">Submit result</Link>
-          </Button>
+          {membership ? (
+            <Button asChild className="w-full sm:w-auto">
+              <Link href="/games?tab=week#submit-result">Submit result</Link>
+            </Button>
+          ) : null}
           <Button asChild variant="outline" className="w-full sm:w-auto">
             <Link href="/games?tab=standings">Standings</Link>
           </Button>
@@ -129,7 +129,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
         <StatCard
           label="Assigned team"
           value={membership?.franchise.name ?? "Unassigned"}
@@ -176,9 +176,6 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-2">
-              <Button asChild size="sm">
-                <Link href="/admin/approvals">Pending approvals ({pendingCount})</Link>
-              </Button>
               <Button asChild size="sm" variant="outline">
                 <Link href="/admin/teams">Assign teams</Link>
               </Button>
@@ -285,7 +282,7 @@ export default async function DashboardPage() {
             {pendingMine.length === 0 ? (
               <EmptyState
                 title="No pending results"
-                description="Submit a game from the Submissions page."
+                description="Submit a game from Games → Week results."
               />
             ) : (
               <ul className="space-y-3">
@@ -392,7 +389,7 @@ function StatCard({
   hint: string;
 }) {
   return (
-    <Card>
+    <Card className="surface-hover">
       <CardHeader className="pb-2">
         <CardDescription>{label}</CardDescription>
         <CardTitle className="break-words text-lg leading-tight sm:text-2xl">

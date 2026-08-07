@@ -17,7 +17,7 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6 sm:space-y-10">
-      <section className="field-stripe relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] px-5 py-10 shadow-[0_20px_60px_rgba(0,0,0,0.12)] sm:px-10 sm:py-16">
+      <section className="field-stripe relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] px-5 py-10 shadow-[0_20px_60px_rgba(0,0,0,0.12)] animate-rise sm:px-10 sm:py-16">
         <div className="absolute -right-20 -top-24 size-72 rounded-full bg-[var(--primary)]/10 blur-3xl" />
         <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-[color-mix(in_srgb,var(--primary)_22%,transparent)] to-transparent" />
         <div className="relative max-w-3xl space-y-5">
@@ -62,7 +62,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="grid gap-3 sm:gap-4 md:grid-cols-3">
+      <section className="stagger grid gap-3 sm:gap-4 md:grid-cols-3">
         {[
           {
             icon: ShieldCheck,
@@ -80,7 +80,7 @@ export default async function HomePage() {
             body: "Automatic XP on approval plus commissioner adjustments and hot-seat labels.",
           },
         ].map((item) => (
-          <Card key={item.title} className="transition-transform duration-200 hover:-translate-y-0.5">
+          <Card key={item.title} className="surface-hover">
             <CardHeader>
               <div className="mb-2 flex size-10 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
                 <item.icon className="size-5" />
