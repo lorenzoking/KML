@@ -1,5 +1,6 @@
 import { StoryCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { buildDraftGradesArticleBody } from "@/lib/draft-grades";
 
 export const STORY_CATEGORY_LABELS: Record<StoryCategory, string> = {
   FEATURE: "Front page",
@@ -174,6 +175,17 @@ Stay locked into the Coach Hub for hot seats, carousel windows, and the long gam
     isFeatured: false,
     sortOrder: 30,
   },
+  {
+    slug: "season-1-team-draft-grades",
+    category: StoryCategory.DRAFT,
+    title: "Season 1 team draft grades: every coach scored",
+    eyebrow: "Draft desk · Grades",
+    summary:
+      "From Jordan Stowe’s A+ Rams steal to Mease’s Dolphins rebuild lab — we graded all 32 picks on overalls, draft slot, stars, contend power, and rebuild tools.",
+    body: buildDraftGradesArticleBody(),
+    isFeatured: false,
+    sortOrder: 5,
+  },
 ] as const;
 
 /** Ensures the welcoming front-page stories exist and stay current. */
@@ -205,11 +217,22 @@ export async function ensureDefaultLeagueStories(seasonId?: string) {
 export async function getPublishedStories(options?: {
   seasonId?: string;
   take?: number;
+  category?: StoryCategory;
 }) {
   return prisma.leagueStory.findMany({
-    where: { isPublished: true },
-    orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }, { publishedAt: "desc" }],
-    take: options?.take ?? 12,
+    where: {
+      isPublished: true,
+      ...(options?.category ? { category: options.category } : {}),
+    },
+    orderBy: [{ isFeatured: "desc" }, { publishedAt: "desc" }, { sortOrder: "asc" }],
+    take: options?.take ?? 50,
+    include: { author: { select: { name: true, email: true } } },
+  });
+}
+
+export async function getStoryBySlug(slug: string) {
+  return prisma.leagueStory.findFirst({
+    where: { slug, isPublished: true },
     include: { author: { select: { name: true, email: true } } },
   });
 }

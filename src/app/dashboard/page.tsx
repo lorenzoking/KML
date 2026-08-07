@@ -176,6 +176,9 @@ export default async function DashboardPage() {
                 <Link href="/games?tab=standings">Standings</Link>
               </Button>
               <Button asChild variant="ghost">
+                <Link href="/storylines">Storylines</Link>
+              </Button>
+              <Button asChild variant="ghost">
                 <Link href="/coach">Coach Hub</Link>
               </Button>
               {commissionerUi ? (
@@ -239,11 +242,22 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-4 pt-5">
               <StoryBody body={featured.body} />
-              {commissionerUi ? (
+              <div className="flex flex-wrap gap-2">
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/admin/stories">Edit league stories</Link>
+                  <Link href={`/storylines/${featured.slug}`}>Open full story</Link>
                 </Button>
-              ) : null}
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/storylines">All storylines</Link>
+                </Button>
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/storylines/season-1-team-draft-grades">Draft grades</Link>
+                </Button>
+                {commissionerUi ? (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/admin/stories">Edit stories</Link>
+                  </Button>
+                ) : null}
+              </div>
             </CardContent>
           </Card>
         </section>
