@@ -121,11 +121,16 @@ export default async function DashboardPage({
       : Promise.resolve(0),
   ]);
 
+  const DASHBOARD_LINK_ONLY_SLUGS = new Set(["season-1-team-draft-grades"]);
+
+  const deskStories = stories.filter(
+    (s) => !DASHBOARD_LINK_ONLY_SLUGS.has(s.slug)
+  );
   const featured =
-    stories.find((s) => s.isFeatured) ??
-    stories.find((s) => s.category === "DRAFT") ??
-    stories[0];
-  const secondaryStories = stories.filter((s) => s.id !== featured?.id);
+    deskStories.find((s) => s.isFeatured) ??
+    deskStories.find((s) => s.category === "DRAFT") ??
+    deskStories[0];
+  const secondaryStories = deskStories.filter((s) => s.id !== featured?.id);
 
   const byCategory = (category: StoryCategory) =>
     secondaryStories.filter((s) => s.category === category);
@@ -292,16 +297,17 @@ export default async function DashboardPage({
               </div>
             </CardHeader>
             <CardContent className="space-y-4 pt-5">
-              <StoryBody body={featured.body} />
               <div className="flex flex-wrap gap-2">
-                <Button asChild variant="outline" size="sm">
+                <Button asChild size="sm">
                   <Link href={`/storylines/${featured.slug}`}>Open full story</Link>
                 </Button>
-                <Button asChild variant="ghost" size="sm">
+                <Button asChild variant="outline" size="sm">
                   <Link href="/storylines">All storylines</Link>
                 </Button>
                 <Button asChild variant="ghost" size="sm">
-                  <Link href="/storylines/season-1-team-draft-grades">Draft grades</Link>
+                  <Link href="/storylines/season-1-team-draft-grades">
+                    Team draft grades
+                  </Link>
                 </Button>
                 {commissionerUi ? (
                   <Button asChild variant="outline" size="sm">
@@ -559,7 +565,12 @@ function StoryCard({
         {story.title}
       </h3>
       <p className="mt-2 text-sm text-[var(--muted-foreground)]">{story.summary}</p>
-      {!compact ? <StoryBody body={story.body} className="mt-3" /> : null}
+      <Link
+        href={`/storylines/${story.slug}`}
+        className="mt-3 inline-block text-sm font-medium text-[var(--primary)] hover:underline"
+      >
+        Read story
+      </Link>
     </article>
   );
 }
