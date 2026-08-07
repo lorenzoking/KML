@@ -32,8 +32,9 @@ export const metadata: Metadata = {
   description:
     "Kings Madden League — built on competition, driven by brotherhood. Standings, approvals, XP, reputation, and league storylines.",
   icons: {
-    icon: "/brand/kml-logo.png",
-    apple: "/brand/kml-logo.png",
+    icon: [{ url: "/brand/kml-icon.png", type: "image/png" }],
+    shortcut: "/brand/kml-icon.png",
+    apple: "/brand/kml-icon.png",
   },
 };
 

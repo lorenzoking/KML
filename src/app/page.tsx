@@ -19,14 +19,16 @@ export default async function HomePage() {
   return (
     <div className="space-y-8 sm:space-y-12">
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden border-y border-[var(--border)]">
-        <div className="absolute inset-0">
-          <BrandLogo
-            size="hero"
-            priority
-            className="h-full max-w-none scale-110 object-cover opacity-35 blur-[1px] sm:opacity-45"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-black/55" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_40%,rgba(212,175,55,0.22),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[#050505]">
+          <div className="absolute inset-y-0 right-[-8%] flex w-[70%] items-center justify-center sm:w-[55%]">
+            <BrandLogo
+              size="hero"
+              priority
+              className="max-w-none scale-110 opacity-40 drop-shadow-[0_0_60px_rgba(212,175,55,0.25)] sm:opacity-55"
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/90 to-black/40" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_40%,rgba(212,175,55,0.18),transparent_55%)]" />
         </div>
 
         <div className="relative mx-auto flex min-h-[78vh] max-w-6xl flex-col justify-end px-4 pb-12 pt-20 sm:min-h-[82vh] sm:pb-16 sm:pt-24">
