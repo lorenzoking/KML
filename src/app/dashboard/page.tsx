@@ -27,6 +27,7 @@ import { GAME_TYPE_LABELS } from "@/lib/constants";
 import { computeReputationScore } from "@/lib/reputation";
 import { getReputationGrade } from "@/lib/coach/grades";
 import { getJobSecurityStatus } from "@/lib/coach/job-security";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import {
   ensureDefaultLeagueStories,
   getPublishedStories,
@@ -133,13 +134,19 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <section className="field-stripe relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] px-5 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.14)] animate-rise sm:px-8 sm:py-10">
+        <div className="absolute -right-10 -top-8 opacity-20">
+          <BrandLogo size="lg" className="h-40 w-40 sm:h-52 sm:w-52" />
+        </div>
         <div className="absolute -right-16 -top-20 size-64 rounded-full bg-[var(--primary)]/15 blur-3xl" />
         <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-[color-mix(in_srgb,var(--primary)_18%,transparent)] to-transparent" />
         <div className="relative grid gap-6 lg:grid-cols-[1.4fr_0.8fr] lg:items-end">
           <div className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-              Welcome to the league desk
-            </p>
+            <div className="flex items-center gap-3">
+              <BrandLogo size="sm" className="drop-shadow-[0_0_16px_rgba(212,175,55,0.4)]" />
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
+                Welcome to the league desk
+              </p>
+            </div>
             <h1 className="max-w-2xl text-3xl font-semibold uppercase leading-[1.05] tracking-[0.04em] sm:text-5xl">
               {firstName}, the season has a story — and you&apos;re in it
             </h1>

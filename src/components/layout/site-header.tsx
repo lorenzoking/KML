@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { ViewModeToggle } from "@/components/layout/view-mode-toggle";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { signOut } from "@/actions/auth";
 import { APP_NAME, APP_SHORT } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -34,14 +35,18 @@ export function SiteHeader({
       ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/85 shadow-[0_1px_12px_rgba(15,30,20,0.04)] backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-[var(--border)] bg-[var(--background)]/85 shadow-[0_1px_12px_rgba(0,0,0,0.35)] backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
-        <Link href={user ? "/dashboard" : "/"} className="flex items-baseline gap-2">
-          <span className="rounded-lg bg-[var(--primary)] px-2 py-1 font-[family-name:var(--font-display)] text-lg tracking-[0.12em] text-[var(--primary-foreground)] shadow-sm">
-            {APP_SHORT}
-          </span>
-          <span className="hidden text-sm text-[var(--muted-foreground)] sm:inline">
-            {APP_NAME}
+        <Link
+          href={user ? "/dashboard" : "/"}
+          className="flex items-center gap-2.5 transition-opacity hover:opacity-90"
+        >
+          <BrandLogo size="sm" priority className="drop-shadow-[0_0_12px_rgba(212,175,55,0.35)]" />
+          <span className="hidden flex-col leading-tight sm:flex">
+            <span className="font-[family-name:var(--font-display)] text-sm uppercase tracking-[0.16em] text-[var(--foreground)]">
+              {APP_SHORT}
+            </span>
+            <span className="text-[11px] text-[var(--muted-foreground)]">{APP_NAME}</span>
           </span>
         </Link>
 

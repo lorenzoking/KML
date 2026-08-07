@@ -30,7 +30,11 @@ export const metadata: Metadata = {
     template: `%s · ${APP_NAME}`,
   },
   description:
-    "Commissioner-run Madden franchise league management — standings, approvals, XP, and coach reputation.",
+    "Kings Madden League — built on competition, driven by brotherhood. Standings, approvals, XP, reputation, and league storylines.",
+  icons: {
+    icon: "/brand/kml-logo.png",
+    apple: "/brand/kml-logo.png",
+  },
 };
 
 // League pages read live DB state; never prerender against Postgres at build time.
