@@ -102,7 +102,8 @@ export default async function CoachXpPage() {
                   </option>
                   {coaches.map((m) => (
                     <option key={m.userId} value={m.userId}>
-                      {m.user.name ?? m.user.email} ({m.franchise.abbreviation})
+                      {m.user.name?.trim() || "Unnamed coach"} (
+                      {m.franchise.abbreviation})
                     </option>
                   ))}
                 </Select>

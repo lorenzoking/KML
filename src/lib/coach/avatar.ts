@@ -6,8 +6,8 @@ export function getCoachAvatarUrl(user: {
   return user.coachProfile?.avatarUrl?.trim() || user.image?.trim() || null;
 }
 
-export function getCoachInitials(name?: string | null, email?: string | null) {
-  const source = (name ?? email ?? "C").trim();
+export function getCoachInitials(name?: string | null) {
+  const source = (name?.trim() || "Coach").trim();
   const parts = source.split(/\s+/).filter(Boolean);
   if (parts.length >= 2) {
     return `${parts[0]![0]}${parts[1]![0]}`.toUpperCase();

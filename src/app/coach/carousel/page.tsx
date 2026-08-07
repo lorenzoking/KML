@@ -272,7 +272,9 @@ export default async function CoachCarouselPage() {
           <div className="space-y-3 md:hidden">
             {applications.map((app) => (
               <div key={app.id} className="rounded-md border p-3 text-sm">
-                <p className="font-medium">{app.applicant.name ?? app.applicant.email}</p>
+                <p className="font-medium">
+                  {app.applicant.name?.trim() || "Unnamed coach"}
+                </p>
                 <p className="mt-1 text-xs text-[var(--muted-foreground)]">
                   {app.currentTeam?.abbreviation ?? "—"} →{" "}
                   {app.requestedTeam?.abbreviation ?? app.vacancy?.franchise.abbreviation ?? "—"} ·{" "}
@@ -325,7 +327,9 @@ export default async function CoachCarouselPage() {
               <tbody>
                 {applications.map((app) => (
                   <tr key={app.id} className="border-b align-top">
-                    <td className="py-2 pr-3">{app.applicant.name ?? app.applicant.email}</td>
+                    <td className="py-2 pr-3">
+                      {app.applicant.name?.trim() || "Unnamed coach"}
+                    </td>
                     <td className="py-2 pr-3">{app.currentTeam?.abbreviation ?? "—"}</td>
                     <td className="py-2 pr-3">
                       {app.requestedTeam?.abbreviation ?? app.vacancy?.franchise.abbreviation ?? "—"}

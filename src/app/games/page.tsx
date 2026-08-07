@@ -163,7 +163,7 @@ export default async function GamesPage({
       return [
         m.franchiseId,
         {
-          name: m.user.name ?? m.user.email,
+          name: m.user.name?.trim() || "Unnamed coach",
           xp: seasonXp,
           score,
           label: getReputationLabel(score),
@@ -390,7 +390,7 @@ export default async function GamesPage({
                             {game.userTeam.name} vs {game.opponentTeam.name} ·{" "}
                             {GAME_TYPE_LABELS[game.gameType]}
                             {game.gameType === "SIMULATED" ? " · no XP" : ""} ·{" "}
-                            {game.submitter.name ?? game.submitter.email}
+                            {game.submitter.name?.trim() || "Unnamed coach"}
                             {game.reviewedAt
                               ? ` · ${format(game.reviewedAt, "MMM d")}`
                               : ""}
@@ -421,7 +421,7 @@ export default async function GamesPage({
                           </div>
                           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
                             Waiting on commissioners ·{" "}
-                            {game.submitter.name ?? game.submitter.email}
+                            {game.submitter.name?.trim() || "Unnamed coach"}
                           </p>
                         </li>
                       ))}

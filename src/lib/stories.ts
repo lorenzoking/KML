@@ -226,14 +226,14 @@ export async function getPublishedStories(options?: {
     },
     orderBy: [{ isFeatured: "desc" }, { publishedAt: "desc" }, { sortOrder: "asc" }],
     take: options?.take ?? 50,
-    include: { author: { select: { name: true, email: true } } },
+    include: { author: { select: { name: true } } },
   });
 }
 
 export async function getStoryBySlug(slug: string) {
   return prisma.leagueStory.findFirst({
     where: { slug, isPublished: true },
-    include: { author: { select: { name: true, email: true } } },
+    include: { author: { select: { name: true } } },
   });
 }
 
@@ -241,6 +241,6 @@ export async function getFeaturedStory() {
   return prisma.leagueStory.findFirst({
     where: { isPublished: true, isFeatured: true },
     orderBy: [{ sortOrder: "asc" }, { publishedAt: "desc" }],
-    include: { author: { select: { name: true, email: true } } },
+    include: { author: { select: { name: true } } },
   });
 }

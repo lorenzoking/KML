@@ -53,7 +53,7 @@ export async function getXpStandings(seasonId: string): Promise<XpBoardRow[]> {
 
     return {
       userId: m.userId,
-      coach: m.user.name ?? m.user.email,
+      coach: m.user.name?.trim() || "Unnamed coach",
       team: m.franchise.name,
       teamAbbr: m.franchise.abbreviation,
       gamesPlayed,

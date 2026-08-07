@@ -66,7 +66,7 @@ export default async function CoachProfileDetailPage({
           <CoachAvatar user={user} size="lg" />
           <div>
             <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold uppercase tracking-wide">
-              {user.name ?? user.email}
+              {user.name?.trim() || "Unnamed coach"}
             </h1>
             {profile?.motto ? (
               <p className="mt-1 text-sm italic text-[var(--muted-foreground)]">

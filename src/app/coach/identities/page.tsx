@@ -71,7 +71,8 @@ export default async function CoachIdentitiesPage() {
           {memberships.map((row) => (
             <div key={row.id} className="rounded-md border p-3">
               <p className="text-sm font-medium">
-                {row.franchise.abbreviation} · {row.user.name ?? row.user.email}
+                {row.franchise.abbreviation} ·{" "}
+                {row.user.name?.trim() || "Unnamed coach"}
               </p>
               <p className="text-xs text-[var(--muted-foreground)]">
                 Team identity: {row.franchise.teamIdentity?.name ?? "Unassigned"} · Coach

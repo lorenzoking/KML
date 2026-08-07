@@ -8,7 +8,6 @@ export function CoachAvatar({
 }: {
   user: {
     name?: string | null;
-    email?: string | null;
     image?: string | null;
     coachProfile?: { avatarUrl?: string | null } | null;
   };
@@ -16,7 +15,7 @@ export function CoachAvatar({
   className?: string;
 }) {
   const url = getCoachAvatarUrl(user);
-  const initials = getCoachInitials(user.name, user.email);
+  const initials = getCoachInitials(user.name);
   const sizeClass =
     size === "sm" ? "size-10 text-xs" : size === "lg" ? "size-20 text-xl" : "size-14 text-sm";
 

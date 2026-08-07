@@ -48,7 +48,7 @@ export default async function RequestTeamPage({
   const takenByFranchiseId = new Map(
     takenMemberships.map((m) => [
       m.franchiseId,
-      m.user.name ?? m.user.email,
+      m.user.name?.trim() || "another coach",
     ])
   );
 

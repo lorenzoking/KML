@@ -47,7 +47,7 @@ export default async function CoachReputationPage({
   const filtered = repRows.filter((row) => {
     const qMatch =
       !q ||
-      (row.user.name ?? row.user.email).toLowerCase().includes(q) ||
+      (row.user.name ?? "Unnamed coach").toLowerCase().includes(q) ||
       row.reason.toLowerCase().includes(q);
     const categoryMatch = !category || row.category === category;
     const weekMatch = !week || row.week === week;
@@ -70,7 +70,9 @@ export default async function CoachReputationPage({
             {filtered.map((row) => (
               <div key={row.id} className="rounded-md border p-3 text-sm">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="font-medium">{row.user.name ?? row.user.email}</p>
+                  <p className="font-medium">
+                    {row.user.name?.trim() || "Unnamed coach"}
+                  </p>
                   <p className="text-xs text-[var(--muted-foreground)]">{row.category}</p>
                 </div>
                 <p className="mt-1 text-xs text-[var(--muted-foreground)]">
@@ -111,7 +113,9 @@ export default async function CoachReputationPage({
                 {filtered.map((row) => (
                   <tr key={row.id} className="border-b">
                     <td className="py-2 pr-3">{format(row.createdAt, "MMM d, h:mm a")}</td>
-                    <td className="py-2 pr-3">{row.user.name ?? row.user.email}</td>
+                    <td className="py-2 pr-3">
+                      {row.user.name?.trim() || "Unnamed coach"}
+                    </td>
                     <td className="py-2 pr-3">{row.category}</td>
                     <td className="py-2 pr-3">{row.week ?? "—"}</td>
                     <td className="py-2 pr-3">{row.amount > 0 ? `+${row.amount}` : row.amount}</td>
@@ -158,7 +162,8 @@ export default async function CoachReputationPage({
                   </option>
                   {users.map((m) => (
                     <option key={m.userId} value={m.userId}>
-                      {m.user.name ?? m.user.email} ({m.franchise.abbreviation})
+                      {m.user.name?.trim() || "Unnamed coach"} (
+                      {m.franchise.abbreviation})
                     </option>
                   ))}
                 </Select>

@@ -116,7 +116,7 @@ async function loadCoachBoardRows(
 
       return {
         userId: membership.userId,
-        coach: membership.user.name ?? membership.user.email,
+        coach: membership.user.name?.trim() || "Unnamed coach",
         team: membership.franchise.name,
         teamAbbr: membership.franchise.abbreviation,
         conference: membership.franchise.conference,
