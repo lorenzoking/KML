@@ -107,6 +107,8 @@ async function main() {
 
   await prisma.carouselApplication.deleteMany();
   await prisma.carouselVacancy.deleteMany();
+  await prisma.waitlistEntry.deleteMany();
+  await prisma.leagueStory.deleteMany();
   await prisma.coachSeasonReview.deleteMany();
   await prisma.coachProfile.deleteMany();
   await prisma.identityCatalog.deleteMany();

@@ -180,3 +180,26 @@ export const updateWaitlistEntrySchema = z.object({
   entryId: z.string().min(1),
   isActive: z.coerce.boolean(),
 });
+
+export const createLeagueStorySchema = z.object({
+  title: z.string().min(4).max(140),
+  eyebrow: z.string().max(80).optional(),
+  summary: z.string().min(8).max(400),
+  body: z.string().min(20).max(12000),
+  category: z.enum([
+    "FEATURE",
+    "GAME_OF_WEEK",
+    "PLAYER_OF_WEEK",
+    "COACHING",
+    "DRAFT",
+    "LEAGUE",
+  ]),
+  week: z.coerce.number().int().min(1).max(30).optional(),
+  isFeatured: z.coerce.boolean().default(false),
+  isPublished: z.coerce.boolean().default(true),
+  sortOrder: z.coerce.number().int().min(0).max(999).default(0),
+});
+
+export const updateLeagueStorySchema = createLeagueStorySchema.extend({
+  storyId: z.string().min(1),
+});

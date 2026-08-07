@@ -101,6 +101,15 @@ enum ExpectationResult {
   EXCEEDED
 }
 
+enum StoryCategory {
+  FEATURE
+  GAME_OF_WEEK
+  PLAYER_OF_WEEK
+  COACHING
+  DRAFT
+  LEAGUE
+}
+
 model User {
   id         String    @id @default(cuid())
   email      String    @unique
@@ -126,6 +135,7 @@ model User {
   carouselApplications  CarouselApplication[]  @relation("CarouselApplicant")
   carouselDecisions     CarouselApplication[]  @relation("CarouselReviewer")
   waitlistEntries       WaitlistEntry[]
+  storiesAuthored       LeagueStory[]          @relation("StoryAuthor")
   auditLogs             AuditLog[]
 }
 
@@ -170,6 +180,7 @@ model Season {
   coachSeasonReviews    CoachSeasonReview[]
   carouselVacancies     CarouselVacancy[]
   carouselApplications  CarouselApplication[]
+  stories               LeagueStory[]
 }
 
 model LeagueMembership {
@@ -450,6 +461,33 @@ model CarouselApplication {
   @@index([seasonId])
   @@index([status])
   @@index([applicantId])
+}
+
+model LeagueStory {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  seasonId    String?
+  week        Int?
+  category    StoryCategory @default(LEAGUE)
+  title       String
+  eyebrow     String?
+  summary     String
+  body        String
+  isFeatured  Boolean       @default(false)
+  isPublished Boolean       @default(true)
+  sortOrder   Int           @default(0)
+  authorId    String?
+  publishedAt DateTime      @default(now())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  season Season? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  author User?   @relation("StoryAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([isPublished, isFeatured])
+  @@index([category])
+  @@index([seasonId, week])
+  @@index([sortOrder])
 }
 
 model AuditLog {
