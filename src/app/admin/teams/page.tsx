@@ -8,14 +8,20 @@ import {
 import { Select } from "@/components/ui/select";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Badge } from "@/components/ui/badge";
-import { assignUserToTeam } from "@/actions/teams";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  addWaitlistEntry,
+  assignUserToTeam,
+  setWaitlistEntryActive,
+} from "@/actions/teams";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason } from "@/lib/league";
 
 export default async function TeamsAdminPage() {
   const { season } = await getActiveSeason();
 
-  const [franchises, users, memberships] = await Promise.all([
+  const [franchises, users, memberships, waitlist] = await Promise.all([
     prisma.franchise.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.user.findMany({
       where: { deletedAt: null, isActive: true },
@@ -28,6 +34,10 @@ export default async function TeamsAdminPage() {
         user: { deletedAt: null },
       },
       include: { user: true, franchise: true },
+    }),
+    prisma.waitlistEntry.findMany({
+      include: { user: true },
+      orderBy: [{ isActive: "desc" }, { position: "asc" }],
     }),
   ]);
 
@@ -93,6 +103,80 @@ export default async function TeamsAdminPage() {
             </Select>
             <SubmitButton>Save assignment</SubmitButton>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Waitlist</CardTitle>
+          <CardDescription>
+            Used to auto-fill fired teams before creating a carousel vacancy.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form
+            action={async (formData) => {
+              "use server";
+              await addWaitlistEntry(formData);
+            }}
+            className="grid gap-3 md:grid-cols-4"
+          >
+            <Select name="userId" required defaultValue="">
+              <option value="" disabled>
+                Select user
+              </option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name ?? u.email}
+                </option>
+              ))}
+            </Select>
+            <div className="space-y-1">
+              <Label htmlFor="position">Position</Label>
+              <Input id="position" name="position" type="number" min={1} required />
+            </div>
+            <div className="space-y-1 md:col-span-2">
+              <Label htmlFor="notes">Notes (optional)</Label>
+              <Input id="notes" name="notes" />
+            </div>
+            <div className="md:col-span-4">
+              <SubmitButton>Add waitlist entry</SubmitButton>
+            </div>
+          </form>
+
+          <div className="space-y-2">
+            {waitlist.length === 0 ? (
+              <p className="text-sm text-[var(--muted-foreground)]">No waitlist entries.</p>
+            ) : (
+              waitlist.map((entry) => (
+                <div key={entry.id} className="flex flex-wrap items-end justify-between gap-2 rounded-md border p-2 text-sm">
+                  <div>
+                    <p className="font-medium">
+                      #{entry.position} · {entry.user.name ?? entry.user.email}
+                    </p>
+                    <p className="text-xs text-[var(--muted-foreground)]">
+                      {entry.notes || "No notes"} · {entry.isActive ? "Active" : "Inactive"}
+                    </p>
+                  </div>
+                  <form
+                    action={async (formData) => {
+                      "use server";
+                      await setWaitlistEntryActive(formData);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <input type="hidden" name="entryId" value={entry.id} />
+                    <Select name="isActive" defaultValue={entry.isActive ? "false" : "true"}>
+                      <option value={entry.isActive ? "false" : "true"}>
+                        {entry.isActive ? "Deactivate" : "Activate"}
+                      </option>
+                    </Select>
+                    <SubmitButton size="sm">Apply</SubmitButton>
+                  </form>
+                </div>
+              ))
+            )}
+          </div>
         </CardContent>
       </Card>
 

@@ -4,6 +4,7 @@ import {
   reviewCarouselApplication,
   setCarouselOpen,
 } from "@/actions/coach";
+import { CarouselMoveType } from "@prisma/client";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,13 +13,16 @@ import { Select } from "@/components/ui/select";
 import { isCommissioner, requireUser } from "@/lib/auth";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
+import { computeReputationScore } from "@/lib/reputation";
+import { getReputationGrade } from "@/lib/coach/grades";
+import { getUserCareerStats } from "@/lib/career";
 
 export default async function CoachCarouselPage() {
   const user = await requireUser();
   const commissioner = await isCommissioner(user);
   const { season, settings } = await getActiveSeason();
 
-  const [vacancies, applications, franchises, membership] = await Promise.all([
+  const [vacancies, applications, franchises, membership, profile, repRows, seasonXp, career] = await Promise.all([
     prisma.carouselVacancy.findMany({
       where: { seasonId: season.id },
       include: { franchise: true },
@@ -36,11 +40,32 @@ export default async function CoachCarouselPage() {
     }),
     prisma.franchise.findMany({ orderBy: { sortOrder: "asc" } }),
     getUserMembership(user.id, season.id),
+    prisma.coachProfile.findUnique({ where: { userId: user.id } }),
+    prisma.reputationAdjustment.findMany({ where: { userId: user.id } }),
+    prisma.xPAdjustment.findMany({ where: { userId: user.id, seasonId: season.id } }),
+    getUserCareerStats(user.id),
   ]);
 
   const myOpenApp = applications.find(
     (a) => a.applicantId === user.id && a.status === "PENDING"
   );
+  const coachRep = computeReputationScore(settings.startingRepScore, repRows);
+  const coachGrade = getReputationGrade(coachRep);
+  const availableXp = seasonXp.reduce((sum, row) => sum + row.amount, 0);
+  const meetsRepGate = coachRep >= settings.carouselMinCoachRep;
+  const canResignOrExtend = settings.carouselOpen && meetsRepGate && Boolean(membership);
+  const canEnterMarket =
+    settings.carouselOpen && meetsRepGate && availableXp >= settings.buyoutXpCost;
+  const marketApps = applications.filter(
+    (app) =>
+      app.status === "PENDING" &&
+      (app.moveType === "CHANGE_TEAM" ||
+        app.moveType === "VACANCY_APPLICATION" ||
+        app.moveType === "VOLUNTARY_BUYOUT" ||
+        app.moveType === "REASSIGNMENT")
+  );
+  const myMarketRank =
+    marketApps.findIndex((app) => app.applicantId === user.id && app.status === "PENDING") + 1;
 
   return (
     <div className="space-y-6">
@@ -53,7 +78,7 @@ export default async function CoachCarouselPage() {
             Carousel status: <span className="font-medium">{settings.carouselOpen ? "Open" : "Closed"}</span>
           </p>
           <p className="text-[var(--muted-foreground)]">
-            Buyout minimum rep {settings.buyoutMinCoachRep} · Base XP cost {settings.buyoutXpCost}
+            Rep floor {settings.carouselMinCoachRep} (B or better) · Change-team cost {settings.buyoutXpCost} XP
           </p>
           {commissioner ? (
             <form
@@ -74,6 +99,65 @@ export default async function CoachCarouselPage() {
               <SubmitButton size="sm">Apply</SubmitButton>
             </form>
           ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Carousel rules at a glance</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
+          <p>Every coach starts with a 3-year contract and B reputation (75).</p>
+          <p>When carousel is open, you can re-sign/extend with your current team for 0 XP if rep is B or better (75+).</p>
+          <p>Changing teams costs {settings.buyoutXpCost} XP and requires rep {settings.carouselMinCoachRep}+.</p>
+          <p>Market order is Coach Rep, then career winning percentage.</p>
+          <p>Fired coaches can compete for open vacancies. If no opening exists, they enter an autopilot season.</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Your carousel eligibility</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 text-sm md:grid-cols-2 lg:grid-cols-3">
+          <InfoPill label="Coach reputation" value={`${coachRep} (${coachGrade})`} />
+          <InfoPill label="Season XP" value={String(availableXp)} />
+          <InfoPill label="Contract years left" value={String(profile?.contractYearsLeft ?? settings.startingContractYears)} />
+          <InfoPill label="Current team" value={membership?.franchise.abbreviation ?? "Unassigned"} />
+          <InfoPill label="Autopilot" value={profile?.isAutopilot ? `Yes (S${profile.autopilotSeason ?? season.number})` : "No"} />
+          <InfoPill label="Market rank" value={myMarketRank > 0 ? `#${myMarketRank}` : "Not in queue"} />
+          <InfoPill
+            label="Can re-sign/extend"
+            value={
+              canResignOrExtend
+                ? "Yes"
+                : !settings.carouselOpen
+                  ? "No (carousel closed)"
+                  : !meetsRepGate
+                    ? `No (need ${settings.carouselMinCoachRep}+ rep)`
+                    : !membership
+                      ? "No (no assigned team)"
+                      : "No"
+            }
+          />
+          <InfoPill
+            label="Can enter market"
+            value={
+              canEnterMarket
+                ? "Yes"
+                : !settings.carouselOpen
+                  ? "No (carousel closed)"
+                  : !meetsRepGate
+                    ? `No (need ${settings.carouselMinCoachRep}+ rep)`
+                    : availableXp < settings.buyoutXpCost
+                      ? `No (need ${settings.buyoutXpCost} XP)`
+                      : "No"
+            }
+          />
+          <InfoPill
+            label="Career win %"
+            value={`${((career.wins / Math.max(career.wins + career.losses + career.ties, 1)) * 100).toFixed(1)}%`}
+          />
         </CardContent>
       </Card>
 
@@ -120,9 +204,7 @@ export default async function CoachCarouselPage() {
           <CardTitle>Apply to carousel</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
-          {!membership ? (
-            <p className="text-[var(--muted-foreground)]">You must be assigned to a team first.</p>
-          ) : myOpenApp ? (
+          {myOpenApp ? (
             <p className="text-[var(--muted-foreground)]">
               You already have a pending application for this season.
             </p>
@@ -136,10 +218,10 @@ export default async function CoachCarouselPage() {
             >
               <div className="space-y-2">
                 <Label htmlFor="moveType">Move type</Label>
-                <Select id="moveType" name="moveType" defaultValue="VACANCY_APPLICATION">
-                  <option value="VACANCY_APPLICATION">Vacancy application</option>
-                  <option value="VOLUNTARY_BUYOUT">Voluntary buyout</option>
-                  <option value="REASSIGNMENT">Commissioner reassignment request</option>
+                <Select id="moveType" name="moveType" defaultValue={membership ? "RE_SIGN" : "CHANGE_TEAM"}>
+                  <option value="RE_SIGN">Re-sign with current team (0 XP)</option>
+                  <option value="EXTEND">Extend with current team (0 XP)</option>
+                  <option value="CHANGE_TEAM">Enter market for a new team (25 XP)</option>
                 </Select>
               </div>
               <div className="space-y-2">
@@ -176,7 +258,7 @@ export default async function CoachCarouselPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Vacancies & applications</CardTitle>
+          <CardTitle>Vacancies & market queue</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -194,7 +276,7 @@ export default async function CoachCarouselPage() {
                 <p className="mt-1 text-xs text-[var(--muted-foreground)]">
                   {app.currentTeam?.abbreviation ?? "—"} →{" "}
                   {app.requestedTeam?.abbreviation ?? app.vacancy?.franchise.abbreviation ?? "—"} ·{" "}
-                  {app.moveType}
+                  {labelForMoveType(app.moveType)}
                 </p>
                 <p className="text-xs text-[var(--muted-foreground)]">
                   Priority {app.priorityScore.toFixed(2)} · {app.status}
@@ -248,7 +330,7 @@ export default async function CoachCarouselPage() {
                     <td className="py-2 pr-3">
                       {app.requestedTeam?.abbreviation ?? app.vacancy?.franchise.abbreviation ?? "—"}
                     </td>
-                    <td className="py-2 pr-3">{app.moveType}</td>
+                    <td className="py-2 pr-3">{labelForMoveType(app.moveType)}</td>
                     <td className="py-2 pr-3">{app.priorityScore.toFixed(2)}</td>
                     <td className="py-2 pr-3">{app.status}</td>
                     <td className="py-2 pr-3">
@@ -283,4 +365,29 @@ export default async function CoachCarouselPage() {
       </Card>
     </div>
   );
+}
+
+function InfoPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-[var(--border)] p-2">
+      <p className="text-xs uppercase tracking-wide text-[var(--muted-foreground)]">{label}</p>
+      <p className="font-medium">{value}</p>
+    </div>
+  );
+}
+
+function labelForMoveType(moveType: string) {
+  switch (moveType) {
+    case CarouselMoveType.RE_SIGN:
+      return "Re-sign";
+    case CarouselMoveType.EXTEND:
+      return "Extend";
+    case CarouselMoveType.CHANGE_TEAM:
+    case CarouselMoveType.VACANCY_APPLICATION:
+    case CarouselMoveType.VOLUNTARY_BUYOUT:
+    case CarouselMoveType.REASSIGNMENT:
+      return "Change team";
+    default:
+      return moveType;
+  }
 }

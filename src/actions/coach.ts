@@ -375,8 +375,6 @@ export async function applyToCarousel(formData: FormData) {
     getUserCareerStats(user.id),
   ]);
 
-  if (!membership) return { error: "You must be assigned to a team to apply." };
-
   const coachRepScore = computeReputationScore(settings.startingRepScore, repRows);
   const gmRepScore = computeReputationScore(
     settings.startingGmRepScore,
@@ -397,22 +395,41 @@ export async function applyToCarousel(formData: FormData) {
   const buyout = getBuyoutEligibility({
     coachRepScore,
     availableXp,
-    contractYearsLeft: profile?.contractYearsLeft ?? 3,
-    minCoachRepScore: settings.buyoutMinCoachRep,
+    contractYearsLeft: profile?.contractYearsLeft ?? settings.startingContractYears,
+    minCoachRepScore: settings.carouselMinCoachRep,
     baseCost: settings.buyoutXpCost,
     status,
   });
+  const moveType =
+    parsed.data.moveType === CarouselMoveType.VOLUNTARY_BUYOUT ||
+    parsed.data.moveType === CarouselMoveType.VACANCY_APPLICATION ||
+    parsed.data.moveType === CarouselMoveType.REASSIGNMENT
+      ? CarouselMoveType.CHANGE_TEAM
+      : parsed.data.moveType;
 
-  if (parsed.data.moveType === CarouselMoveType.VOLUNTARY_BUYOUT && !buyout.eligible) {
-    return { error: buyout.reason };
+  if (coachRepScore < settings.carouselMinCoachRep) {
+    return { error: `Coach reputation must be at least ${settings.carouselMinCoachRep}.` };
+  }
+
+  if (moveType === CarouselMoveType.RE_SIGN || moveType === CarouselMoveType.EXTEND) {
+    if (!membership) {
+      return { error: "You must be assigned to a team to re-sign or extend." };
+    }
+  }
+
+  if (moveType === CarouselMoveType.CHANGE_TEAM) {
+    if (!parsed.data.vacancyId && !parsed.data.requestedTeamId) {
+      return { error: "Select a vacancy or requested team for a team change." };
+    }
+    if (!buyout.eligible) {
+      return { error: buyout.reason };
+    }
   }
 
   const totalGames = career.wins + career.losses + career.ties;
   const winPct = totalGames > 0 ? career.wins / totalGames : 0;
   const priority = getCarouselPriorityScore({
     coachRepScore,
-    gmRepScore,
-    careerXp: career.careerXp,
     careerWinPct: winPct,
     userId: user.id,
   });
@@ -421,12 +438,12 @@ export async function applyToCarousel(formData: FormData) {
     data: {
       seasonId: season.id,
       applicantId: user.id,
-      currentTeamId: membership.franchiseId,
+      currentTeamId: membership?.franchiseId,
       vacancyId: parsed.data.vacancyId || undefined,
       requestedTeamId: parsed.data.requestedTeamId || undefined,
-      moveType: parsed.data.moveType,
+      moveType,
       buyoutEligible: buyout.eligible,
-      xpCost: parsed.data.moveType === CarouselMoveType.VOLUNTARY_BUYOUT ? buyout.cost : 0,
+      xpCost: moveType === CarouselMoveType.CHANGE_TEAM ? settings.buyoutXpCost : 0,
       priorityScore: priority,
       status: CarouselApplicationStatus.PENDING,
     },
@@ -506,76 +523,93 @@ export async function reviewCarouselApplication(formData: FormData) {
 
   const targetFranchiseId =
     application.requestedTeamId ?? application.vacancy?.franchiseId ?? null;
-  if (!targetFranchiseId) {
+  const moveType =
+    application.moveType === CarouselMoveType.VOLUNTARY_BUYOUT ||
+    application.moveType === CarouselMoveType.VACANCY_APPLICATION ||
+    application.moveType === CarouselMoveType.REASSIGNMENT
+      ? CarouselMoveType.CHANGE_TEAM
+      : application.moveType;
+  if (moveType === CarouselMoveType.CHANGE_TEAM && !targetFranchiseId) {
     return { error: "No requested franchise found for approval." };
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.leagueMembership.updateMany({
-      where: { seasonId: season.id, isActive: true, userId: application.applicantId },
-      data: {
-        isActive: false,
-        endedAt: new Date(),
-        endedWeek: settings.currentWeek,
-      },
-    });
-
-    await tx.leagueMembership.updateMany({
-      where: { seasonId: season.id, isActive: true, franchiseId: targetFranchiseId },
-      data: {
-        isActive: false,
-        endedAt: new Date(),
-        endedWeek: settings.currentWeek,
-      },
-    });
-
-    await tx.leagueMembership.create({
-      data: {
-        userId: application.applicantId,
-        franchiseId: targetFranchiseId,
-        seasonId: season.id,
-        isActive: true,
-        startedWeek: settings.currentWeek,
-      },
-    });
-
     await tx.carouselApplication.update({
       where: { id: application.id },
       data: {
         status: CarouselApplicationStatus.APPROVED,
         decisionNote: parsed.data.decisionNote,
         reviewedById: commissioner.id,
-        contractYears: parsed.data.contractYears ?? 3,
+        contractYears: parsed.data.contractYears ?? settings.startingContractYears,
       },
     });
 
-    if (application.vacancyId) {
-      await tx.carouselVacancy.update({
-        where: { id: application.vacancyId },
-        data: { isOpen: false },
-      });
-    }
+    if (moveType === CarouselMoveType.CHANGE_TEAM) {
+      if (!targetFranchiseId) {
+        throw new Error("No requested franchise found for approval.");
+      }
 
-    if (application.xpCost > 0) {
-      await tx.xPAdjustment.create({
+      await tx.leagueMembership.updateMany({
+        where: { seasonId: season.id, isActive: true, userId: application.applicantId },
+        data: {
+          isActive: false,
+          endedAt: new Date(),
+          endedWeek: settings.currentWeek,
+        },
+      });
+
+      await tx.leagueMembership.updateMany({
+        where: { seasonId: season.id, isActive: true, franchiseId: targetFranchiseId },
+        data: {
+          isActive: false,
+          endedAt: new Date(),
+          endedWeek: settings.currentWeek,
+        },
+      });
+
+      await tx.leagueMembership.create({
         data: {
           userId: application.applicantId,
           franchiseId: targetFranchiseId,
           seasonId: season.id,
-          amount: -application.xpCost,
-          reason: "Carousel buyout cost",
-          isAutomatic: false,
-          createdById: commissioner.id,
+          isActive: true,
+          startedWeek: settings.currentWeek,
         },
       });
+
+      if (application.vacancyId) {
+        await tx.carouselVacancy.update({
+          where: { id: application.vacancyId },
+          data: { isOpen: false },
+        });
+      }
+
+      if (application.xpCost > 0) {
+        await tx.xPAdjustment.create({
+          data: {
+            userId: application.applicantId,
+            franchiseId: targetFranchiseId,
+            seasonId: season.id,
+            amount: -application.xpCost,
+            reason: "Carousel team change cost",
+            isAutomatic: false,
+            createdById: commissioner.id,
+          },
+        });
+      }
     }
 
     await tx.coachProfile.upsert({
       where: { userId: application.applicantId },
-      update: { contractYearsLeft: parsed.data.contractYears ?? 3 },
+      update: {
+        contractYearsLeft: parsed.data.contractYears ?? settings.startingContractYears,
+        isAutopilot: false,
+        autopilotSeason: null,
+      },
       create: {
         userId: application.applicantId,
-        contractYearsLeft: parsed.data.contractYears ?? 3,
+        contractYearsLeft: parsed.data.contractYears ?? settings.startingContractYears,
+        isAutopilot: false,
       },
     });
   });

@@ -39,6 +39,9 @@ export const settingsSchema = z.object({
   xpGamePlayed: z.coerce.number().int().min(0).max(100),
   xpWinBonus: z.coerce.number().int().min(0).max(100),
   startingRepScore: z.coerce.number().int().min(0).max(100),
+  carouselMinCoachRep: z.coerce.number().int().min(0).max(100),
+  buyoutXpCost: z.coerce.number().int().min(0).max(100),
+  startingContractYears: z.coerce.number().int().min(1).max(7),
   rulesMarkdown: z.string().max(20000),
 });
 
@@ -150,7 +153,14 @@ export const createCarouselVacancySchema = z.object({
 export const applyToCarouselSchema = z.object({
   vacancyId: z.string().min(1).optional().or(z.literal("")),
   requestedTeamId: z.string().min(1).optional().or(z.literal("")),
-  moveType: z.enum(["VOLUNTARY_BUYOUT", "VACANCY_APPLICATION", "REASSIGNMENT"]),
+  moveType: z.enum([
+    "RE_SIGN",
+    "EXTEND",
+    "CHANGE_TEAM",
+    "VOLUNTARY_BUYOUT",
+    "VACANCY_APPLICATION",
+    "REASSIGNMENT",
+  ]),
 });
 
 export const reviewCarouselApplicationSchema = z.object({
@@ -158,4 +168,15 @@ export const reviewCarouselApplicationSchema = z.object({
   decision: z.enum(["APPROVE", "DENY", "WITHDRAW"]),
   decisionNote: z.string().max(300).optional(),
   contractYears: z.coerce.number().int().min(0).max(7).optional(),
+});
+
+export const createWaitlistEntrySchema = z.object({
+  userId: z.string().min(1),
+  position: z.coerce.number().int().min(1).max(64),
+  notes: z.string().max(300).optional(),
+});
+
+export const updateWaitlistEntrySchema = z.object({
+  entryId: z.string().min(1),
+  isActive: z.coerce.boolean(),
 });

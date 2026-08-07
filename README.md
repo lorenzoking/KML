@@ -181,9 +181,11 @@ query the DB at build time — update `DATABASE_URL` to the pooler URI and redep
 - Reputation score = `startingRepScore` + sum of `ReputationAdjustment` rows.
 - GM reputation score = `startingGmRepScore` + sum of `ReputationAdjustment.gmAmount`.
 - Advancing a season archives the old season and starts a new one; historical results stay for career stats.
+- Advancing season also decrements active coaches' contract years (floored at 0).
 - Resetting season games voids current-season results only and does not erase prior seasons.
 - Identity lock/change rules are **warning-based** in this phase; commissioner can override.
-- Carousel actions write auditable application/decision history and preserve stint history.
+- Carousel supports re-sign/extend (0 XP) and team-change market moves (configurable XP) with priority ordered by coach rep then career win %.
+- Fired coaches can trigger vacancy creation, waitlist replacement, or autopilot status.
 
 ## Scripts
 
@@ -203,8 +205,7 @@ Deferred from the original All-In-One spreadsheet system:
 1. **Player / team stat submission** — structured weekly box-score forms, commissioner validation, and per-coach leaderboards.
 2. **Madden Companion import pipeline** — ingest exported league files, map franchise IDs, and auto-draft pending game rows for approval.
 3. **Google Sheets export** — one-way sync of standings, XP, and reputation for Discord/Dyno links without using Sheets as the source of truth.
-4. **Coaching carousel** — offseason vacancies, buyout XP costs, hiring priority queue, and contract term resets.
-5. **Tanking review** — evidence-based case workflow, strike ladder, and reputation/XP penalties separate from draft-order changes.
+4. **Tanking review** — evidence-based case workflow, strike ladder, and reputation/XP penalties separate from draft-order changes.
 
 ## License
 

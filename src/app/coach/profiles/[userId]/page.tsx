@@ -72,6 +72,12 @@ export default async function CoachProfileDetailPage({
           <p>Coach identity: {row?.coachIdentity ?? "Unassigned"}</p>
           <p>Team identity: {row?.teamIdentity ?? "Unassigned"}</p>
           <p>Contract years left: {row?.contractYearsLeft ?? 3}</p>
+          <p>
+            Autopilot:{" "}
+            {user.coachProfile?.isAutopilot
+              ? `Yes${user.coachProfile.autopilotSeason ? ` (S${user.coachProfile.autopilotSeason})` : ""}`
+              : "No"}
+          </p>
           <p>Recovery note: {row?.jobRecoveryNote ?? "N/A"}</p>
         </CardContent>
       </Card>

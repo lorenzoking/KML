@@ -261,6 +261,22 @@ export async function advanceToNextSeason(formData: FormData) {
           startedWeek: 1,
         })),
       });
+
+      await tx.coachProfile.updateMany({
+        where: { userId: { in: activeMemberships.map((m) => m.userId) } },
+        data: {
+          contractYearsLeft: {
+            decrement: 1,
+          },
+        },
+      });
+      await tx.coachProfile.updateMany({
+        where: {
+          userId: { in: activeMemberships.map((m) => m.userId) },
+          contractYearsLeft: { lt: 0 },
+        },
+        data: { contractYearsLeft: 0 },
+      });
     }
 
     await tx.leagueSetting.update({

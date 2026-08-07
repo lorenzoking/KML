@@ -71,6 +71,20 @@ export default async function RulesPage() {
           {renderMarkdownLite(settings.rulesMarkdown)}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Coaching Carousel & contracts</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
+          <p>All coaches begin on a 3-year contract and start at B coaching reputation.</p>
+          <p>At season end, carousel opens before free agency: re-sign, extend, or enter the market.</p>
+          <p>Re-sign/extend requires B (75+) and costs 0 XP.</p>
+          <p>Changing teams requires B (75+) and costs {settings.buyoutXpCost} XP.</p>
+          <p>Market pick order runs by coaching reputation first, then career winning percentage.</p>
+          <p>Fired coaches lose their team immediately. They can pursue open jobs during carousel; if none are open, they enter an autopilot season.</p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

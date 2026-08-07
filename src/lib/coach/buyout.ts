@@ -10,8 +10,7 @@ type BuyoutInput = {
 };
 
 export function getBuyoutCost(input: BuyoutInput) {
-  const years = Math.max(input.contractYearsLeft, 1);
-  return input.baseCost + (years - 1) * 5;
+  return Math.max(input.baseCost, 0);
 }
 
 export function getBuyoutEligibility(input: BuyoutInput) {

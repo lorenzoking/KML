@@ -70,6 +70,9 @@ enum ReputationCategory {
 }
 
 enum CarouselMoveType {
+  RE_SIGN
+  EXTEND
+  CHANGE_TEAM
   VOLUNTARY_BUYOUT
   VACANCY_APPLICATION
   REASSIGNMENT
@@ -122,6 +125,7 @@ model User {
   seasonReviews         CoachSeasonReview[]
   carouselApplications  CarouselApplication[]  @relation("CarouselApplicant")
   carouselDecisions     CarouselApplication[]  @relation("CarouselReviewer")
+  waitlistEntries       WaitlistEntry[]
   auditLogs             AuditLog[]
 }
 
@@ -206,8 +210,10 @@ model LeagueSetting {
   hotSeatThreshold   Int      @default(59)
   firingThreshold    Int      @default(44)
   watchThreshold     Int      @default(70)
+  carouselMinCoachRep Int     @default(75)
   buyoutMinCoachRep  Int      @default(85)
   buyoutXpCost       Int      @default(25)
+  startingContractYears Int   @default(3)
   carouselOpen       Boolean  @default(false)
   rulesMarkdown      String   @default("")
   updatedAt          DateTime @updatedAt
@@ -350,6 +356,8 @@ model CoachProfile {
   contractYearsLeft     Int            @default(3)
   tankingStrikes        Int            @default(0)
   gmStrikes             Int            @default(0)
+  isAutopilot           Boolean        @default(false)
+  autopilotSeason       Int?
   hotSeatStatusOverride HotSeatStatus?
   hotSeatNote           String?
   lastReviewAt          DateTime?
@@ -360,6 +368,22 @@ model CoachProfile {
   coachIdentity IdentityCatalog? @relation("CoachIdentity", fields: [coachIdentityId], references: [id])
 
   @@index([coachIdentityId])
+}
+
+model WaitlistEntry {
+  id          String   @id @default(cuid())
+  userId       String
+  position     Int
+  notes        String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([position])
+  @@index([isActive])
+  @@index([userId])
 }
 
 model CoachSeasonReview {

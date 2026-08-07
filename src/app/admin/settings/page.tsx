@@ -102,6 +102,36 @@ export default async function SettingsAdminPage() {
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="carouselMinCoachRep">Carousel minimum rep (B floor)</Label>
+                <Input
+                  id="carouselMinCoachRep"
+                  name="carouselMinCoachRep"
+                  type="number"
+                  defaultValue={settings.carouselMinCoachRep}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="buyoutXpCost">Change-team XP cost</Label>
+                <Input
+                  id="buyoutXpCost"
+                  name="buyoutXpCost"
+                  type="number"
+                  defaultValue={settings.buyoutXpCost}
+                  required
+                />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="startingContractYears">Starting contract years</Label>
+                <Input
+                  id="startingContractYears"
+                  name="startingContractYears"
+                  type="number"
+                  defaultValue={settings.startingContractYears}
+                  required
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

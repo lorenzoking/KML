@@ -1,7 +1,5 @@
 type PriorityInput = {
   coachRepScore: number;
-  gmRepScore: number;
-  careerXp: number;
   careerWinPct: number;
   userId: string;
 };
@@ -15,16 +13,11 @@ function deterministicTieBreaker(userId: string) {
 }
 
 export function getCarouselPriorityScore(input: PriorityInput) {
-  const normalizedXp = Math.min(input.careerXp / 300, 1);
   const normalizedWinPct = Math.min(Math.max(input.careerWinPct, 0), 1);
   const tie = deterministicTieBreaker(input.userId);
 
-  const score =
-    input.coachRepScore * 0.4 +
-    input.gmRepScore * 0.3 +
-    normalizedXp * 100 * 0.2 +
-    normalizedWinPct * 100 * 0.08 +
-    tie * 2;
+  // Lexicographic order: coach rep first, then career win pct.
+  const score = input.coachRepScore * 1000 + normalizedWinPct * 100 + tie;
 
   return Math.round(score * 100) / 100;
 }

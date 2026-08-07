@@ -236,6 +236,15 @@ export default async function DashboardPage() {
               value={String(coachProfile?.contractYearsLeft ?? 3)}
             />
             <ProfilePill
+              label="Autopilot season"
+              value={
+                coachProfile?.isAutopilot
+                  ? `Yes${coachProfile.autopilotSeason ? ` (S${coachProfile.autopilotSeason})` : ""}`
+                  : "No"
+              }
+              badgeVariant={coachProfile?.isAutopilot ? "pressured" : undefined}
+            />
+            <ProfilePill
               label="Expectation score"
               value={String(coachProfile?.expectationScore ?? 0)}
             />

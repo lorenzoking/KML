@@ -16,6 +16,9 @@ export async function updateLeagueSettings(formData: FormData) {
     xpGamePlayed: formData.get("xpGamePlayed"),
     xpWinBonus: formData.get("xpWinBonus"),
     startingRepScore: formData.get("startingRepScore"),
+    carouselMinCoachRep: formData.get("carouselMinCoachRep"),
+    buyoutXpCost: formData.get("buyoutXpCost"),
+    startingContractYears: formData.get("startingContractYears"),
     rulesMarkdown: formData.get("rulesMarkdown"),
   });
 
@@ -56,6 +59,10 @@ export async function updateLeagueSettings(formData: FormData) {
       xpGamePlayed: data.xpGamePlayed,
       xpWinBonus: data.xpWinBonus,
       startingRepScore: data.startingRepScore,
+      carouselMinCoachRep: data.carouselMinCoachRep,
+      buyoutMinCoachRep: data.carouselMinCoachRep,
+      buyoutXpCost: data.buyoutXpCost,
+      startingContractYears: data.startingContractYears,
       rulesMarkdown: data.rulesMarkdown,
     },
   });

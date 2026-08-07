@@ -73,6 +73,12 @@ const DEFAULT_RULES = `# Kings Madden League — Rulebook
 - Commissioners apply positive or negative adjustments with a reason.
 - Labels: Elite, Stable, Pressured, Hot Seat.
 
+## Coaching Carousel
+- Coaches start on 3-year contracts with a B baseline reputation.
+- Re-signing or extending with your current team costs 0 XP and requires B or higher.
+- Changing teams during carousel requires B or higher and costs 25 XP.
+- Market order is coaching reputation first, then career win percentage.
+
 ## Sportsmanship
 - Field a competitive lineup and make a good-faith attempt to win.
 - Healthy starters cannot be benched solely to weaken the team.
@@ -140,8 +146,10 @@ async function main() {
       hotSeatThreshold: 59,
       firingThreshold: 44,
       watchThreshold: 70,
-      buyoutMinCoachRep: 85,
+      carouselMinCoachRep: 75,
+      buyoutMinCoachRep: 75,
       buyoutXpCost: 25,
+      startingContractYears: 3,
       carouselOpen: true,
       rulesMarkdown: DEFAULT_RULES,
     },
