@@ -35,10 +35,15 @@ import {
 } from "@/lib/stories";
 import { StoryBody } from "@/components/stories/story-body";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ teamRequested?: string }>;
+}) {
   const user = await requireUser();
   const commissionerUi = await isCommissioner(user);
   const { settings, season } = await getActiveSeason();
+  const params = await searchParams;
 
   await ensureDefaultLeagueStories(season.id);
 
@@ -51,6 +56,7 @@ export default async function DashboardPage() {
     pendingMine,
     stories,
     weekGames,
+    teamRequestUser,
   ] = await Promise.all([
     getUserMembership(user.id, season.id),
     getXpTotal(user.id),
@@ -75,6 +81,10 @@ export default async function DashboardPage() {
       include: { userTeam: true, opponentTeam: true },
       orderBy: [{ status: "asc" }, { createdAt: "asc" }],
       take: 8,
+    }),
+    prisma.user.findUnique({
+      where: { id: user.id },
+      include: { requestedFranchise: true },
     }),
   ]);
 
@@ -133,6 +143,43 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {params.teamRequested === "1" ? (
+        <p className="success-banner rounded-md px-3 py-2 text-sm">
+          Team request sent. A commissioner will assign you soon.
+        </p>
+      ) : null}
+
+      {!membership ? (
+        <Card className="border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]">
+          <CardHeader>
+            <CardTitle>
+              {teamRequestUser?.requestedFranchise
+                ? `Requested: ${teamRequestUser.requestedFranchise.name}`
+                : "Tell us which team you drafted"}
+            </CardTitle>
+            <CardDescription>
+              {teamRequestUser?.requestedFranchise
+                ? "Your request is visible to commissioners. You can still update it until you are assigned."
+                : "Google only shows your Gmail name. Request your franchise so we know who to assign."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link href="/request-team">
+                {teamRequestUser?.requestedFranchise
+                  ? "Update team request"
+                  : "Request your team"}
+              </Link>
+            </Button>
+            {teamRequestUser?.teamRequestNote ? (
+              <p className="w-full text-sm text-[var(--muted-foreground)]">
+                Note: {teamRequestUser.teamRequestNote}
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
       <section className="field-stripe relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] px-5 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.14)] animate-rise sm:px-8 sm:py-10">
         <div className="absolute -right-10 -top-8 opacity-20">
           <BrandLogo size="lg" className="h-40 w-40 sm:h-52 sm:w-52" />
@@ -171,7 +218,11 @@ export default async function DashboardPage() {
                 <Button asChild>
                   <Link href="/games?tab=week#submit-result">Submit result</Link>
                 </Button>
-              ) : null}
+              ) : (
+                <Button asChild>
+                  <Link href="/request-team">Request team</Link>
+                </Button>
+              )}
               <Button asChild variant="outline">
                 <Link href="/games?tab=standings">Standings</Link>
               </Button>

@@ -52,6 +52,7 @@ export default async function AdminUserDetailPage({
         include: { franchise: true },
         orderBy: { assignedAt: "asc" },
       },
+      requestedFranchise: true,
       submissions: {
         include: { userTeam: true, opponentTeam: true, season: true },
         orderBy: { createdAt: "desc" },
@@ -182,6 +183,19 @@ export default async function AdminUserDetailPage({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {!currentMembership && user.requestedFranchise ? (
+              <div className="rounded-lg border border-[color-mix(in_srgb,var(--primary)_35%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_8%,transparent)] px-3 py-2 text-sm">
+                <p className="font-medium">
+                  Requested: {user.requestedFranchise.name} (
+                  {user.requestedFranchise.abbreviation})
+                </p>
+                {user.teamRequestNote ? (
+                  <p className="mt-1 text-[var(--muted-foreground)]">
+                    Note: {user.teamRequestNote}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
             {user.memberships.length > 0 ? (
               <ul className="space-y-1 text-xs text-[var(--muted-foreground)]">
                 {user.memberships.map((m) => (
@@ -208,12 +222,17 @@ export default async function AdminUserDetailPage({
               />
               <Select
                 name="franchiseId"
-                defaultValue={currentMembership?.franchiseId ?? "unassign"}
+                defaultValue={
+                  currentMembership?.franchiseId ??
+                  user.requestedFranchiseId ??
+                  "unassign"
+                }
               >
                 <option value="unassign">Unassign / fire</option>
                 {franchises.map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.name}
+                    {user.requestedFranchiseId === f.id ? " (requested)" : ""}
                   </option>
                 ))}
               </Select>

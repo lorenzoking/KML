@@ -32,6 +32,16 @@ export const assignTeamSchema = z.object({
   franchiseId: z.string().min(1).nullable(),
 });
 
+export const requestTeamSchema = z.object({
+  franchiseId: z.string().min(1, "Pick the team you drafted / want assigned"),
+  displayName: z
+    .string()
+    .trim()
+    .min(2, "Add the name coaches know you by")
+    .max(60),
+  note: z.string().trim().max(280).optional().or(z.literal("")),
+});
+
 export const settingsSchema = z.object({
   leagueName: z.string().min(2).max(80),
   currentSeason: z.coerce.number().int().min(1).max(50),

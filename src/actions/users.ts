@@ -4,12 +4,70 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { Role } from "@prisma/client";
-import { requireCommissioner, syncUserFromAuth } from "@/lib/auth";
+import { requireCommissioner, requireUser, syncUserFromAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getActiveSeason } from "@/lib/league";
-import { updateUserSchema } from "@/lib/validations";
+import { getActiveSeason, getUserMembership } from "@/lib/league";
+import { requestTeamSchema, updateUserSchema } from "@/lib/validations";
 import { writeAuditLog } from "@/lib/audit";
 import { z } from "zod";
+
+export async function requestTeam(formData: FormData) {
+  const user = await requireUser();
+  const { season } = await getActiveSeason();
+
+  const membership = await getUserMembership(user.id, season.id);
+  if (membership) {
+    return { error: "You already have a team assignment for this season." };
+  }
+
+  const parsed = requestTeamSchema.safeParse({
+    franchiseId: formData.get("franchiseId"),
+    displayName: formData.get("displayName") || "",
+    note: formData.get("note") || "",
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid team request." };
+  }
+
+  const franchise = await prisma.franchise.findUnique({
+    where: { id: parsed.data.franchiseId },
+  });
+  if (!franchise) return { error: "That team was not found." };
+
+  const displayName = parsed.data.displayName.trim();
+  const note = parsed.data.note?.trim();
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      requestedFranchiseId: franchise.id,
+      teamRequestNote: note || null,
+      teamRequestedAt: new Date(),
+      name: displayName,
+    },
+  });
+
+  await writeAuditLog({
+    actorId: user.id,
+    action: "REQUEST_TEAM",
+    entityType: "User",
+    entityId: user.id,
+    metadata: {
+      franchiseId: franchise.id,
+      franchise: franchise.abbreviation,
+      note: note || null,
+      displayName,
+    },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/request-team");
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${user.id}`);
+  revalidatePath("/admin");
+  redirect("/dashboard?teamRequested=1");
+}
 
 export async function updateUser(formData: FormData) {
   const commissioner = await requireCommissioner();

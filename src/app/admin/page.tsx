@@ -21,13 +21,20 @@ import { format } from "date-fns";
 export default async function AdminPage() {
   const { settings, season } = await getActiveSeason();
 
-  const [pendingCount, approvedCount, userCount, assignedCount, recent, audits, users] =
+  const [pendingCount, approvedCount, userCount, assignedCount, pendingTeamRequests, recent, audits, users] =
     await Promise.all([
       prisma.gameSubmission.count({ where: { status: "PENDING" } }),
       prisma.gameSubmission.count({ where: { status: "APPROVED" } }),
       prisma.user.count(),
       prisma.leagueMembership.count({
         where: { seasonId: season.id, isActive: true },
+      }),
+      prisma.user.count({
+        where: {
+          deletedAt: null,
+          requestedFranchiseId: { not: null },
+          memberships: { none: { seasonId: season.id, isActive: true } },
+        },
       }),
       prisma.gameSubmission.findMany({
         include: { submitter: true, userTeam: true, opponentTeam: true },
@@ -71,6 +78,13 @@ export default async function AdminPage() {
         <Button asChild variant="outline">
           <Link href="/admin/users">Manage users</Link>
         </Button>
+        {pendingTeamRequests > 0 ? (
+          <Button asChild variant="outline">
+            <Link href="/admin/users?needsTeam=1">
+              Team requests ({pendingTeamRequests})
+            </Link>
+          </Button>
+        ) : null}
         <Button asChild variant="outline">
           <Link href="/admin/teams">Manage teams</Link>
         </Button>

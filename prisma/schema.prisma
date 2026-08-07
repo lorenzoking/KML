@@ -111,16 +111,19 @@ enum StoryCategory {
 }
 
 model User {
-  id         String    @id @default(cuid())
-  email      String    @unique
-  name       String?
-  image      String?
-  role       Role      @default(USER)
-  isActive   Boolean   @default(true)
-  adminNotes String?
-  deletedAt  DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  name                 String?
+  image                String?
+  role                 Role      @default(USER)
+  isActive             Boolean   @default(true)
+  adminNotes           String?
+  requestedFranchiseId String?
+  teamRequestNote      String?
+  teamRequestedAt      DateTime?
+  deletedAt            DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   memberships           LeagueMembership[]
   submissions           GameSubmission[]       @relation("SubmissionSubmitter")
@@ -137,6 +140,9 @@ model User {
   waitlistEntries       WaitlistEntry[]
   storiesAuthored       LeagueStory[]          @relation("StoryAuthor")
   auditLogs             AuditLog[]
+  requestedFranchise    Franchise?             @relation("UserRequestedFranchise", fields: [requestedFranchiseId], references: [id], onDelete: SetNull)
+
+  @@index([requestedFranchiseId])
 }
 
 model Franchise {
@@ -161,6 +167,7 @@ model Franchise {
   carouselVacancies             CarouselVacancy[]
   carouselCurrentApplications   CarouselApplication[] @relation("CarouselCurrentTeam")
   carouselRequestedApplications CarouselApplication[] @relation("CarouselRequestedTeam")
+  teamRequests                  User[]                @relation("UserRequestedFranchise")
 }
 
 model Season {

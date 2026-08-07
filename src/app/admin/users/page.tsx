@@ -47,6 +47,7 @@ export default async function AdminUsersPage({
     scanned?: string;
     restored?: string;
     error?: string;
+    needsTeam?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -60,6 +61,7 @@ export default async function AdminUsersPage({
         where: { seasonId: season.id, isActive: true },
         include: { franchise: true },
       },
+      requestedFranchise: true,
       xpAdjustmentsReceived: { select: { amount: true } },
       reputationReceived: { select: { amount: true } },
     },
@@ -72,7 +74,9 @@ export default async function AdminUsersPage({
       (u) =>
         u.email.toLowerCase().includes(q) ||
         (u.name ?? "").toLowerCase().includes(q) ||
-        u.memberships[0]?.franchise.abbreviation.toLowerCase().includes(q)
+        u.memberships[0]?.franchise.abbreviation.toLowerCase().includes(q) ||
+        u.requestedFranchise?.abbreviation.toLowerCase().includes(q) ||
+        u.requestedFranchise?.name.toLowerCase().includes(q)
     );
   }
   if (params.role === "COMMISSIONER" || params.role === "USER") {
@@ -80,6 +84,15 @@ export default async function AdminUsersPage({
   }
   if (params.active === "true") filtered = filtered.filter((u) => u.isActive);
   if (params.active === "false") filtered = filtered.filter((u) => !u.isActive);
+  if (params.needsTeam === "1") {
+    filtered = filtered.filter(
+      (u) => !u.memberships[0] && Boolean(u.requestedFranchiseId)
+    );
+  }
+
+  const pendingTeamRequests = users.filter(
+    (u) => !u.memberships[0] && Boolean(u.requestedFranchise)
+  );
 
   return (
     <div className="space-y-6">
@@ -107,6 +120,51 @@ export default async function AdminUsersPage({
         <p className="rounded-md bg-rose-500/10 px-3 py-2 text-sm text-rose-700 dark:text-rose-300">
           {params.error}
         </p>
+      ) : null}
+
+      {pendingTeamRequests.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending team requests</CardTitle>
+            <CardDescription>
+              Coaches who signed up and told you which franchise they drafted.
+              Assign them from Manage.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {pendingTeamRequests.map((u) => (
+              <div
+                key={u.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] px-3 py-2"
+              >
+                <div>
+                  <p className="text-sm font-medium">{u.name ?? "Unnamed"}</p>
+                  <p className="text-xs text-[var(--muted-foreground)]">
+                    {u.email}
+                    {u.teamRequestNote ? ` · ${u.teamRequestNote}` : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">
+                    Wants {u.requestedFranchise?.abbreviation}
+                  </Badge>
+                  <Link
+                    href={`/admin/users/${u.id}`}
+                    className="text-sm font-medium text-[var(--primary)] hover:underline"
+                  >
+                    Assign
+                  </Link>
+                </div>
+              </div>
+            ))}
+            <Link
+              href="/admin/users?needsTeam=1"
+              className="text-xs font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            >
+              Filter list to pending requests only
+            </Link>
+          </CardContent>
+        </Card>
       ) : null}
 
       <Card>
@@ -220,6 +278,7 @@ export default async function AdminUsersPage({
                   <TableHead>Coach</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Team</TableHead>
+                  <TableHead>Requested</TableHead>
                   <TableHead>XP</TableHead>
                   <TableHead>Rep</TableHead>
                   <TableHead>Status</TableHead>
@@ -234,6 +293,7 @@ export default async function AdminUsersPage({
                     user.reputationReceived
                   );
                   const team = user.memberships[0]?.franchise;
+                  const requested = user.requestedFranchise;
                   return (
                     <TableRow key={user.id}>
                       <TableCell>
@@ -246,6 +306,17 @@ export default async function AdminUsersPage({
                         <Badge variant="outline">{user.role}</Badge>
                       </TableCell>
                       <TableCell>{team ? team.abbreviation : "—"}</TableCell>
+                      <TableCell>
+                        {team ? (
+                          "—"
+                        ) : requested ? (
+                          <span title={user.teamRequestNote ?? undefined}>
+                            {requested.abbreviation}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
                       <TableCell>{xp}</TableCell>
                       <TableCell>
                         <ReputationBadge

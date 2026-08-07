@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { syncUserFromAuth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 function getRedirectOrigin(request: Request) {
   const { origin } = new URL(request.url);
@@ -68,6 +69,15 @@ export async function GET(request: Request) {
 
       if (!appUser.isActive) {
         return NextResponse.redirect(`${redirectOrigin}/sign-in?error=inactive`);
+      }
+
+      // New / unassigned coaches should pick the franchise they drafted.
+      const hasTeam = await prisma.leagueMembership.findFirst({
+        where: { userId: appUser.id, isActive: true },
+        select: { id: true },
+      });
+      if (!hasTeam && !appUser.requestedFranchiseId) {
+        return NextResponse.redirect(`${redirectOrigin}/request-team`);
       }
     } catch (syncError) {
       console.error("User sync failed after OAuth:", syncError);

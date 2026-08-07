@@ -8,6 +8,7 @@ export const PROTECTED_PREFIXES = [
   "/dashboard",
   "/admin",
   "/coach",
+  "/request-team",
 ] as const;
 
 export const COMMISSIONER_PREFIXES = ["/admin"] as const;

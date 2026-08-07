@@ -205,6 +205,15 @@ export async function assignUserToTeam(formData: FormData) {
     update: { isAutopilot: false, autopilotSeason: null },
     create: { userId, isAutopilot: false },
   });
+  // Clear signup team request once they are officially assigned.
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      requestedFranchiseId: null,
+      teamRequestNote: null,
+      teamRequestedAt: null,
+    },
+  });
 
   await writeAuditLog({
     actorId: commissioner.id,
