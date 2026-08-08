@@ -187,42 +187,50 @@ async function main() {
       {
         name: "Win Now",
         slug: "team-win-now",
-        coreBenefit: "Aggressive veteran moves and playoff push focus.",
-        restriction: "Must target playoffs in 2 of every 3 seasons.",
-        changeRule: "Offseason only, once every 2 seasons.",
-        xpCost: 15,
-        level: "Elite",
-        minRepScore: 85,
-      },
-      {
-        name: "Balanced",
-        slug: "team-balanced",
-        coreBenefit: "Flexible roster strategy with moderate expectations.",
-        restriction: "Avoid repeated bottom-tier finishes.",
-        changeRule: "Offseason only, once every 2 seasons.",
-        xpCost: 10,
-        level: "Strong",
-        minRepScore: 70,
+        coreBenefit:
+          "Full access to all unrestricted free agents from Day 1 of Free Agency.",
+        restriction: "No Rookie Development Camps.",
+        changeRule:
+          "A Team Identity may only be changed once every three seasons, unless approved by the league due to extraordinary circumstances (new ownership, coaching change, etc.).",
+        xpCost: 0,
+        level: "Win now",
+        minRepScore: 0,
       },
       {
         name: "Rebuilding",
         slug: "team-rebuilding",
-        coreBenefit: "Youth development patience and long-term planning.",
-        restriction: "Progress required year-over-year.",
-        changeRule: "Locked for 2 seasons once chosen.",
-        xpCost: 5,
-        level: "Secure",
-        minRepScore: 55,
+        coreBenefit:
+          "During the first 3 days of Free Agency, you may only offer contracts to players 28 years old or younger.",
+        restriction:
+          "Cannot sign veteran players over 28 during the first three days of Free Agency.",
+        changeRule:
+          "A Team Identity may only be changed once every three seasons, unless approved by the league due to extraordinary circumstances (new ownership, coaching change, etc.).",
+        xpCost: 0,
+        level: "Rebuild",
+        minRepScore: 0,
       },
       {
         name: "Draft & Develop",
         slug: "team-draft-develop",
-        coreBenefit: "Extra rookie development focus and scheme continuity.",
-        restriction: "Limited splash veteran acquisitions.",
-        changeRule: "Offseason only.",
-        xpCost: 8,
-        level: "Builder",
-        minRepScore: 60,
+        coreBenefit:
+          "During the first 3 days of Free Agency, you cannot offer contracts to players who are 85 Overall or higher, or 28 years old or older.",
+        restriction: "Minimal access to premium veteran talent.",
+        changeRule:
+          "A Team Identity may only be changed once every three seasons, unless approved by the league due to extraordinary circumstances (new ownership, coaching change, etc.).",
+        xpCost: 0,
+        level: "Draft & develop",
+        minRepScore: 0,
+      },
+      {
+        name: "Balanced",
+        slug: "team-balanced",
+        coreBenefit: "Full access to Free Agency.",
+        restriction: "Does not receive the elite veteran access of Win Now.",
+        changeRule:
+          "A Team Identity may only be changed once every three seasons, unless approved by the league due to extraordinary circumstances (new ownership, coaching change, etc.).",
+        xpCost: 0,
+        level: "Balanced",
+        minRepScore: 0,
       },
     ].map((identity) =>
       prisma.identityCatalog.create({

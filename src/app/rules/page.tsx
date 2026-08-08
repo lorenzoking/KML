@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { TeamIdentityRulesSection } from "@/components/coach/team-identity-rules";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLeagueSettings } from "@/lib/league";
 
@@ -85,6 +88,23 @@ export default async function RulesPage() {
           <p>Fired coaches lose their team immediately. They can pursue open jobs during carousel; if none are open, they enter an autopilot season.</p>
         </CardContent>
       </Card>
+
+      <section id="team-identity" className="scroll-mt-24 space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-semibold uppercase tracking-wide">
+              Team Identity
+            </h2>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              Full breakdown of Win Now, Rebuilding, Draft & Develop, and Balanced.
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/coach/identities">Open in Coach hub</Link>
+          </Button>
+        </div>
+        <TeamIdentityRulesSection />
+      </section>
     </div>
   );
 }
