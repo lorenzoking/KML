@@ -25,7 +25,7 @@ export default async function AdminPage() {
     await Promise.all([
       prisma.gameSubmission.count({ where: { status: "PENDING" } }),
       prisma.gameSubmission.count({ where: { status: "APPROVED" } }),
-      prisma.user.count(),
+      prisma.user.count({ where: { deletedAt: null } }),
       prisma.leagueMembership.count({
         where: { seasonId: season.id, isActive: true },
       }),
@@ -47,7 +47,7 @@ export default async function AdminPage() {
         take: 8,
       }),
       prisma.user.findMany({
-        where: { role: "USER" },
+        where: { role: "USER", deletedAt: null },
         orderBy: { name: "asc" },
         include: {
           memberships: {
