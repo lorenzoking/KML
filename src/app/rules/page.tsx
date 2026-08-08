@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CoachIdentityRulesSection } from "@/components/coach/coach-identity-rules";
 import { TeamIdentityRulesSection } from "@/components/coach/team-identity-rules";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,10 +101,28 @@ export default async function RulesPage() {
             </p>
           </div>
           <Button asChild variant="outline" size="sm">
-            <Link href="/coach/identities">Open in Coach hub</Link>
+            <Link href="/coach/identities#team-identity">Open in Coach hub</Link>
           </Button>
         </div>
         <TeamIdentityRulesSection />
+      </section>
+
+      <section id="coaching-identity" className="scroll-mt-24 space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-semibold uppercase tracking-wide">
+              Coaching Identity
+            </h2>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              Full breakdown of QB Whisperer, Skill Developer, Trench Builder, Defensive
+              Guru, RB Guru, and Culture Builder.
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/coach/identities#coaching-identity">Open in Coach hub</Link>
+          </Button>
+        </div>
+        <CoachIdentityRulesSection />
       </section>
     </div>
   );

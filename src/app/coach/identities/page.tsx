@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { assignCoachIdentity, assignTeamIdentity } from "@/actions/coach";
+import { CoachIdentityRulesSection } from "@/components/coach/coach-identity-rules";
 import { TeamIdentityRulesSection } from "@/components/coach/team-identity-rules";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { isCommissioner, requireUser } from "@/lib/auth";
+import { ensureDefaultCoachIdentities } from "@/lib/coach/ensure-coach-identities";
 import { ensureDefaultTeamIdentities } from "@/lib/coach/ensure-team-identities";
 import { getActiveSeason } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
@@ -16,7 +18,10 @@ export default async function CoachIdentitiesPage() {
   const commissioner = await isCommissioner(user);
   const { season } = await getActiveSeason();
 
-  await ensureDefaultTeamIdentities();
+  await Promise.all([
+    ensureDefaultTeamIdentities(),
+    ensureDefaultCoachIdentities(),
+  ]);
 
   const [teamIdentities, coachIdentities, memberships] = await Promise.all([
     prisma.identityCatalog.findMany({
@@ -38,7 +43,7 @@ export default async function CoachIdentitiesPage() {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
@@ -48,59 +53,56 @@ export default async function CoachIdentitiesPage() {
             Identities
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-[var(--muted-foreground)]">
-            Team Identity is a commitment. Pick the path that matches how your franchise
-            actually builds — then live with the trade-offs.
+            Team Identity shapes how you build the roster. Coaching Identity shapes how
+            players develop. Align both into one vision.
           </p>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/rules#team-identity">Also in league rules</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href="#team-identity">Team Identity</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="#coaching-identity">Coaching Identity</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/rules#team-identity">League rules</Link>
+          </Button>
+        </div>
       </div>
 
-      <TeamIdentityRulesSection />
+      <section id="team-identity" className="scroll-mt-24 space-y-4">
+        <h2 className="text-2xl font-semibold uppercase tracking-wide">
+          Team Identity
+        </h2>
+        <TeamIdentityRulesSection />
+      </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Coach identity catalog</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            {coachIdentities.length === 0 ? (
-              <p className="text-[var(--muted-foreground)]">No coach identities yet.</p>
-            ) : (
-              coachIdentities.map((identity) => (
-                <div key={identity.id} className="rounded-md border p-3">
-                  <p className="font-medium">{identity.name}</p>
-                  <p>{identity.coreBenefit}</p>
-                  <p className="text-xs text-[var(--muted-foreground)]">
-                    Min rep {identity.minRepScore} · XP Cost {identity.xpCost}
-                  </p>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+      <section id="coaching-identity" className="scroll-mt-24 space-y-4">
+        <h2 className="text-2xl font-semibold uppercase tracking-wide">
+          Coaching Identity
+        </h2>
+        <CoachIdentityRulesSection />
+      </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Current team identities</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            {memberships.map((row) => (
-              <div key={row.id} className="rounded-md border p-3">
-                <p className="font-medium">
-                  {row.franchise.abbreviation} ·{" "}
-                  {row.user.name?.trim() || "Unnamed coach"}
-                </p>
-                <p className="text-xs text-[var(--muted-foreground)]">
-                  Team: {row.franchise.teamIdentity?.name ?? "Unassigned"} · Coach:{" "}
-                  {row.user.coachProfile?.coachIdentity?.name ?? "Unassigned"}
-                </p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Current assignments</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          {memberships.map((row) => (
+            <div key={row.id} className="rounded-md border p-3">
+              <p className="font-medium">
+                {row.franchise.abbreviation} ·{" "}
+                {row.user.name?.trim() || "Unnamed coach"}
+              </p>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Team: {row.franchise.teamIdentity?.name ?? "Unassigned"} · Coach:{" "}
+                {row.user.coachProfile?.coachIdentity?.name ?? "Unassigned"}
+              </p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
       {commissioner ? (
         <Card>
@@ -156,11 +158,11 @@ export default async function CoachIdentitiesPage() {
                       <option value="">Unassigned</option>
                       {coachIdentities.map((identity) => (
                         <option key={identity.id} value={identity.id}>
-                          {identity.name} (Cost {identity.xpCost})
+                          {identity.name}
                         </option>
                       ))}
                     </Select>
-                    <input type="hidden" name="applyXpCost" value="true" />
+                    <input type="hidden" name="applyXpCost" value="false" />
                     <SubmitButton size="sm">Save coach identity</SubmitButton>
                   </form>
                 </div>
