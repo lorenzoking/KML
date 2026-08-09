@@ -30,18 +30,23 @@ export function TeamIdentityPicker({
   chosenSeason,
   currentSeason,
   franchiseName,
+  franchiseId,
   returnTo = "/coach/me",
+  allowAdminOverride = false,
 }: {
   options: IdentityOption[];
   currentIdentity?: IdentityOption | null;
   chosenSeason?: number | null;
   currentSeason: number;
   franchiseName: string;
+  franchiseId?: string;
   returnTo?: string;
+  allowAdminOverride?: boolean;
 }) {
   const rule = getTeamIdentityRuleBySlug(currentIdentity?.slug);
   const unlockSeason = chosenSeason != null ? chosenSeason + 3 : null;
   const locked =
+    !allowAdminOverride &&
     Boolean(currentIdentity) &&
     chosenSeason != null &&
     unlockSeason != null &&
@@ -64,6 +69,10 @@ export function TeamIdentityPicker({
               {locked ? (
                 <span className="text-xs text-[var(--muted-foreground)]">
                   Locked until Season {unlockSeason}
+                </span>
+              ) : allowAdminOverride && currentIdentity && chosenSeason != null ? (
+                <span className="text-xs text-[var(--primary)]">
+                  Admin override available
                 </span>
               ) : (
                 <span className="text-xs text-[var(--muted-foreground)]">
@@ -104,6 +113,9 @@ export function TeamIdentityPicker({
           className="space-y-3"
         >
           <input type="hidden" name="returnTo" value={returnTo} />
+          {franchiseId ? (
+            <input type="hidden" name="franchiseId" value={franchiseId} />
+          ) : null}
           <div className="space-y-2">
             <Label htmlFor="identityId">
               {currentIdentity ? "Change Team Identity" : "Choose Team Identity"}
@@ -127,6 +139,9 @@ export function TeamIdentityPicker({
           </div>
           <p className="text-xs text-[var(--muted-foreground)]">
             {TEAM_IDENTITY_CHANGE_RULE}{" "}
+            {allowAdminOverride
+              ? "Commissioners can override this lock at any time."
+              : null}{" "}
             <Link
               href="/rules?tab=team-identity"
               className="text-[var(--primary)] hover:underline"
@@ -136,7 +151,11 @@ export function TeamIdentityPicker({
           </p>
           {!locked ? (
             <SubmitButton>
-              {currentIdentity ? "Update Team Identity" : "Save Team Identity"}
+              {allowAdminOverride && currentIdentity
+                ? "Override Team Identity"
+                : currentIdentity
+                  ? "Update Team Identity"
+                  : "Save Team Identity"}
             </SubmitButton>
           ) : (
             <p className="text-sm text-[var(--muted-foreground)]">

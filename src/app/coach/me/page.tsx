@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { requireUser } from "@/lib/auth";
+import { isCommissioner, requireUser } from "@/lib/auth";
 import { ensureDefaultCoachIdentities } from "@/lib/coach/ensure-coach-identities";
 import { ensureDefaultTeamIdentities } from "@/lib/coach/ensure-team-identities";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
@@ -28,6 +28,7 @@ export default async function MyCoachProfilePage({
   searchParams: Promise<{ updated?: string; error?: string }>;
 }) {
   const user = await requireUser();
+  const commissionerUi = await isCommissioner(user);
   const params = await searchParams;
   const { season, settings } = await getActiveSeason();
 
@@ -94,6 +95,8 @@ export default async function MyCoachProfilePage({
           chosenSeason={franchise.teamIdentityChosenSeason}
           currentSeason={settings.currentSeason}
           franchiseName={franchise.name}
+          franchiseId={franchise.id}
+          allowAdminOverride={commissionerUi}
         />
       ) : (
         <Card>
@@ -117,6 +120,8 @@ export default async function MyCoachProfilePage({
         currentIdentity={profile?.coachIdentity}
         chosenSeason={profile?.coachIdentityChosenSeason}
         currentSeason={settings.currentSeason}
+        targetUserId={user.id}
+        allowAdminOverride={commissionerUi}
       />
 
       <Card>

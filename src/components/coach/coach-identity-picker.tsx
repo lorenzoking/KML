@@ -28,17 +28,22 @@ export function CoachIdentityPicker({
   currentIdentity,
   chosenSeason,
   currentSeason,
+  targetUserId,
   returnTo = "/coach/me",
+  allowAdminOverride = false,
 }: {
   options: IdentityOption[];
   currentIdentity?: IdentityOption | null;
   chosenSeason?: number | null;
   currentSeason: number;
+  targetUserId?: string;
   returnTo?: string;
+  allowAdminOverride?: boolean;
 }) {
   const rule = getCoachIdentityRuleBySlug(currentIdentity?.slug);
   const unlockSeason = chosenSeason != null ? chosenSeason + 3 : null;
   const locked =
+    !allowAdminOverride &&
     Boolean(currentIdentity) &&
     chosenSeason != null &&
     unlockSeason != null &&
@@ -61,6 +66,10 @@ export function CoachIdentityPicker({
               {locked ? (
                 <span className="text-xs text-[var(--muted-foreground)]">
                   Locked until Season {unlockSeason}
+                </span>
+              ) : allowAdminOverride && currentIdentity && chosenSeason != null ? (
+                <span className="text-xs text-[var(--primary)]">
+                  Admin override available
                 </span>
               ) : (
                 <span className="text-xs text-[var(--muted-foreground)]">
@@ -96,6 +105,9 @@ export function CoachIdentityPicker({
           className="space-y-3"
         >
           <input type="hidden" name="returnTo" value={returnTo} />
+          {targetUserId ? (
+            <input type="hidden" name="userId" value={targetUserId} />
+          ) : null}
           <div className="space-y-2">
             <Label htmlFor="coachIdentityId">
               {currentIdentity
@@ -121,6 +133,9 @@ export function CoachIdentityPicker({
           </div>
           <p className="text-xs text-[var(--muted-foreground)]">
             {COACH_IDENTITY_CHANGE_RULE}{" "}
+            {allowAdminOverride
+              ? "Commissioners can override this lock at any time."
+              : null}{" "}
             <Link
               href="/rules?tab=coaching-identity"
               className="text-[var(--primary)] hover:underline"
@@ -130,9 +145,11 @@ export function CoachIdentityPicker({
           </p>
           {!locked ? (
             <SubmitButton>
-              {currentIdentity
-                ? "Update Coaching Identity"
-                : "Save Coaching Identity"}
+              {allowAdminOverride && currentIdentity
+                ? "Override Coaching Identity"
+                : currentIdentity
+                  ? "Update Coaching Identity"
+                  : "Save Coaching Identity"}
             </SubmitButton>
           ) : (
             <p className="text-sm text-[var(--muted-foreground)]">

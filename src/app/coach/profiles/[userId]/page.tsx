@@ -169,7 +169,7 @@ export default async function CoachProfileDetailPage({
         ) : null}
       </div>
 
-      {isSelf ? (
+      {isSelf || commissioner ? (
         <>
           {activeMembership ? (
             <TeamIdentityPicker
@@ -178,7 +178,9 @@ export default async function CoachProfileDetailPage({
               chosenSeason={activeMembership.franchise.teamIdentityChosenSeason}
               currentSeason={settings.currentSeason}
               franchiseName={activeMembership.franchise.name}
+              franchiseId={activeMembership.franchise.id}
               returnTo={`/coach/profiles/${user.id}`}
+              allowAdminOverride={commissioner}
             />
           ) : null}
           <CoachIdentityPicker
@@ -186,7 +188,9 @@ export default async function CoachProfileDetailPage({
             currentIdentity={profile?.coachIdentity}
             chosenSeason={profile?.coachIdentityChosenSeason}
             currentSeason={settings.currentSeason}
+            targetUserId={user.id}
             returnTo={`/coach/profiles/${user.id}`}
+            allowAdminOverride={commissioner}
           />
         </>
       ) : null}

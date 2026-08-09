@@ -6,7 +6,7 @@ import {
   CarouselMoveType,
   IdentityType,
 } from "@prisma/client";
-import { requireCommissioner, requireUser } from "@/lib/auth";
+import { isCommissioner, requireCommissioner, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
 import {
@@ -154,6 +154,7 @@ export async function assignTeamIdentity(formData: FormData) {
 
 export async function selectMyTeamIdentity(formData: FormData) {
   const user = await requireUser();
+  const commissioner = await isCommissioner(user);
   const { season, settings } = await getActiveSeason();
 
   const parsed = selectMyTeamIdentitySchema.safeParse({
@@ -163,9 +164,19 @@ export async function selectMyTeamIdentity(formData: FormData) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid Team Identity." };
   }
 
-  const membership = await getUserMembership(user.id, season.id);
-  if (!membership) {
-    return { error: "You need an assigned franchise before choosing a Team Identity." };
+  const requestedFranchiseId = String(formData.get("franchiseId") || "");
+  let franchiseId = requestedFranchiseId;
+
+  if (franchiseId) {
+    if (!commissioner) {
+      return { error: "Only commissioners can change another franchise’s Team Identity." };
+    }
+  } else {
+    const membership = await getUserMembership(user.id, season.id);
+    if (!membership) {
+      return { error: "You need an assigned franchise before choosing a Team Identity." };
+    }
+    franchiseId = membership.franchiseId;
   }
 
   const identity = await prisma.identityCatalog.findUnique({
@@ -176,11 +187,12 @@ export async function selectMyTeamIdentity(formData: FormData) {
   }
 
   const franchise = await prisma.franchise.findUnique({
-    where: { id: membership.franchiseId },
+    where: { id: franchiseId },
   });
   if (!franchise) return { error: "Franchise not found." };
 
   if (
+    !commissioner &&
     franchise.teamIdentityId &&
     franchise.teamIdentityId !== identity.id &&
     franchise.teamIdentityChosenSeason != null
@@ -203,13 +215,14 @@ export async function selectMyTeamIdentity(formData: FormData) {
 
   await writeAuditLog({
     actorId: user.id,
-    action: "SELECT_MY_TEAM_IDENTITY",
+    action: commissioner ? "ADMIN_OVERRIDE_TEAM_IDENTITY" : "SELECT_MY_TEAM_IDENTITY",
     entityType: "Franchise",
     entityId: franchise.id,
     metadata: {
       identityId: identity.id,
       identitySlug: identity.slug,
       season: settings.currentSeason,
+      override: commissioner,
     },
   });
 
@@ -219,6 +232,7 @@ export async function selectMyTeamIdentity(formData: FormData) {
 
 export async function selectMyCoachIdentity(formData: FormData) {
   const user = await requireUser();
+  const commissioner = await isCommissioner(user);
   const { settings } = await getActiveSeason();
 
   const parsed = selectMyCoachIdentitySchema.safeParse({
@@ -228,6 +242,15 @@ export async function selectMyCoachIdentity(formData: FormData) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid Coaching Identity." };
   }
 
+  const requestedUserId = String(formData.get("userId") || "");
+  let targetUserId = user.id;
+  if (requestedUserId) {
+    if (!commissioner) {
+      return { error: "Only commissioners can change another coach’s Coaching Identity." };
+    }
+    targetUserId = requestedUserId;
+  }
+
   const identity = await prisma.identityCatalog.findUnique({
     where: { id: parsed.data.identityId },
   });
@@ -235,9 +258,12 @@ export async function selectMyCoachIdentity(formData: FormData) {
     return { error: "Selected identity is not a Coaching Identity." };
   }
 
-  const profile = await prisma.coachProfile.findUnique({ where: { userId: user.id } });
+  const profile = await prisma.coachProfile.findUnique({
+    where: { userId: targetUserId },
+  });
 
   if (
+    !commissioner &&
     profile?.coachIdentityId &&
     profile.coachIdentityId !== identity.id &&
     profile.coachIdentityChosenSeason != null
@@ -251,13 +277,13 @@ export async function selectMyCoachIdentity(formData: FormData) {
   }
 
   await prisma.coachProfile.upsert({
-    where: { userId: user.id },
+    where: { userId: targetUserId },
     update: {
       coachIdentityId: identity.id,
       coachIdentityChosenSeason: settings.currentSeason,
     },
     create: {
-      userId: user.id,
+      userId: targetUserId,
       coachIdentityId: identity.id,
       coachIdentityChosenSeason: settings.currentSeason,
     },
@@ -265,17 +291,20 @@ export async function selectMyCoachIdentity(formData: FormData) {
 
   await writeAuditLog({
     actorId: user.id,
-    action: "SELECT_MY_COACH_IDENTITY",
+    action: commissioner
+      ? "ADMIN_OVERRIDE_COACH_IDENTITY"
+      : "SELECT_MY_COACH_IDENTITY",
     entityType: "CoachProfile",
-    entityId: user.id,
+    entityId: targetUserId,
     metadata: {
       identityId: identity.id,
       identitySlug: identity.slug,
       season: settings.currentSeason,
+      override: commissioner,
     },
   });
 
-  revalidateCoachPaths(user.id);
+  revalidateCoachPaths(targetUserId);
   return { success: true };
 }
 

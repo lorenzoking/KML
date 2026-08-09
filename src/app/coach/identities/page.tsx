@@ -108,6 +108,10 @@ export default async function CoachIdentitiesPage() {
         <Card>
           <CardHeader>
             <CardTitle>Assign identities</CardTitle>
+            <p className="text-sm text-[var(--muted-foreground)]">
+              Commissioners can change Team or Coaching Identity at any time, even after
+              a coach has locked their selection for three seasons.
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             {memberships.map((row) => (
