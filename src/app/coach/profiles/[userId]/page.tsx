@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { addCoachLedgerEntry, assignCoachIdentity, saveCoachSeasonReview, updateCoachProfile } from "@/actions/coach";
 import { CoachAvatar } from "@/components/coach/coach-avatar";
+import { TeamIdentityPicker } from "@/components/coach/team-identity-picker";
 import { SubmitButton } from "@/components/forms/submit-button";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { isCommissioner, requireUser } from "@/lib/auth";
 import { getUserCareerStats } from "@/lib/career";
 import { getCoachBoardRow } from "@/lib/coach/coach-board";
+import { ensureDefaultTeamIdentities } from "@/lib/coach/ensure-team-identities";
+import { getTeamIdentityRuleBySlug } from "@/lib/coach/team-identity-rules";
 import { getActiveSeason } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
 
@@ -23,41 +27,52 @@ export default async function CoachProfileDetailPage({
   const currentUser = await requireUser();
   const commissioner = await isCommissioner(currentUser);
   const { userId } = await params;
-  const { season } = await getActiveSeason();
+  const { season, settings } = await getActiveSeason();
 
-  const [user, career, row, identities, review, reputationRows] = await Promise.all([
-    prisma.user.findFirst({
-      where: { id: userId, deletedAt: null },
-      include: {
-        coachProfile: true,
-        memberships: {
-          where: { seasonId: season.id, isActive: true },
-          include: { franchise: { include: { teamIdentity: true } } },
-          take: 1,
+  await ensureDefaultTeamIdentities();
+
+  const [user, career, row, identities, teamIdentities, review, reputationRows] =
+    await Promise.all([
+      prisma.user.findFirst({
+        where: { id: userId, deletedAt: null },
+        include: {
+          coachProfile: true,
+          memberships: {
+            where: { seasonId: season.id, isActive: true },
+            include: { franchise: { include: { teamIdentity: true } } },
+            take: 1,
+          },
         },
-      },
-    }),
-    getUserCareerStats(userId),
-    getCoachBoardRow(userId, season.id),
-    prisma.identityCatalog.findMany({
-      where: { type: "COACH" },
-      orderBy: { name: "asc" },
-    }),
-    prisma.coachSeasonReview.findUnique({
-      where: { userId_seasonId: { userId, seasonId: season.id } },
-    }),
-    prisma.reputationAdjustment.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      take: 8,
-    }),
-  ]);
+      }),
+      getUserCareerStats(userId),
+      getCoachBoardRow(userId, season.id),
+      prisma.identityCatalog.findMany({
+        where: { type: "COACH" },
+        orderBy: { name: "asc" },
+      }),
+      prisma.identityCatalog.findMany({
+        where: { type: "TEAM" },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, slug: true },
+      }),
+      prisma.coachSeasonReview.findUnique({
+        where: { userId_seasonId: { userId, seasonId: season.id } },
+      }),
+      prisma.reputationAdjustment.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 8,
+      }),
+    ]);
   if (!user) notFound();
 
   const activeMembership = user.memberships[0];
 
   const isSelf = currentUser.id === user.id;
   const profile = user.coachProfile;
+  const teamIdentityRule = getTeamIdentityRuleBySlug(
+    activeMembership?.franchise.teamIdentity?.slug
+  );
 
   return (
     <div className="space-y-6">
@@ -89,10 +104,46 @@ export default async function CoachProfileDetailPage({
 
       <div className="grid gap-4 md:grid-cols-4">
         <Metric title="Team" value={activeMembership?.franchise.abbreviation ?? "Unassigned"} />
+        <Metric
+          title="Team Identity"
+          value={activeMembership?.franchise.teamIdentity?.name ?? "Unassigned"}
+        />
         <Metric title="Career record" value={`${career.wins}-${career.losses}-${career.ties}`} />
-        <Metric title="Career XP" value={String(career.careerXp)} />
         <Metric title="Job security" value={row?.jobStatus.replaceAll("_", " ") ?? "N/A"} />
       </div>
+
+      {teamIdentityRule ? (
+        <Card>
+          <CardHeader>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline">{teamIdentityRule.shortLabel}</Badge>
+              <CardTitle>{teamIdentityRule.name}</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
+            <p className="font-medium text-[var(--foreground)]">{teamIdentityRule.tagline}</p>
+            <p>{teamIdentityRule.summary}</p>
+            <p className="italic">Philosophy: {teamIdentityRule.philosophy}</p>
+            <Link
+              href={`/coach/identities#${teamIdentityRule.slug}`}
+              className="inline-block text-[var(--primary)] hover:underline"
+            >
+              Read full Team Identity rules
+            </Link>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {isSelf && activeMembership ? (
+        <TeamIdentityPicker
+          options={teamIdentities}
+          currentIdentity={activeMembership.franchise.teamIdentity}
+          chosenSeason={activeMembership.franchise.teamIdentityChosenSeason}
+          currentSeason={settings.currentSeason}
+          franchiseName={activeMembership.franchise.name}
+          returnTo={`/coach/profiles/${user.id}`}
+        />
+      ) : null}
 
       {(profile?.bio ||
         profile?.discordName ||
@@ -125,7 +176,7 @@ export default async function CoachProfileDetailPage({
           <p>Coach rep: {row ? `${row.coachRepScore} (${row.coachRepGrade})` : "N/A"}</p>
           <p>GM rep: {row ? `${row.gmRepScore} (${row.gmRepGrade})` : "N/A"}</p>
           <p>Coach identity: {row?.coachIdentity ?? "Unassigned"}</p>
-          <p>Team identity: {row?.teamIdentity ?? "Unassigned"}</p>
+          <p>Career XP: {career.careerXp}</p>
           <p>Contract years left: {row?.contractYearsLeft ?? 3}</p>
           <p>
             Autopilot:{" "}

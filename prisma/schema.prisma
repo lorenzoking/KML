@@ -146,15 +146,16 @@ model User {
 }
 
 model Franchise {
-  id             String  @id @default(cuid())
-  name           String  @unique
-  abbreviation   String  @unique
-  city           String
-  conference     String
-  division       String
-  primaryColor   String  @default("#1a1a1a")
-  sortOrder      Int     @default(0)
-  teamIdentityId String?
+  id                       String  @id @default(cuid())
+  name                     String  @unique
+  abbreviation             String  @unique
+  city                     String
+  conference               String
+  division                 String
+  primaryColor             String  @default("#1a1a1a")
+  sortOrder                Int     @default(0)
+  teamIdentityId           String?
+  teamIdentityChosenSeason Int?
 
   memberships                   LeagueMembership[]
   submissionsAsUser             GameSubmission[]      @relation("UserTeam")

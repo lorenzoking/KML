@@ -97,6 +97,10 @@ export const assignIdentitySchema = z.object({
   applyXpCost: z.coerce.boolean().default(false),
 });
 
+export const selectMyTeamIdentitySchema = z.object({
+  identityId: z.string().min(1, "Pick a Team Identity"),
+});
+
 export const coachLedgerEntrySchema = z.object({
   userId: z.string().min(1),
   amount: z.coerce.number().int().min(-50).max(50),

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { updateMyCoachProfile } from "@/actions/coach";
 import { CoachAvatar } from "@/components/coach/coach-avatar";
+import { TeamIdentityPicker } from "@/components/coach/team-identity-picker";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { requireUser } from "@/lib/auth";
+import { ensureDefaultTeamIdentities } from "@/lib/coach/ensure-team-identities";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
 
@@ -25,19 +27,27 @@ export default async function MyCoachProfilePage({
 }) {
   const user = await requireUser();
   const params = await searchParams;
-  const { season } = await getActiveSeason();
+  const { season, settings } = await getActiveSeason();
 
-  const [fresh, membership] = await Promise.all([
+  await ensureDefaultTeamIdentities();
+
+  const [fresh, membership, teamIdentities] = await Promise.all([
     prisma.user.findUnique({
       where: { id: user.id },
       include: { coachProfile: true },
     }),
     getUserMembership(user.id, season.id),
+    prisma.identityCatalog.findMany({
+      where: { type: "TEAM" },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, slug: true },
+    }),
   ]);
 
   if (!fresh) redirect("/sign-in");
 
   const profile = fresh.coachProfile;
+  const franchise = membership?.franchise ?? null;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -70,9 +80,34 @@ export default async function MyCoachProfilePage({
         </p>
       ) : null}
 
+      {franchise ? (
+        <TeamIdentityPicker
+          options={teamIdentities}
+          currentIdentity={franchise.teamIdentity}
+          chosenSeason={franchise.teamIdentityChosenSeason}
+          currentSeason={settings.currentSeason}
+          franchiseName={franchise.name}
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Team Identity</CardTitle>
+            <CardDescription>
+              Once a commissioner assigns your franchise, you can choose your Team
+              Identity here.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/request-team">Request your team</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
-          <CardTitle>Identity</CardTitle>
+          <CardTitle>Coach profile</CardTitle>
           <CardDescription>
             {membership
               ? `Currently assigned: ${membership.franchise.name}`

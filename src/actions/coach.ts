@@ -17,6 +17,7 @@ import {
   coachSeasonReviewSchema,
   createCarouselVacancySchema,
   reviewCarouselApplicationSchema,
+  selectMyTeamIdentitySchema,
   updateCoachProfileSchema,
   updateMyCoachProfileSchema,
 } from "@/lib/validations";
@@ -100,6 +101,7 @@ export async function assignCoachIdentity(formData: FormData) {
 
 export async function assignTeamIdentity(formData: FormData) {
   const commissioner = await requireCommissioner();
+  const { settings } = await getActiveSeason();
 
   const parsed = assignIdentitySchema.safeParse({
     franchiseId: formData.get("franchiseId"),
@@ -118,7 +120,12 @@ export async function assignTeamIdentity(formData: FormData) {
 
   await prisma.franchise.update({
     where: { id: parsed.data.franchiseId },
-    data: { teamIdentityId: parsed.data.identityId },
+    data: {
+      teamIdentityId: parsed.data.identityId,
+      teamIdentityChosenSeason: parsed.data.identityId
+        ? settings.currentSeason
+        : null,
+    },
   });
 
   await writeAuditLog({
@@ -130,6 +137,71 @@ export async function assignTeamIdentity(formData: FormData) {
   });
 
   revalidateCoachPaths();
+  return { success: true };
+}
+
+export async function selectMyTeamIdentity(formData: FormData) {
+  const user = await requireUser();
+  const { season, settings } = await getActiveSeason();
+
+  const parsed = selectMyTeamIdentitySchema.safeParse({
+    identityId: formData.get("identityId"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid Team Identity." };
+  }
+
+  const membership = await getUserMembership(user.id, season.id);
+  if (!membership) {
+    return { error: "You need an assigned franchise before choosing a Team Identity." };
+  }
+
+  const identity = await prisma.identityCatalog.findUnique({
+    where: { id: parsed.data.identityId },
+  });
+  if (!identity || identity.type !== IdentityType.TEAM) {
+    return { error: "Selected identity is not a Team Identity." };
+  }
+
+  const franchise = await prisma.franchise.findUnique({
+    where: { id: membership.franchiseId },
+  });
+  if (!franchise) return { error: "Franchise not found." };
+
+  if (
+    franchise.teamIdentityId &&
+    franchise.teamIdentityId !== identity.id &&
+    franchise.teamIdentityChosenSeason != null
+  ) {
+    const unlockSeason = franchise.teamIdentityChosenSeason + 3;
+    if (settings.currentSeason < unlockSeason) {
+      return {
+        error: `Team Identity is locked until Season ${unlockSeason}. Ask a commissioner for an extraordinary change.`,
+      };
+    }
+  }
+
+  await prisma.franchise.update({
+    where: { id: franchise.id },
+    data: {
+      teamIdentityId: identity.id,
+      teamIdentityChosenSeason: settings.currentSeason,
+    },
+  });
+
+  await writeAuditLog({
+    actorId: user.id,
+    action: "SELECT_MY_TEAM_IDENTITY",
+    entityType: "Franchise",
+    entityId: franchise.id,
+    metadata: {
+      identityId: identity.id,
+      identitySlug: identity.slug,
+      season: settings.currentSeason,
+    },
+  });
+
+  revalidateCoachPaths(user.id);
   return { success: true };
 }
 
