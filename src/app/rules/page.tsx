@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CoachIdentityRulesSection } from "@/components/coach/coach-identity-rules";
 import { TeamIdentityRulesSection } from "@/components/coach/team-identity-rules";
+import { GameplayRulesSection } from "@/components/rules/gameplay-rules";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLeagueSettings } from "@/lib/league";
@@ -46,16 +47,30 @@ function renderMarkdownLite(markdown: string) {
 
 export default async function RulesPage() {
   const settings = await getLeagueSettings();
+  const hasExtraRulebook = Boolean(settings.rulesMarkdown?.trim());
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold uppercase tracking-[0.06em]">
-          League rules
-        </h1>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          {settings.leagueName} · public read-only
-        </p>
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-semibold uppercase tracking-[0.06em]">
+            League rules
+          </h1>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+            {settings.leagueName} · gameplay, scheduling, identities, and enforcement
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href="#gameplay">Gameplay</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="#team-identity">Team Identity</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="#coaching-identity">Coaching Identity</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -67,14 +82,17 @@ export default async function RulesPage() {
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Rulebook</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-1">
-          {renderMarkdownLite(settings.rulesMarkdown)}
-        </CardContent>
-      </Card>
+      <section id="gameplay" className="scroll-mt-24 space-y-4">
+        <div>
+          <h2 className="text-2xl font-semibold uppercase tracking-wide">
+            Gameplay rules
+          </h2>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            How we play user and CPU games — settings, offense, defense, and enforcement.
+          </p>
+        </div>
+        <GameplayRulesSection />
+      </section>
 
       <Card>
         <CardHeader>
@@ -124,6 +142,17 @@ export default async function RulesPage() {
         </div>
         <CoachIdentityRulesSection />
       </section>
+
+      {hasExtraRulebook ? (
+        <Card id="additional-rulebook" className="scroll-mt-24">
+          <CardHeader>
+            <CardTitle>Additional commissioner notes</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            {renderMarkdownLite(settings.rulesMarkdown)}
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   );
 }
