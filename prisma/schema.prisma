@@ -374,9 +374,10 @@ model CoachProfile {
   motto                 String?
   hometown              String?
   favoriteScheme        String?
-  selectionPick         Int?
-  coachIdentityId       String?
-  expectationScore      Int            @default(0)
+  selectionPick              Int?
+  coachIdentityId            String?
+  coachIdentityChosenSeason  Int?
+  expectationScore           Int            @default(0)
   contractYearsLeft     Int            @default(3)
   tankingStrikes        Int            @default(0)
   gmStrikes             Int            @default(0)

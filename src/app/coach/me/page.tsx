@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { updateMyCoachProfile } from "@/actions/coach";
 import { CoachAvatar } from "@/components/coach/coach-avatar";
+import { CoachIdentityPicker } from "@/components/coach/coach-identity-picker";
 import { TeamIdentityPicker } from "@/components/coach/team-identity-picker";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { requireUser } from "@/lib/auth";
+import { ensureDefaultCoachIdentities } from "@/lib/coach/ensure-coach-identities";
 import { ensureDefaultTeamIdentities } from "@/lib/coach/ensure-team-identities";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
@@ -29,16 +31,21 @@ export default async function MyCoachProfilePage({
   const params = await searchParams;
   const { season, settings } = await getActiveSeason();
 
-  await ensureDefaultTeamIdentities();
+  await Promise.all([ensureDefaultTeamIdentities(), ensureDefaultCoachIdentities()]);
 
-  const [fresh, membership, teamIdentities] = await Promise.all([
+  const [fresh, membership, teamIdentities, coachIdentities] = await Promise.all([
     prisma.user.findUnique({
       where: { id: user.id },
-      include: { coachProfile: true },
+      include: { coachProfile: { include: { coachIdentity: true } } },
     }),
     getUserMembership(user.id, season.id),
     prisma.identityCatalog.findMany({
       where: { type: "TEAM" },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, slug: true },
+    }),
+    prisma.identityCatalog.findMany({
+      where: { type: "COACH" },
       orderBy: { name: "asc" },
       select: { id: true, name: true, slug: true },
     }),
@@ -104,6 +111,13 @@ export default async function MyCoachProfilePage({
           </CardContent>
         </Card>
       )}
+
+      <CoachIdentityPicker
+        options={coachIdentities}
+        currentIdentity={profile?.coachIdentity}
+        chosenSeason={profile?.coachIdentityChosenSeason}
+        currentSeason={settings.currentSeason}
+      />
 
       <Card>
         <CardHeader>

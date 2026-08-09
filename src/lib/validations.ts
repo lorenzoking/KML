@@ -101,6 +101,10 @@ export const selectMyTeamIdentitySchema = z.object({
   identityId: z.string().min(1, "Pick a Team Identity"),
 });
 
+export const selectMyCoachIdentitySchema = z.object({
+  identityId: z.string().min(1, "Pick a Coaching Identity"),
+});
+
 export const coachLedgerEntrySchema = z.object({
   userId: z.string().min(1),
   amount: z.coerce.number().int().min(-50).max(50),

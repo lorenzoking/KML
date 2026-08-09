@@ -166,3 +166,8 @@ export function coachIdentityCatalogFields(rule: CoachIdentityRule) {
     minRepScore: 0,
   };
 }
+
+export function getCoachIdentityRuleBySlug(slug?: string | null) {
+  if (!slug) return null;
+  return COACH_IDENTITY_RULES.find((rule) => rule.slug === slug) ?? null;
+}

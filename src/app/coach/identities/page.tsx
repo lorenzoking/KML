@@ -59,13 +59,13 @@ export default async function CoachIdentitiesPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline" size="sm">
-            <Link href="#team-identity">Team Identity</Link>
+            <Link href="/coach/me">Choose my identities</Link>
           </Button>
           <Button asChild variant="outline" size="sm">
-            <Link href="#coaching-identity">Coaching Identity</Link>
+            <Link href="/rules?tab=team-identity">Team Identity rules</Link>
           </Button>
           <Button asChild variant="ghost" size="sm">
-            <Link href="/rules#team-identity">League rules</Link>
+            <Link href="/rules?tab=coaching-identity">Coaching Identity rules</Link>
           </Button>
         </div>
       </div>

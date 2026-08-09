@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { selectMyTeamIdentity } from "@/actions/coach";
+import { selectMyCoachIdentity } from "@/actions/coach";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,10 +13,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import {
-  TEAM_IDENTITY_CHANGE_RULE,
-  TEAM_IDENTITY_SNAPSHOT,
-  getTeamIdentityRuleBySlug,
-} from "@/lib/coach/team-identity-rules";
+  COACH_IDENTITY_CHANGE_RULE,
+  getCoachIdentityRuleBySlug,
+} from "@/lib/coach/coach-identity-rules";
 
 type IdentityOption = {
   id: string;
@@ -24,22 +23,20 @@ type IdentityOption = {
   slug: string;
 };
 
-export function TeamIdentityPicker({
+export function CoachIdentityPicker({
   options,
   currentIdentity,
   chosenSeason,
   currentSeason,
-  franchiseName,
   returnTo = "/coach/me",
 }: {
   options: IdentityOption[];
   currentIdentity?: IdentityOption | null;
   chosenSeason?: number | null;
   currentSeason: number;
-  franchiseName: string;
   returnTo?: string;
 }) {
-  const rule = getTeamIdentityRuleBySlug(currentIdentity?.slug);
+  const rule = getCoachIdentityRuleBySlug(currentIdentity?.slug);
   const unlockSeason = chosenSeason != null ? chosenSeason + 3 : null;
   const locked =
     Boolean(currentIdentity) &&
@@ -50,10 +47,10 @@ export function TeamIdentityPicker({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Team Identity</CardTitle>
+        <CardTitle>Coaching Identity</CardTitle>
         <CardDescription>
-          {franchiseName} — this is how your franchise builds in Free Agency, trades,
-          and development.
+          Your specialty for offseason development — how players improve, not how the
+          roster is acquired.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -73,19 +70,14 @@ export function TeamIdentityPicker({
             </div>
             {rule ? (
               <div className="mt-2 space-y-1 text-sm text-[var(--muted-foreground)]">
-                <p className="font-medium text-[var(--foreground)]">{rule.tagline}</p>
-                <p>{rule.summary}</p>
-                <p>
-                  Development:{" "}
-                  {TEAM_IDENTITY_SNAPSHOT.find((s) => s.slug === rule.slug)
-                    ?.development ?? "See rules"}
-                </p>
+                <p className="font-medium text-[var(--foreground)]">{rule.summary}</p>
+                <p className="italic">Philosophy: {rule.philosophy}</p>
               </div>
             ) : null}
           </div>
         ) : (
           <p className="rounded-lg border border-dashed border-[var(--border)] px-3 py-2 text-sm text-[var(--muted-foreground)]">
-            No Team Identity selected yet. Pick one below — this is a 3-season
+            No Coaching Identity selected yet. Pick one below — this is a 3-season
             commitment.
           </p>
         )}
@@ -95,7 +87,7 @@ export function TeamIdentityPicker({
             "use server";
             const next = String(formData.get("returnTo") || "/coach/me");
             const safeNext = next.startsWith("/coach") ? next : "/coach/me";
-            const result = await selectMyTeamIdentity(formData);
+            const result = await selectMyCoachIdentity(formData);
             if (result?.error) {
               redirect(`${safeNext}?error=${encodeURIComponent(result.error)}`);
             }
@@ -105,11 +97,13 @@ export function TeamIdentityPicker({
         >
           <input type="hidden" name="returnTo" value={returnTo} />
           <div className="space-y-2">
-            <Label htmlFor="identityId">
-              {currentIdentity ? "Change Team Identity" : "Choose Team Identity"}
+            <Label htmlFor="coachIdentityId">
+              {currentIdentity
+                ? "Change Coaching Identity"
+                : "Choose Coaching Identity"}
             </Label>
             <Select
-              id="identityId"
+              id="coachIdentityId"
               name="identityId"
               required
               defaultValue={currentIdentity?.id ?? ""}
@@ -126,9 +120,9 @@ export function TeamIdentityPicker({
             </Select>
           </div>
           <p className="text-xs text-[var(--muted-foreground)]">
-            {TEAM_IDENTITY_CHANGE_RULE}{" "}
+            {COACH_IDENTITY_CHANGE_RULE}{" "}
             <Link
-              href="/rules?tab=team-identity"
+              href="/rules?tab=coaching-identity"
               className="text-[var(--primary)] hover:underline"
             >
               Read full rules
@@ -136,7 +130,9 @@ export function TeamIdentityPicker({
           </p>
           {!locked ? (
             <SubmitButton>
-              {currentIdentity ? "Update Team Identity" : "Save Team Identity"}
+              {currentIdentity
+                ? "Update Coaching Identity"
+                : "Save Coaching Identity"}
             </SubmitButton>
           ) : (
             <p className="text-sm text-[var(--muted-foreground)]">

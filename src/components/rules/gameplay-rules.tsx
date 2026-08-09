@@ -44,23 +44,28 @@ export function GameplayRulesSection() {
       </div>
 
       <nav
-        aria-label="Gameplay rule sections"
-        className="flex flex-wrap gap-2"
+        aria-label="Jump to gameplay rule"
+        className="sticky top-16 z-20 -mx-1 border-b border-[var(--border)] bg-[var(--background)]/95 px-1 py-3 backdrop-blur"
       >
-        {GAMEPLAY_RULE_SECTIONS.map((section) => (
-          <a
-            key={section.id}
-            href={`#${section.id}`}
-            className="rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)]"
-          >
-            {section.title}
-          </a>
-        ))}
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--primary)]">
+          Jump to section
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {GAMEPLAY_RULE_SECTIONS.map((section) => (
+            <a
+              key={section.id}
+              href={`#${section.id}`}
+              className="rounded-full border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--muted-foreground)] transition-colors hover:border-[var(--primary)] hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] hover:text-[var(--foreground)]"
+            >
+              {section.title}
+            </a>
+          ))}
+        </div>
       </nav>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="space-y-4">
         {GAMEPLAY_RULE_SECTIONS.map((section) => (
-          <Card key={section.id} id={section.id} className="scroll-mt-24">
+          <Card key={section.id} id={section.id} className="scroll-mt-36">
             <CardHeader>
               <CardTitle>{section.title}</CardTitle>
               {section.summary ? (

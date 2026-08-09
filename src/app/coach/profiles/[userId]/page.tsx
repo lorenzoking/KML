@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { addCoachLedgerEntry, assignCoachIdentity, saveCoachSeasonReview, updateCoachProfile } from "@/actions/coach";
 import { CoachAvatar } from "@/components/coach/coach-avatar";
+import { CoachIdentityPicker } from "@/components/coach/coach-identity-picker";
 import { TeamIdentityPicker } from "@/components/coach/team-identity-picker";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { isCommissioner, requireUser } from "@/lib/auth";
 import { getUserCareerStats } from "@/lib/career";
 import { getCoachBoardRow } from "@/lib/coach/coach-board";
+import { ensureDefaultCoachIdentities } from "@/lib/coach/ensure-coach-identities";
 import { ensureDefaultTeamIdentities } from "@/lib/coach/ensure-team-identities";
+import { getCoachIdentityRuleBySlug } from "@/lib/coach/coach-identity-rules";
 import { getTeamIdentityRuleBySlug } from "@/lib/coach/team-identity-rules";
 import { getActiveSeason } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
@@ -29,14 +32,14 @@ export default async function CoachProfileDetailPage({
   const { userId } = await params;
   const { season, settings } = await getActiveSeason();
 
-  await ensureDefaultTeamIdentities();
+  await Promise.all([ensureDefaultTeamIdentities(), ensureDefaultCoachIdentities()]);
 
   const [user, career, row, identities, teamIdentities, review, reputationRows] =
     await Promise.all([
       prisma.user.findFirst({
         where: { id: userId, deletedAt: null },
         include: {
-          coachProfile: true,
+          coachProfile: { include: { coachIdentity: true } },
           memberships: {
             where: { seasonId: season.id, isActive: true },
             include: { franchise: { include: { teamIdentity: true } } },
@@ -73,6 +76,12 @@ export default async function CoachProfileDetailPage({
   const teamIdentityRule = getTeamIdentityRuleBySlug(
     activeMembership?.franchise.teamIdentity?.slug
   );
+  const coachIdentityRule = getCoachIdentityRuleBySlug(profile?.coachIdentity?.slug);
+  const coachIdentityOptions = identities.map((identity) => ({
+    id: identity.id,
+    name: identity.name,
+    slug: identity.slug,
+  }));
 
   return (
     <div className="space-y-6">
@@ -108,41 +117,78 @@ export default async function CoachProfileDetailPage({
           title="Team Identity"
           value={activeMembership?.franchise.teamIdentity?.name ?? "Unassigned"}
         />
-        <Metric title="Career record" value={`${career.wins}-${career.losses}-${career.ties}`} />
+        <Metric
+          title="Coach Identity"
+          value={profile?.coachIdentity?.name ?? "Unassigned"}
+        />
         <Metric title="Job security" value={row?.jobStatus.replaceAll("_", " ") ?? "N/A"} />
       </div>
 
-      {teamIdentityRule ? (
-        <Card>
-          <CardHeader>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline">{teamIdentityRule.shortLabel}</Badge>
-              <CardTitle>{teamIdentityRule.name}</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
-            <p className="font-medium text-[var(--foreground)]">{teamIdentityRule.tagline}</p>
-            <p>{teamIdentityRule.summary}</p>
-            <p className="italic">Philosophy: {teamIdentityRule.philosophy}</p>
-            <Link
-              href={`/coach/identities#${teamIdentityRule.slug}`}
-              className="inline-block text-[var(--primary)] hover:underline"
-            >
-              Read full Team Identity rules
-            </Link>
-          </CardContent>
-        </Card>
-      ) : null}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {teamIdentityRule ? (
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline">{teamIdentityRule.shortLabel}</Badge>
+                <CardTitle>{teamIdentityRule.name}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
+              <p className="font-medium text-[var(--foreground)]">{teamIdentityRule.tagline}</p>
+              <p>{teamIdentityRule.summary}</p>
+              <p className="italic">Philosophy: {teamIdentityRule.philosophy}</p>
+              <Link
+                href="/rules?tab=team-identity"
+                className="inline-block text-[var(--primary)] hover:underline"
+              >
+                Read full Team Identity rules
+              </Link>
+            </CardContent>
+          </Card>
+        ) : null}
 
-      {isSelf && activeMembership ? (
-        <TeamIdentityPicker
-          options={teamIdentities}
-          currentIdentity={activeMembership.franchise.teamIdentity}
-          chosenSeason={activeMembership.franchise.teamIdentityChosenSeason}
-          currentSeason={settings.currentSeason}
-          franchiseName={activeMembership.franchise.name}
-          returnTo={`/coach/profiles/${user.id}`}
-        />
+        {coachIdentityRule ? (
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline">{coachIdentityRule.shortLabel}</Badge>
+                <CardTitle>{coachIdentityRule.name}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
+              <p>{coachIdentityRule.summary}</p>
+              <p className="italic">Philosophy: {coachIdentityRule.philosophy}</p>
+              <Link
+                href="/rules?tab=coaching-identity"
+                className="inline-block text-[var(--primary)] hover:underline"
+              >
+                Read full Coaching Identity rules
+              </Link>
+            </CardContent>
+          </Card>
+        ) : null}
+      </div>
+
+      {isSelf ? (
+        <>
+          {activeMembership ? (
+            <TeamIdentityPicker
+              options={teamIdentities}
+              currentIdentity={activeMembership.franchise.teamIdentity}
+              chosenSeason={activeMembership.franchise.teamIdentityChosenSeason}
+              currentSeason={settings.currentSeason}
+              franchiseName={activeMembership.franchise.name}
+              returnTo={`/coach/profiles/${user.id}`}
+            />
+          ) : null}
+          <CoachIdentityPicker
+            options={coachIdentityOptions}
+            currentIdentity={profile?.coachIdentity}
+            chosenSeason={profile?.coachIdentityChosenSeason}
+            currentSeason={settings.currentSeason}
+            returnTo={`/coach/profiles/${user.id}`}
+          />
+        </>
       ) : null}
 
       {(profile?.bio ||
@@ -175,7 +221,7 @@ export default async function CoachProfileDetailPage({
         <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
           <p>Coach rep: {row ? `${row.coachRepScore} (${row.coachRepGrade})` : "N/A"}</p>
           <p>GM rep: {row ? `${row.gmRepScore} (${row.gmRepGrade})` : "N/A"}</p>
-          <p>Coach identity: {row?.coachIdentity ?? "Unassigned"}</p>
+          <p>Career record: {`${career.wins}-${career.losses}-${career.ties}`}</p>
           <p>Career XP: {career.careerXp}</p>
           <p>Contract years left: {row?.contractYearsLeft ?? 3}</p>
           <p>

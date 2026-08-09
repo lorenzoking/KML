@@ -17,6 +17,7 @@ import {
   coachSeasonReviewSchema,
   createCarouselVacancySchema,
   reviewCarouselApplicationSchema,
+  selectMyCoachIdentitySchema,
   selectMyTeamIdentitySchema,
   updateCoachProfileSchema,
   updateMyCoachProfileSchema,
@@ -45,7 +46,7 @@ function revalidateCoachPaths(userId?: string) {
 
 export async function assignCoachIdentity(formData: FormData) {
   const commissioner = await requireCommissioner();
-  const { season } = await getActiveSeason();
+  const { season, settings } = await getActiveSeason();
 
   const parsed = assignIdentitySchema.safeParse({
     userId: formData.get("userId"),
@@ -65,8 +66,19 @@ export async function assignCoachIdentity(formData: FormData) {
 
   await prisma.coachProfile.upsert({
     where: { userId: parsed.data.userId },
-    update: { coachIdentityId: parsed.data.identityId },
-    create: { userId: parsed.data.userId, coachIdentityId: parsed.data.identityId },
+    update: {
+      coachIdentityId: parsed.data.identityId,
+      coachIdentityChosenSeason: parsed.data.identityId
+        ? settings.currentSeason
+        : null,
+    },
+    create: {
+      userId: parsed.data.userId,
+      coachIdentityId: parsed.data.identityId,
+      coachIdentityChosenSeason: parsed.data.identityId
+        ? settings.currentSeason
+        : null,
+    },
   });
 
   if (identity && parsed.data.applyXpCost && identity.xpCost > 0) {
@@ -194,6 +206,68 @@ export async function selectMyTeamIdentity(formData: FormData) {
     action: "SELECT_MY_TEAM_IDENTITY",
     entityType: "Franchise",
     entityId: franchise.id,
+    metadata: {
+      identityId: identity.id,
+      identitySlug: identity.slug,
+      season: settings.currentSeason,
+    },
+  });
+
+  revalidateCoachPaths(user.id);
+  return { success: true };
+}
+
+export async function selectMyCoachIdentity(formData: FormData) {
+  const user = await requireUser();
+  const { settings } = await getActiveSeason();
+
+  const parsed = selectMyCoachIdentitySchema.safeParse({
+    identityId: formData.get("identityId"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid Coaching Identity." };
+  }
+
+  const identity = await prisma.identityCatalog.findUnique({
+    where: { id: parsed.data.identityId },
+  });
+  if (!identity || identity.type !== IdentityType.COACH) {
+    return { error: "Selected identity is not a Coaching Identity." };
+  }
+
+  const profile = await prisma.coachProfile.findUnique({ where: { userId: user.id } });
+
+  if (
+    profile?.coachIdentityId &&
+    profile.coachIdentityId !== identity.id &&
+    profile.coachIdentityChosenSeason != null
+  ) {
+    const unlockSeason = profile.coachIdentityChosenSeason + 3;
+    if (settings.currentSeason < unlockSeason) {
+      return {
+        error: `Coaching Identity is locked until Season ${unlockSeason}. Ask a commissioner for an extraordinary change.`,
+      };
+    }
+  }
+
+  await prisma.coachProfile.upsert({
+    where: { userId: user.id },
+    update: {
+      coachIdentityId: identity.id,
+      coachIdentityChosenSeason: settings.currentSeason,
+    },
+    create: {
+      userId: user.id,
+      coachIdentityId: identity.id,
+      coachIdentityChosenSeason: settings.currentSeason,
+    },
+  });
+
+  await writeAuditLog({
+    actorId: user.id,
+    action: "SELECT_MY_COACH_IDENTITY",
+    entityType: "CoachProfile",
+    entityId: user.id,
     metadata: {
       identityId: identity.id,
       identitySlug: identity.slug,
