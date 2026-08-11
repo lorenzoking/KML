@@ -117,6 +117,24 @@ export function SubmissionForm({
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="simScore">Your Sim Score (1–5)</Label>
+        <Select id="simScore" name="simScore" required defaultValue="">
+          <option value="" disabled>
+            Select Sim Score
+          </option>
+          <option value="5">5 — Elite sim</option>
+          <option value="4">4 — Strong sim</option>
+          <option value="3">3 — Acceptable</option>
+          <option value="2">2 — Poor (counts toward Bad Sim)</option>
+          <option value="1">1 — Very poor (counts toward Bad Sim)</option>
+        </Select>
+        <p className="text-xs text-[var(--muted-foreground)]">
+          Enter the Madden Sim Score for your play. Scores of 2 or lower feed KML Bad
+          Sim Reputation rules.
+        </p>
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
         <Textarea id="notes" name="notes" placeholder="Optional context for commissioners" />
       </div>

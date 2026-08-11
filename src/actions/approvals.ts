@@ -92,6 +92,7 @@ export async function reviewSubmission(formData: FormData) {
         awayTeamId: submission.opponentTeamId,
         homeScore: submission.userScore,
         awayScore: submission.opponentScore,
+        simScore: submission.simScore,
         winnerTeamId,
       },
     });
@@ -164,6 +165,7 @@ export async function reviewSubmission(formData: FormData) {
       winnerTeamId,
       userScore: submission.userScore,
       opponentScore: submission.opponentScore,
+      simScore: submission.simScore,
       gameType: submission.gameType,
       awardsXp: awardsCoachXp(submission.gameType),
     },

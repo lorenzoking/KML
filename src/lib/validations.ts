@@ -15,6 +15,11 @@ export const gameSubmissionSchema = z
     opponentTeamId: z.string().min(1, "Opponent is required"),
     userScore: z.coerce.number().int().min(0).max(200),
     opponentScore: z.coerce.number().int().min(0).max(200),
+    simScore: z.coerce
+      .number()
+      .int()
+      .min(1, "Sim Score must be 1–5")
+      .max(5, "Sim Score must be 1–5"),
     notes: z.string().max(500).optional(),
   })
   .refine((data) => data.userScore !== data.opponentScore || true, {

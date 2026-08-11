@@ -391,7 +391,8 @@ export default async function DashboardPage({
                     >
                       <span>
                         W{s.week}: {s.userTeam.abbreviation} {s.userScore}–
-                        {s.opponentScore} {s.opponentTeam.abbreviation}
+                        {s.opponentScore} {s.opponentTeam.abbreviation} · Sim{" "}
+                        {s.simScore}/5
                       </span>
                       <StatusBadge status={s.status} />
                     </li>
@@ -423,7 +424,8 @@ export default async function DashboardPage({
                         <StatusBadge status={s.status} />
                       </div>
                       <p className="text-xs text-[var(--muted-foreground)]">
-                        Week {s.week} · {GAME_TYPE_LABELS[s.gameType]}
+                        Week {s.week} · {GAME_TYPE_LABELS[s.gameType]} · Sim{" "}
+                        {s.simScore}/5
                       </p>
                     </li>
                   ))}

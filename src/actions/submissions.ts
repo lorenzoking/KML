@@ -24,6 +24,7 @@ export async function submitGameResult(formData: FormData) {
     opponentTeamId: formData.get("opponentTeamId"),
     userScore: formData.get("userScore"),
     opponentScore: formData.get("opponentScore"),
+    simScore: formData.get("simScore"),
     notes: formData.get("notes") || undefined,
   });
 
@@ -82,6 +83,7 @@ export async function submitGameResult(formData: FormData) {
       opponentTeamId: data.opponentTeamId,
       userScore: data.userScore,
       opponentScore: data.opponentScore,
+      simScore: data.simScore,
       notes: data.notes,
       status: SubmissionStatus.PENDING,
     },
@@ -96,6 +98,7 @@ export async function submitGameResult(formData: FormData) {
       week: data.week,
       userScore: data.userScore,
       opponentScore: data.opponentScore,
+      simScore: data.simScore,
     },
   });
 

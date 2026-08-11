@@ -411,6 +411,7 @@ async function main() {
         opponentTeamId: oppTeam.id,
         userScore: game.userScore,
         opponentScore: game.oppScore,
+        simScore: 4,
         notes: "Seeded demo result",
         status: SubmissionStatus.APPROVED,
         reviewedById: commissioner.id,
@@ -429,6 +430,7 @@ async function main() {
         awayTeamId: oppTeam.id,
         homeScore: game.userScore,
         awayScore: game.oppScore,
+        simScore: 4,
         winnerTeamId: won ? userTeam.id : game.userScore < game.oppScore ? oppTeam.id : null,
       },
     });
@@ -473,6 +475,7 @@ async function main() {
       opponentTeamId: byAbbr.NYJ.id,
       userScore: 24,
       opponentScore: 20,
+      simScore: 3,
       notes: "Close divisional win — awaiting approval",
       status: SubmissionStatus.PENDING,
     },
