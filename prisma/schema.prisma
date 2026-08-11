@@ -139,6 +139,8 @@ model User {
   carouselDecisions     CarouselApplication[]  @relation("CarouselReviewer")
   waitlistEntries       WaitlistEntry[]
   storiesAuthored       LeagueStory[]          @relation("StoryAuthor")
+  storyLikes            LeagueStoryLike[]
+  storyComments         LeagueStoryComment[]
   auditLogs             AuditLog[]
   requestedFranchise    Franchise?             @relation("UserRequestedFranchise", fields: [requestedFranchiseId], references: [id], onDelete: SetNull)
 
@@ -495,13 +497,46 @@ model LeagueStory {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  season Season? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
-  author User?   @relation("StoryAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  season   Season?              @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  author   User?                @relation("StoryAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  likes    LeagueStoryLike[]
+  comments LeagueStoryComment[]
 
   @@index([isPublished, isFeatured])
   @@index([category])
   @@index([seasonId, week])
   @@index([sortOrder])
+}
+
+model LeagueStoryLike {
+  id        String   @id @default(cuid())
+  storyId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  story LeagueStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, userId])
+  @@index([userId])
+  @@index([storyId])
+}
+
+model LeagueStoryComment {
+  id        String    @id @default(cuid())
+  storyId   String
+  userId    String
+  body      String
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  story LeagueStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([storyId, createdAt])
+  @@index([userId])
+  @@index([deletedAt])
 }
 
 model AuditLog {

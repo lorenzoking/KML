@@ -312,14 +312,44 @@ export async function getPublishedStories(options?: {
     },
     orderBy: [{ isFeatured: "desc" }, { publishedAt: "desc" }, { sortOrder: "asc" }],
     take: options?.take ?? 50,
-    include: { author: { select: { name: true } } },
+    include: {
+      author: { select: { name: true } },
+      _count: {
+        select: {
+          likes: true,
+          comments: { where: { deletedAt: null } },
+        },
+      },
+    },
   });
 }
 
-export async function getStoryBySlug(slug: string) {
+export async function getStoryBySlug(slug: string, viewerId?: string | null) {
   return prisma.leagueStory.findFirst({
     where: { slug, isPublished: true },
-    include: { author: { select: { name: true } } },
+    include: {
+      author: { select: { name: true } },
+      _count: {
+        select: {
+          likes: true,
+          comments: { where: { deletedAt: null } },
+        },
+      },
+      likes: viewerId
+        ? {
+            where: { userId: viewerId },
+            select: { id: true },
+            take: 1,
+          }
+        : false,
+      comments: {
+        where: { deletedAt: null },
+        orderBy: { createdAt: "asc" },
+        include: {
+          user: { select: { id: true, name: true, image: true } },
+        },
+      },
+    },
   });
 }
 
@@ -327,6 +357,14 @@ export async function getFeaturedStory() {
   return prisma.leagueStory.findFirst({
     where: { isPublished: true, isFeatured: true },
     orderBy: [{ sortOrder: "asc" }, { publishedAt: "desc" }],
-    include: { author: { select: { name: true } } },
+    include: {
+      author: { select: { name: true } },
+      _count: {
+        select: {
+          likes: true,
+          comments: { where: { deletedAt: null } },
+        },
+      },
+    },
   });
 }
