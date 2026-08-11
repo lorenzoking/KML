@@ -342,7 +342,8 @@ export default async function GamesPage({
                             <StatusBadge status={s.status} />
                           </div>
                           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                            Sim Score {s.simScore}/5
+                            Opponent Sim Score {s.opponentSimScore}/5 (
+                            {s.opponentTeam.abbreviation})
                           </p>
                         </li>
                       ))}
@@ -392,9 +393,9 @@ export default async function GamesPage({
                           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
                             {game.userTeam.name} vs {game.opponentTeam.name} ·{" "}
                             {GAME_TYPE_LABELS[game.gameType]}
-                            {game.gameType === "SIMULATED" ? " · no XP" : ""} · Sim{" "}
-                            {game.simScore}/5 ·{" "}
-                            {game.submitter.name?.trim() || "Unnamed coach"}
+                            {game.gameType === "SIMULATED" ? " · no XP" : ""} ·{" "}
+                            {game.opponentTeam.abbreviation} Sim {game.opponentSimScore}
+                            /5 · {game.submitter.name?.trim() || "Unnamed coach"}
                             {game.reviewedAt
                               ? ` · ${format(game.reviewedAt, "MMM d")}`
                               : ""}
@@ -424,7 +425,8 @@ export default async function GamesPage({
                             <StatusBadge status={game.status} />
                           </div>
                           <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                            Waiting on commissioners · Sim {game.simScore}/5 ·{" "}
+                            Waiting on commissioners · {game.opponentTeam.abbreviation}{" "}
+                            Sim {game.opponentSimScore}/5 ·{" "}
                             {game.submitter.name?.trim() || "Unnamed coach"}
                           </p>
                         </li>

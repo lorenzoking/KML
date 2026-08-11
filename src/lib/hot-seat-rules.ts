@@ -62,7 +62,7 @@ export const HOT_SEAT_RULE_SECTIONS: HotSeatRuleSection[] = [
       "Three Sim Scores of 2 or lower within 5 games: additional -2 Reputation",
       "Continued poor Sim play after commissioner warnings: -2 to -5 additional Reputation depending on severity",
     ],
-    note: "Gameplay that repeatedly fails to meet KML’s simulation standards can therefore become a legitimate reason for a coach to lose their job. Commissioners apply these as Coaching Reputation ledger entries (category SIM_SCORE).",
+    note: "Gameplay that repeatedly fails to meet KML’s simulation standards can therefore become a legitimate reason for a coach to lose their job. After each game, coaches report their opponent’s Sim Score on the result submission. Commissioners apply Bad Sim deductions as Coaching Reputation ledger entries (category SIM_SCORE).",
   },
   {
     id: "hot-seat-bands",

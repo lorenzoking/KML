@@ -117,20 +117,20 @@ export function SubmissionForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="simScore">Your Sim Score (1–5)</Label>
-        <Select id="simScore" name="simScore" required defaultValue="">
+        <Label htmlFor="opponentSimScore">Opponent&apos;s Sim Score (1–5)</Label>
+        <Select id="opponentSimScore" name="opponentSimScore" required defaultValue="">
           <option value="" disabled>
-            Select Sim Score
+            Select opponent&apos;s Sim Score
           </option>
           <option value="5">5 — Elite sim</option>
           <option value="4">4 — Strong sim</option>
           <option value="3">3 — Acceptable</option>
-          <option value="2">2 — Poor (counts toward Bad Sim)</option>
-          <option value="1">1 — Very poor (counts toward Bad Sim)</option>
+          <option value="2">2 — Poor (counts toward Bad Sim for them)</option>
+          <option value="1">1 — Very poor (counts toward Bad Sim for them)</option>
         </Select>
         <p className="text-xs text-[var(--muted-foreground)]">
-          Enter the Madden Sim Score for your play. Scores of 2 or lower feed KML Bad
-          Sim Reputation rules.
+          Enter the Madden Sim Score for your opponent&apos;s play — not your own. Scores of
+          2 or lower feed KML Bad Sim Reputation rules for that coach.
         </p>
       </div>
 

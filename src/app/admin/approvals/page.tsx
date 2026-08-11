@@ -69,17 +69,18 @@ export default async function ApprovalsPage() {
                 <CardDescription>
                   Season {s.season.number} · Week {s.week} ·{" "}
                   {GAME_TYPE_LABELS[s.gameType]}
-                  {s.gameType === "SIMULATED" ? " · no XP" : ""} · Sim Score{" "}
-                  {s.simScore}/5 · submitted by{" "}
+                  {s.gameType === "SIMULATED" ? " · no XP" : ""} ·{" "}
+                  {s.opponentTeam.abbreviation} Sim {s.opponentSimScore}/5 · submitted by{" "}
                   {s.submitter.name ?? s.submitter.email} ·{" "}
                   {format(s.createdAt, "MMM d, h:mm a")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {s.simScore <= 2 ? (
+                {s.opponentSimScore <= 2 ? (
                   <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
-                    Low Sim Score ({s.simScore}/5) — may count toward Bad Sim
-                    Reputation if the pattern continues.
+                    Low opponent Sim Score ({s.opponentTeam.abbreviation}{" "}
+                    {s.opponentSimScore}/5) — may count toward Bad Sim Reputation for
+                    that coach if the pattern continues.
                   </p>
                 ) : null}
                 {s.notes ? (
@@ -144,7 +145,8 @@ export default async function ApprovalsPage() {
                       {s.opponentTeam.abbreviation}
                     </p>
                     <p className="text-xs text-[var(--muted-foreground)]">
-                      Sim {s.simScore}/5 · {s.reviewedBy?.name ?? "Commissioner"}
+                      {s.opponentTeam.abbreviation} Sim {s.opponentSimScore}/5 ·{" "}
+                      {s.reviewedBy?.name ?? "Commissioner"}
                       {s.decisionNote ? ` · ${s.decisionNote}` : ""}
                     </p>
                   </div>

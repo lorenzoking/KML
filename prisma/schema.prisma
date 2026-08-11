@@ -249,8 +249,8 @@ model GameSubmission {
   opponentTeamId String
   userScore      Int
   opponentScore  Int
-  /// Madden/KML realism rating for the submitter's play (1–5). Scores ≤2 feed Bad Sim rules.
-  simScore       Int
+  /// Madden/KML realism rating for the opponent's play (1–5), reported by the submitter. Scores ≤2 feed Bad Sim rules for that opponent.
+  opponentSimScore Int
   notes          String?
   status         SubmissionStatus @default(PENDING)
   reviewedById   String?
@@ -282,8 +282,8 @@ model GameResult {
   awayTeamId   String
   homeScore    Int
   awayScore    Int
-  /// Copied from the approved submission's Sim Score.
-  simScore     Int?
+  /// Opponent Sim Score from the approved submission (away team = opponent when submitter is home).
+  opponentSimScore Int?
   winnerTeamId String?
   isVoided     Boolean   @default(false)
   voidedAt     DateTime?
