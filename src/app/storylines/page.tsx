@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { format } from "date-fns";
 import type { StoryCategory } from "@prisma/client";
 import {
@@ -11,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { extractStoryCoverImage } from "@/components/stories/story-body";
 import { getActiveSeason } from "@/lib/league";
 import {
   ensureDefaultLeagueStories,
@@ -131,8 +133,25 @@ function StorylineCard({
   story: Awaited<ReturnType<typeof getPublishedStories>>[number];
   highlight?: boolean;
 }) {
+  const cover = extractStoryCoverImage(story.body);
+
   return (
-    <Card className={highlight ? "border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]" : "surface-hover"}>
+    <Card className={highlight ? "overflow-hidden border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]" : "surface-hover overflow-hidden"}>
+      {cover && highlight ? (
+        <Link
+          href={`/storylines/${story.slug}`}
+          className="relative block aspect-[16/9] w-full border-b border-[var(--border)] bg-black"
+        >
+          <Image
+            src={cover.src}
+            alt={cover.alt}
+            fill
+            priority
+            className="object-cover object-top"
+            sizes="(max-width: 768px) 100vw, 960px"
+          />
+        </Link>
+      ) : null}
       <CardHeader>
         <div className="mb-1 flex flex-wrap gap-2">
           <Badge variant="outline">{STORY_CATEGORY_LABELS[story.category]}</Badge>
