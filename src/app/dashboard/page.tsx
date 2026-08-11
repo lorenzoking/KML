@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Image from "next/image";
-import type { ReactNode } from "react";
 import type { StoryCategory } from "@prisma/client";
 import {
   Card,
@@ -56,7 +55,6 @@ export default async function DashboardPage({
     coachProfile,
     pendingMine,
     stories,
-    weekGames,
     teamRequestUser,
   ] = await Promise.all([
     getUserMembership(user.id, season.id),
@@ -73,16 +71,6 @@ export default async function DashboardPage({
       orderBy: { createdAt: "desc" },
     }),
     getPublishedStories({ take: 10 }),
-    prisma.gameSubmission.findMany({
-      where: {
-        seasonId: season.id,
-        week: settings.currentWeek,
-        status: { in: ["APPROVED", "PENDING"] },
-      },
-      include: { userTeam: true, opponentTeam: true },
-      orderBy: [{ status: "asc" }, { createdAt: "asc" }],
-      take: 8,
-    }),
     prisma.user.findUnique({
       where: { id: user.id },
       include: { requestedFranchise: true },
@@ -137,14 +125,13 @@ export default async function DashboardPage({
   const byCategory = (category: StoryCategory) =>
     secondaryStories.filter((s) => s.category === category);
 
-  const gamesOfWeekStories = byCategory("GAME_OF_WEEK");
-  const potwStories = byCategory("PLAYER_OF_WEEK");
   const coachingStories = byCategory("COACHING");
   const draftStories = byCategory("DRAFT");
   const otherStories = secondaryStories.filter(
     (s) =>
       !["GAME_OF_WEEK", "PLAYER_OF_WEEK", "COACHING", "DRAFT"].includes(s.category)
   );
+  const moreStories = [...coachingStories, ...draftStories, ...otherStories];
 
   const firstName = (user.name ?? "Coach").split(" ")[0];
 
@@ -206,8 +193,7 @@ export default async function DashboardPage({
             </h1>
             <p className="max-w-2xl text-sm leading-relaxed text-[var(--muted-foreground)] sm:text-base">
               This is your home for the Kings Madden League narrative: draft chapters,
-              games of the week, coaching pressure, and the weekly honors that make the
-              league feel alive.
+              coaching pressure, and the storylines that make the league feel alive.
             </p>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
               <span>
@@ -337,64 +323,9 @@ export default async function DashboardPage({
         </section>
       ) : null}
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        <StoryColumn
-          title="Games of the week"
-          description="The matchups and moments driving the week."
-          stories={gamesOfWeekStories}
-          fallback={
-            weekGames.length > 0 ? (
-              <ul className="space-y-2">
-                {weekGames.map((g) => (
-                  <li
-                    key={g.id}
-                    className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-                  >
-                    <span className="font-medium">
-                      {g.userTeam.abbreviation} {g.userScore}–{g.opponentScore}{" "}
-                      {g.opponentTeam.abbreviation}
-                    </span>
-                    <span className="mt-1 block text-xs text-[var(--muted-foreground)]">
-                      Week {g.week} · {g.status}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <EmptyState
-                title="No week-one results yet"
-                description="Once games are submitted, this desk fills with the week’s drama."
-              />
-            )
-          }
-        />
-        <StoryColumn
-          title="Players of the week"
-          description="Names that deserve the spotlight."
-          stories={potwStories}
-          fallback={
-            <EmptyState
-              title="Honors desk is open"
-              description="Commissioners will post weekly standouts as the season rolls."
-            />
-          }
-        />
-        <StoryColumn
-          title="Coaching storylines"
-          description="Pressure, contracts, and carousel heat."
-          stories={coachingStories}
-          fallback={
-            <EmptyState
-              title="Pressure is coming"
-              description="Hot seats and carousel moves will show up here as the season develops."
-            />
-          }
-        />
-      </section>
-
-      {draftStories.length > 0 || otherStories.length > 0 ? (
+      {moreStories.length > 0 ? (
         <section className="stagger grid gap-4 md:grid-cols-2">
-          {[...draftStories, ...otherStories].map((story) => (
+          {moreStories.map((story) => (
             <StoryCard key={story.id} story={story} />
           ))}
         </section>
@@ -528,47 +459,13 @@ function MiniStat({
   );
 }
 
-function StoryColumn({
-  title,
-  description,
-  stories,
-  fallback,
-}: {
-  title: string;
-  description: string;
-  stories: Awaited<ReturnType<typeof getPublishedStories>>;
-  fallback: ReactNode;
-}) {
-  return (
-    <Card className="surface-hover">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {stories.length === 0
-          ? fallback
-          : stories.map((story) => <StoryCard key={story.id} story={story} compact />)}
-      </CardContent>
-    </Card>
-  );
-}
-
 function StoryCard({
   story,
-  compact = false,
 }: {
   story: Awaited<ReturnType<typeof getPublishedStories>>[number];
-  compact?: boolean;
 }) {
   return (
-    <article
-      className={
-        compact
-          ? "rounded-xl border border-[var(--border)] p-3"
-          : "rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4"
-      }
-    >
+    <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
       <div className="mb-2 flex flex-wrap gap-2">
         <Badge variant="outline">{STORY_CATEGORY_LABELS[story.category]}</Badge>
         {story.week ? <Badge variant="default">Week {story.week}</Badge> : null}
