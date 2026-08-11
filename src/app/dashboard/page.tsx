@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import type { StoryCategory } from "@prisma/client";
 import {
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ReputationBadge, StatusBadge } from "@/components/status-badge";
+import { extractStoryCoverImage } from "@/components/stories/story-body";
 import { isCommissioner, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
@@ -129,6 +131,7 @@ export default async function DashboardPage({
     deskStories.find((s) => s.isFeatured) ??
     deskStories.find((s) => s.category === "DRAFT") ??
     deskStories[0];
+  const featuredCover = featured ? extractStoryCoverImage(featured.body) : null;
   const secondaryStories = deskStories.filter((s) => s.id !== featured?.id);
 
   const byCategory = (category: StoryCategory) =>
@@ -276,6 +279,21 @@ export default async function DashboardPage({
       {featured ? (
         <section className="animate-rise">
           <Card className="overflow-hidden border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]">
+            {featuredCover ? (
+              <Link
+                href={`/storylines/${featured.slug}`}
+                className="relative block aspect-[16/10] w-full border-b border-[var(--border)] bg-black sm:aspect-[2/1]"
+              >
+                <Image
+                  src={featuredCover.src}
+                  alt={featuredCover.alt}
+                  fill
+                  priority
+                  className="object-cover object-top transition duration-300 hover:scale-[1.01]"
+                  sizes="(max-width: 768px) 100vw, 960px"
+                />
+              </Link>
+            ) : null}
             <CardHeader className="space-y-3 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="elite">Front page</Badge>

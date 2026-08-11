@@ -1,10 +1,23 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 type Block =
   | { type: "heading"; text: string }
   | { type: "paragraph"; text: string }
   | { type: "list"; ordered: boolean; items: string[] }
-  | { type: "table"; headers: string[]; rows: string[][] };
+  | { type: "table"; headers: string[]; rows: string[][] }
+  | { type: "image"; src: string; alt: string };
+
+const IMAGE_LINE_RE = /^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)$/;
+
+/** Pull the first markdown image from a story body for card/hero use. */
+export function extractStoryCoverImage(body: string): { src: string; alt: string } | null {
+  for (const raw of body.replace(/\r\n/g, "\n").split("\n")) {
+    const match = raw.trim().match(IMAGE_LINE_RE);
+    if (match) return { alt: match[1] || "Story image", src: match[2] };
+  }
+  return null;
+}
 
 function parseInline(text: string) {
   // Very small bold support: **text**
@@ -67,6 +80,19 @@ function parseStoryBody(body: string): Block[] {
       continue;
     }
 
+    const imageMatch = trimmed.match(IMAGE_LINE_RE);
+    if (imageMatch) {
+      flushParagraph();
+      flushList();
+      flushTable();
+      blocks.push({
+        type: "image",
+        alt: imageMatch[1] || "Story image",
+        src: imageMatch[2],
+      });
+      continue;
+    }
+
     if (trimmed.startsWith("|")) {
       flushParagraph();
       flushList();
@@ -106,15 +132,23 @@ function parseStoryBody(body: string): Block[] {
 export function StoryBody({
   body,
   className,
+  omitFirstImage = false,
 }: {
   body: string;
   className?: string;
+  /** Hide the first image when a cover/hero already renders it. */
+  omitFirstImage?: boolean;
 }) {
   const blocks = parseStoryBody(body);
+  let skippedFirstImage = false;
 
   return (
     <div className={cn("space-y-4", className)}>
       {blocks.map((block, idx) => {
+        if (omitFirstImage && block.type === "image" && !skippedFirstImage) {
+          skippedFirstImage = true;
+          return null;
+        }
         if (block.type === "heading") {
           return (
             <h3
@@ -153,6 +187,30 @@ export function StoryBody({
                 </li>
               ))}
             </ListTag>
+          );
+        }
+
+        if (block.type === "image") {
+          return (
+            <figure
+              key={idx}
+              className="overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)]"
+            >
+              <Image
+                src={block.src}
+                alt={block.alt}
+                width={1536}
+                height={1024}
+                className="h-auto w-full object-cover"
+                sizes="(max-width: 768px) 100vw, 720px"
+                priority={idx === 0}
+              />
+              {block.alt ? (
+                <figcaption className="border-t border-[var(--border)] px-3 py-2 text-xs text-[var(--muted-foreground)]">
+                  {block.alt}
+                </figcaption>
+              ) : null}
+            </figure>
           );
         }
 

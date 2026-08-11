@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import {
@@ -10,7 +11,10 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StoryBody } from "@/components/stories/story-body";
+import {
+  StoryBody,
+  extractStoryCoverImage,
+} from "@/components/stories/story-body";
 import { getActiveSeason } from "@/lib/league";
 import {
   ensureDefaultLeagueStories,
@@ -29,6 +33,7 @@ export default async function StorylineDetailPage({
 
   const story = await getStoryBySlug(slug);
   if (!story) notFound();
+  const cover = extractStoryCoverImage(story.body);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -42,6 +47,18 @@ export default async function StorylineDetailPage({
       </div>
 
       <Card className="overflow-hidden border-[color-mix(in_srgb,var(--primary)_28%,var(--border))]">
+        {cover ? (
+          <div className="relative aspect-[3/2] w-full border-b border-[var(--border)] bg-black sm:aspect-[16/10]">
+            <Image
+              src={cover.src}
+              alt={cover.alt}
+              fill
+              priority
+              className="object-cover object-top"
+              sizes="(max-width: 768px) 100vw, 768px"
+            />
+          </div>
+        ) : null}
         <CardHeader className="space-y-3 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]">
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline">{STORY_CATEGORY_LABELS[story.category]}</Badge>
@@ -61,7 +78,7 @@ export default async function StorylineDetailPage({
           </p>
         </CardHeader>
         <CardContent className="pt-6">
-          <StoryBody body={story.body} />
+          <StoryBody body={story.body} omitFirstImage={Boolean(cover)} />
         </CardContent>
       </Card>
     </div>
