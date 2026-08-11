@@ -53,6 +53,7 @@ export default async function StorylinesPage({
   const stories = await getPublishedStories({
     category: activeFilter.category,
     take: 100,
+    includeEngagement: true,
   });
 
   const featured = stories.filter((s) => s.isFeatured);

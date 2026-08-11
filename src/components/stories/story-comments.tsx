@@ -66,7 +66,7 @@ export function StoryComments({
             setSuccess(null);
             startTransition(async () => {
               const result = await createStoryComment(formData);
-              if (result?.error) setError(result.error);
+              if (result && "error" in result && result.error) setError(result.error);
               else {
                 setSuccess("Comment posted.");
                 setBody("");
@@ -147,7 +147,9 @@ export function StoryComments({
                       setDeleteError(null);
                       startTransition(async () => {
                         const result = await deleteStoryComment(formData);
-                        if (result?.error) setDeleteError(result.error);
+                        if (result && "error" in result && result.error) {
+                          setDeleteError(result.error);
+                        }
                       });
                     }}
                   >

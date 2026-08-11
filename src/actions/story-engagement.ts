@@ -10,10 +10,32 @@ import {
   toggleStoryLikeSchema,
 } from "@/lib/validations";
 
+const ENGAGEMENT_UNAVAILABLE =
+  "Story likes and comments are not available yet. Ask a commissioner to run database migrations.";
+
 function revalidateStoryEngagement(slug: string) {
   revalidatePath(`/storylines/${slug}`);
   revalidatePath("/storylines");
   revalidatePath("/dashboard");
+}
+
+function isMissingEngagementTable(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+  const code = "code" in error ? String(error.code) : "";
+  const message = "message" in error ? String(error.message) : String(error);
+  return (
+    code === "P2021" ||
+    /LeagueStoryLike|LeagueStoryComment/i.test(message) ||
+    /does not exist/i.test(message)
+  );
+}
+
+function engagementError(error: unknown) {
+  if (isMissingEngagementTable(error)) {
+    console.warn("Story engagement tables are missing.", error);
+    return { error: ENGAGEMENT_UNAVAILABLE };
+  }
+  throw error;
 }
 
 export async function toggleStoryLike(formData: FormData) {
@@ -33,36 +55,40 @@ export async function toggleStoryLike(formData: FormData) {
     return { error: "Story not found." };
   }
 
-  const existing = await prisma.leagueStoryLike.findUnique({
-    where: {
-      storyId_userId: { storyId: story.id, userId: user.id },
-    },
-  });
+  try {
+    const existing = await prisma.leagueStoryLike.findUnique({
+      where: {
+        storyId_userId: { storyId: story.id, userId: user.id },
+      },
+    });
 
-  if (existing) {
-    await prisma.leagueStoryLike.delete({ where: { id: existing.id } });
-    await writeAuditLog({
-      actorId: user.id,
-      action: "UNLIKE_LEAGUE_STORY",
-      entityType: "LeagueStory",
-      entityId: story.id,
-      metadata: { slug: story.slug },
-    });
-  } else {
-    await prisma.leagueStoryLike.create({
-      data: { storyId: story.id, userId: user.id },
-    });
-    await writeAuditLog({
-      actorId: user.id,
-      action: "LIKE_LEAGUE_STORY",
-      entityType: "LeagueStory",
-      entityId: story.id,
-      metadata: { slug: story.slug },
-    });
+    if (existing) {
+      await prisma.leagueStoryLike.delete({ where: { id: existing.id } });
+      await writeAuditLog({
+        actorId: user.id,
+        action: "UNLIKE_LEAGUE_STORY",
+        entityType: "LeagueStory",
+        entityId: story.id,
+        metadata: { slug: story.slug },
+      });
+    } else {
+      await prisma.leagueStoryLike.create({
+        data: { storyId: story.id, userId: user.id },
+      });
+      await writeAuditLog({
+        actorId: user.id,
+        action: "LIKE_LEAGUE_STORY",
+        entityType: "LeagueStory",
+        entityId: story.id,
+        metadata: { slug: story.slug },
+      });
+    }
+
+    revalidateStoryEngagement(story.slug);
+    return { success: true, liked: !existing };
+  } catch (error) {
+    return engagementError(error);
   }
-
-  revalidateStoryEngagement(story.slug);
-  return { success: true, liked: !existing };
 }
 
 export async function createStoryComment(formData: FormData) {
@@ -83,24 +109,28 @@ export async function createStoryComment(formData: FormData) {
     return { error: "Story not found." };
   }
 
-  const comment = await prisma.leagueStoryComment.create({
-    data: {
-      storyId: story.id,
-      userId: user.id,
-      body: parsed.data.body,
-    },
-  });
+  try {
+    const comment = await prisma.leagueStoryComment.create({
+      data: {
+        storyId: story.id,
+        userId: user.id,
+        body: parsed.data.body,
+      },
+    });
 
-  await writeAuditLog({
-    actorId: user.id,
-    action: "CREATE_LEAGUE_STORY_COMMENT",
-    entityType: "LeagueStoryComment",
-    entityId: comment.id,
-    metadata: { storyId: story.id, slug: story.slug },
-  });
+    await writeAuditLog({
+      actorId: user.id,
+      action: "CREATE_LEAGUE_STORY_COMMENT",
+      entityType: "LeagueStoryComment",
+      entityId: comment.id,
+      metadata: { storyId: story.id, slug: story.slug },
+    });
 
-  revalidateStoryEngagement(story.slug);
-  return { success: true };
+    revalidateStoryEngagement(story.slug);
+    return { success: true };
+  } catch (error) {
+    return engagementError(error);
+  }
 }
 
 export async function deleteStoryComment(formData: FormData) {
@@ -113,37 +143,41 @@ export async function deleteStoryComment(formData: FormData) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid delete request." };
   }
 
-  const comment = await prisma.leagueStoryComment.findFirst({
-    where: { id: parsed.data.commentId, deletedAt: null },
-    include: { story: { select: { id: true, slug: true } } },
-  });
-  if (!comment) {
-    return { error: "Comment not found." };
+  try {
+    const comment = await prisma.leagueStoryComment.findFirst({
+      where: { id: parsed.data.commentId, deletedAt: null },
+      include: { story: { select: { id: true, slug: true } } },
+    });
+    if (!comment) {
+      return { error: "Comment not found." };
+    }
+
+    if (comment.userId !== user.id && !commissioner) {
+      return { error: "You can only remove your own comments." };
+    }
+
+    await prisma.leagueStoryComment.update({
+      where: { id: comment.id },
+      data: { deletedAt: new Date() },
+    });
+
+    await writeAuditLog({
+      actorId: user.id,
+      action: commissioner && comment.userId !== user.id
+        ? "MODERATE_LEAGUE_STORY_COMMENT"
+        : "DELETE_LEAGUE_STORY_COMMENT",
+      entityType: "LeagueStoryComment",
+      entityId: comment.id,
+      metadata: {
+        storyId: comment.story.id,
+        slug: comment.story.slug,
+        authorId: comment.userId,
+      },
+    });
+
+    revalidateStoryEngagement(comment.story.slug);
+    return { success: true };
+  } catch (error) {
+    return engagementError(error);
   }
-
-  if (comment.userId !== user.id && !commissioner) {
-    return { error: "You can only remove your own comments." };
-  }
-
-  await prisma.leagueStoryComment.update({
-    where: { id: comment.id },
-    data: { deletedAt: new Date() },
-  });
-
-  await writeAuditLog({
-    actorId: user.id,
-    action: commissioner && comment.userId !== user.id
-      ? "MODERATE_LEAGUE_STORY_COMMENT"
-      : "DELETE_LEAGUE_STORY_COMMENT",
-    entityType: "LeagueStoryComment",
-    entityId: comment.id,
-    metadata: {
-      storyId: comment.story.id,
-      slug: comment.story.slug,
-      authorId: comment.userId,
-    },
-  });
-
-  revalidateStoryEngagement(comment.story.slug);
-  return { success: true };
 }

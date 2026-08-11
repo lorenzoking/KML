@@ -61,7 +61,6 @@ export default async function StorylineDetailPage({
   const story = await getStoryBySlug(slug, user?.id);
   if (!story) notFound();
   const cover = extractStoryCoverImage(story.body);
-  const likedByViewer = Boolean(story.likes?.length);
   const canModerate = user ? await isCommissioner(user) : false;
 
   return (
@@ -112,7 +111,7 @@ export default async function StorylineDetailPage({
             <StoryLikeButton
               storyId={story.id}
               likeCount={story._count.likes}
-              likedByViewer={likedByViewer}
+              likedByViewer={story.likedByViewer}
               signedIn={Boolean(user?.isActive)}
             />
           </div>

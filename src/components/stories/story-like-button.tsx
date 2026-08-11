@@ -54,7 +54,7 @@ export function StoryLikeButton({
           setOptimisticCount((count) => Math.max(0, count + (nextLiked ? 1 : -1)));
           startTransition(async () => {
             const result = await toggleStoryLike(formData);
-            if (result?.error) {
+            if (result && "error" in result && result.error) {
               setOptimisticLiked(likedByViewer);
               setOptimisticCount(likeCount);
               setError(result.error);

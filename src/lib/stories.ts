@@ -300,71 +300,181 @@ export async function ensureDefaultLeagueStories(seasonId?: string) {
   }
 }
 
+type StoryCommentWithAuthor = {
+  id: string;
+  body: string;
+  createdAt: Date;
+  user: { id: string; name: string | null; image: string | null };
+};
+
+const EMPTY_ENGAGEMENT = {
+  likeCount: 0,
+  commentCount: 0,
+  likedByViewer: false,
+  comments: [] as StoryCommentWithAuthor[],
+};
+
+/** Engagement tables may not exist until migrate deploy runs. */
+function isMissingEngagementTable(error: unknown) {
+  if (!error || typeof error !== "object") return false;
+  const code = "code" in error ? String(error.code) : "";
+  const message = "message" in error ? String(error.message) : String(error);
+  return (
+    code === "P2021" ||
+    /LeagueStoryLike|LeagueStoryComment/i.test(message) ||
+    /does not exist/i.test(message)
+  );
+}
+
+async function getStoryEngagementCounts(storyIds: string[]) {
+  if (storyIds.length === 0) {
+    return new Map<string, { likes: number; comments: number }>();
+  }
+
+  try {
+    const [likes, comments] = await Promise.all([
+      prisma.leagueStoryLike.groupBy({
+        by: ["storyId"],
+        where: { storyId: { in: storyIds } },
+        _count: { _all: true },
+      }),
+      prisma.leagueStoryComment.groupBy({
+        by: ["storyId"],
+        where: { storyId: { in: storyIds }, deletedAt: null },
+        _count: { _all: true },
+      }),
+    ]);
+
+    const counts = new Map<string, { likes: number; comments: number }>();
+    for (const id of storyIds) {
+      counts.set(id, { likes: 0, comments: 0 });
+    }
+    for (const row of likes) {
+      const current = counts.get(row.storyId) ?? { likes: 0, comments: 0 };
+      current.likes = row._count._all;
+      counts.set(row.storyId, current);
+    }
+    for (const row of comments) {
+      const current = counts.get(row.storyId) ?? { likes: 0, comments: 0 };
+      current.comments = row._count._all;
+      counts.set(row.storyId, current);
+    }
+    return counts;
+  } catch (error) {
+    if (isMissingEngagementTable(error)) {
+      console.warn(
+        "Story engagement tables are missing. Run prisma migrate deploy.",
+        error
+      );
+      return new Map(
+        storyIds.map((id) => [id, { likes: 0, comments: 0 }] as const)
+      );
+    }
+    throw error;
+  }
+}
+
+async function getStoryEngagementDetail(storyId: string, viewerId?: string | null) {
+  try {
+    const [likeCount, comments, viewerLike] = await Promise.all([
+      prisma.leagueStoryLike.count({ where: { storyId } }),
+      prisma.leagueStoryComment.findMany({
+        where: { storyId, deletedAt: null },
+        orderBy: { createdAt: "asc" },
+        include: {
+          user: { select: { id: true, name: true, image: true } },
+        },
+      }),
+      viewerId
+        ? prisma.leagueStoryLike.findUnique({
+            where: { storyId_userId: { storyId, userId: viewerId } },
+            select: { id: true },
+          })
+        : Promise.resolve(null),
+    ]);
+
+    return {
+      likeCount,
+      commentCount: comments.length,
+      likedByViewer: Boolean(viewerLike),
+      comments,
+    };
+  } catch (error) {
+    if (isMissingEngagementTable(error)) {
+      console.warn(
+        "Story engagement tables are missing. Run prisma migrate deploy.",
+        error
+      );
+      return EMPTY_ENGAGEMENT;
+    }
+    throw error;
+  }
+}
+
 export async function getPublishedStories(options?: {
   seasonId?: string;
   take?: number;
   category?: StoryCategory;
+  includeEngagement?: boolean;
 }) {
-  return prisma.leagueStory.findMany({
+  const stories = await prisma.leagueStory.findMany({
     where: {
       isPublished: true,
       ...(options?.category ? { category: options.category } : {}),
     },
     orderBy: [{ isFeatured: "desc" }, { publishedAt: "desc" }, { sortOrder: "asc" }],
     take: options?.take ?? 50,
-    include: {
-      author: { select: { name: true } },
+    include: { author: { select: { name: true } } },
+  });
+
+  if (!options?.includeEngagement) {
+    return stories.map((story) => ({
+      ...story,
+      _count: { likes: 0, comments: 0 },
+    }));
+  }
+
+  const counts = await getStoryEngagementCounts(stories.map((story) => story.id));
+  return stories.map((story) => {
+    const engagement = counts.get(story.id) ?? { likes: 0, comments: 0 };
+    return {
+      ...story,
       _count: {
-        select: {
-          likes: true,
-          comments: { where: { deletedAt: null } },
-        },
+        likes: engagement.likes,
+        comments: engagement.comments,
       },
-    },
+    };
   });
 }
 
 export async function getStoryBySlug(slug: string, viewerId?: string | null) {
-  return prisma.leagueStory.findFirst({
+  const story = await prisma.leagueStory.findFirst({
     where: { slug, isPublished: true },
-    include: {
-      author: { select: { name: true } },
-      _count: {
-        select: {
-          likes: true,
-          comments: { where: { deletedAt: null } },
-        },
-      },
-      likes: viewerId
-        ? {
-            where: { userId: viewerId },
-            select: { id: true },
-            take: 1,
-          }
-        : false,
-      comments: {
-        where: { deletedAt: null },
-        orderBy: { createdAt: "asc" },
-        include: {
-          user: { select: { id: true, name: true, image: true } },
-        },
-      },
-    },
+    include: { author: { select: { name: true } } },
   });
+  if (!story) return null;
+
+  const engagement = await getStoryEngagementDetail(story.id, viewerId);
+  return {
+    ...story,
+    _count: {
+      likes: engagement.likeCount,
+      comments: engagement.commentCount,
+    },
+    likedByViewer: engagement.likedByViewer,
+    comments: engagement.comments,
+  };
 }
 
 export async function getFeaturedStory() {
-  return prisma.leagueStory.findFirst({
+  const story = await prisma.leagueStory.findFirst({
     where: { isPublished: true, isFeatured: true },
     orderBy: [{ sortOrder: "asc" }, { publishedAt: "desc" }],
-    include: {
-      author: { select: { name: true } },
-      _count: {
-        select: {
-          likes: true,
-          comments: { where: { deletedAt: null } },
-        },
-      },
-    },
+    include: { author: { select: { name: true } } },
   });
+  if (!story) return null;
+  return {
+    ...story,
+    _count: { likes: 0, comments: 0 },
+  };
 }
