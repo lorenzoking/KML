@@ -182,11 +182,6 @@ function StorylineCard({
       <CardContent className="flex items-center justify-between gap-3">
         <p className="text-xs text-[var(--muted-foreground)]">
           {format(story.publishedAt, "MMM d, yyyy")}
-          {" · "}
-          {story._count.likes} {story._count.likes === 1 ? "like" : "likes"}
-          {" · "}
-          {story._count.comments}{" "}
-          {story._count.comments === 1 ? "comment" : "comments"}
         </p>
         <Button asChild size="sm" variant="outline">
           <Link href={`/storylines/${story.slug}`}>Read</Link>
