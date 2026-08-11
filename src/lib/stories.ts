@@ -35,7 +35,7 @@ Close behind on the win-now shelf:
 
 - **Lefty / Eagles (88)** — most complete two-way club
 - **Curry / Lions (87)** and **Noquestions / Ravens (87)** — January expectations from Day 1
-- **Puddin / Broncos (86)** and **Wrinzo / Patriots (86)** — quiet, dangerous balance
+- **Puddin / Broncos (86)** and **Ren / Patriots (86)** — quiet, dangerous balance
 
 If the first champion is decided by overalls alone, Hollywood hosts the parade.
 
@@ -69,9 +69,9 @@ The Morning Show’s center desk drew a hard line: **Slap, Primetime, Dooders, a
 | **Slap** | Saints | 79 OVR | Game-changer label; offense keeps him dangerous |
 | **Dooders** | Cardinals | 78 OVR | Rebuild rating, veteran hands — chaos agent |
 | **Mease** | Dolphins | 74 OVR | Lowest team in the game; highest “don’t count him out” energy |
-| **Ren** | League royalty | — | One of KML’s known best — when Ren’s locked in, brackets break |
+| **Ren** | Patriots | 86 OVR · 87 OFF · 85 DEF | Same as Wrinzo on the draft board — one of KML’s known best with a top-six roster |
 
-That table is the tension of KML Reborn: **Big Al** and **Petey** have contend-ready clubs. **Primetime**, **Slap**, and **Dooders** have enough juice to steal weeks. **Mease** has the hardest assignment in Madden 27 — and still gets named in the same breath as the elite. **Ren** doesn’t need a ratings column to move the room.
+That table is the tension of KML Reborn: **Big Al**, **Petey**, and **Ren** have contend-ready clubs. **Primetime**, **Slap**, and **Dooders** have enough juice to steal weeks. **Mease** has the hardest assignment in Madden 27 — and still gets named in the same breath as the elite.
 
 Talent on the roster is not the same as talent on the sticks.
 
@@ -81,7 +81,8 @@ Talent on the roster is not the same as talent on the sticks.
 - **Obvious favorite:** Jordan Stowe — win-now pressure with the best toys
 - **Morning Show chalk:** Petey’s Seahawks
 - **Sleeper:** Big Al’s Steelers
-- **Wild cards:** Primetime, Slap, Dooders, Mease, Ren
+- **Dark horse with toys:** Ren’s Patriots (86 OVR)
+- **Wild cards:** Primetime, Slap, Dooders, Mease
 
 ## Desk verdict
 
