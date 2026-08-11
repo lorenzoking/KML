@@ -43,11 +43,7 @@ export const metadata: Metadata = {
     template: `%s · ${APP_NAME}`,
   },
   description: SITE_DESCRIPTION,
-  icons: {
-    icon: [{ url: "/brand/kml-icon.png", type: "image/png" }],
-    shortcut: "/brand/kml-icon.png",
-    apple: "/brand/kml-icon.png",
-  },
+  // Favicon / apple icons come from src/app/icon.png + apple-icon.png (Next file convention).
   openGraph: share.openGraph,
   twitter: share.twitter,
 };
