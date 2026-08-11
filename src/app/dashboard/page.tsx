@@ -25,7 +25,7 @@ import {
 import { getUserCareerStats } from "@/lib/career";
 import { formatRecord } from "@/lib/utils";
 import { GAME_TYPE_LABELS } from "@/lib/constants";
-import { computeReputationScore } from "@/lib/reputation";
+import { computeGmReputationScore, computeReputationScore } from "@/lib/reputation";
 import { getReputationGrade } from "@/lib/coach/grades";
 import { getJobSecurityStatus } from "@/lib/coach/job-security";
 import { BrandLogo } from "@/components/brand/brand-logo";
@@ -80,9 +80,9 @@ export default async function DashboardPage({
   const teamStanding = membership
     ? await getFranchiseSeasonRecord(season.id, membership.franchiseId)
     : undefined;
-  const gmRepScore = computeReputationScore(
+  const gmRepScore = computeGmReputationScore(
     settings.startingGmRepScore,
-    reputation.adjustments.map((row) => ({ amount: row.gmAmount }))
+    reputation.adjustments
   );
   const jobStatus = getJobSecurityStatus({
     coachRepScore: reputation.score,

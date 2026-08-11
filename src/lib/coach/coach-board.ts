@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { getLeagueSettings, getSeasonStandings } from "@/lib/league";
-import { computeReputationScore } from "@/lib/reputation";
+import {
+  computeGmReputationScore,
+  computeReputationScore,
+  getGmReputationStatus,
+  type GmReputationStatus,
+} from "@/lib/reputation";
 import { getReputationGrade } from "@/lib/coach/grades";
 import {
   getJobSecurityStatus,
@@ -17,6 +22,7 @@ export type CoachBoardRow = {
   coachRepGrade: string;
   gmRepScore: number;
   gmRepGrade: string;
+  gmRepStatus: GmReputationStatus;
   xp: number;
   record: string;
   wins: number;
@@ -83,12 +89,13 @@ async function loadCoachBoardRows(
   const rows = memberships.map((membership) => {
       const repRows = membership.user.reputationReceived;
       const coachRepScore = computeReputationScore(settings.startingRepScore, repRows);
-      const gmRepScore = computeReputationScore(
+      const gmRepScore = computeGmReputationScore(
         settings.startingGmRepScore,
-        repRows.map((r) => ({ amount: r.gmAmount }))
+        repRows
       );
       const coachRepGrade = getReputationGrade(coachRepScore);
       const gmRepGrade = getReputationGrade(gmRepScore);
+      const gmRepStatus = getGmReputationStatus(gmRepScore);
       const xp = membership.user.xpAdjustmentsReceived.reduce(
         (sum, row) => sum + row.amount,
         0
@@ -124,6 +131,7 @@ async function loadCoachBoardRows(
         coachRepGrade,
         gmRepScore,
         gmRepGrade,
+        gmRepStatus,
         xp,
         record: `${wins}-${losses}`,
         wins,

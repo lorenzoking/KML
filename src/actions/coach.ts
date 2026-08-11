@@ -23,7 +23,7 @@ import {
   updateMyCoachProfileSchema,
 } from "@/lib/validations";
 import { writeAuditLog } from "@/lib/audit";
-import { computeReputationScore } from "@/lib/reputation";
+import { computeGmReputationScore, computeReputationScore } from "@/lib/reputation";
 import { getJobSecurityStatus } from "@/lib/coach/job-security";
 import { getBuyoutEligibility } from "@/lib/coach/buyout";
 import { getCarouselPriorityScore } from "@/lib/coach/carousel-priority";
@@ -623,10 +623,7 @@ export async function applyToCarousel(formData: FormData) {
   ]);
 
   const coachRepScore = computeReputationScore(settings.startingRepScore, repRows);
-  const gmRepScore = computeReputationScore(
-    settings.startingGmRepScore,
-    repRows.map((r) => ({ amount: r.gmAmount }))
-  );
+  const gmRepScore = computeGmReputationScore(settings.startingGmRepScore, repRows);
   const status = getJobSecurityStatus({
     coachRepScore,
     gmRepScore,

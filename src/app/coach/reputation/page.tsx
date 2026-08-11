@@ -8,6 +8,7 @@ import { isCommissioner, requireUser } from "@/lib/auth";
 import { getActiveSeason } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
+import Link from "next/link";
 
 type SearchParams = Promise<{
   q?: string;
@@ -56,6 +57,37 @@ export default async function CoachReputationPage({
 
   return (
     <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Coaching Reputation</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
+            <p>
+              On-field standing: losing streaks, blowouts, Bad Sim Scores, and Hot Seat
+              pressure. Bad Sim deductions use category <span className="font-medium text-[var(--foreground)]">SIM_SCORE</span>.
+            </p>
+            <Link href="/rules?tab=hot-seat" className="inline-block text-sm font-medium text-[var(--primary)] hover:underline">
+              Hot Seat & Bad Sim rules
+            </Link>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>GM Reputation</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
+            <p>
+              Front-office standing: High (80+), Neutral (65–79), Low (below 65). Low GM
+              rep means trade review, first-round pick votes, and extra scrutiny.
+            </p>
+            <Link href="/rules?tab=gm-reputation" className="inline-block text-sm font-medium text-[var(--primary)] hover:underline">
+              GM Reputation rules
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Reputation ledger</CardTitle>
@@ -196,6 +228,7 @@ export default async function CoachReputationPage({
                     "CAROUSEL",
                     "BONUS",
                     "PENALTY",
+                    "SIM_SCORE",
                   ].map((option) => (
                     <option key={option} value={option}>
                       {option}

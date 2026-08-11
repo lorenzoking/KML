@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CoachIdentityRulesSection } from "@/components/coach/coach-identity-rules";
 import { TeamIdentityRulesSection } from "@/components/coach/team-identity-rules";
 import { GameplayRulesSection } from "@/components/rules/gameplay-rules";
+import { GmReputationRulesSection } from "@/components/rules/gm-reputation-rules";
 import { HotSeatRulesSection } from "@/components/rules/hot-seat-rules";
 import { RulesTabs, resolveRulesTab } from "@/components/rules/rules-tabs";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,11 @@ export default async function RulesPage({
             <Link href="/coach/me">Choose my identities</Link>
           </Button>
         )}
+        {activeTab === "gm-reputation" ? (
+          <Button asChild variant="outline" size="sm">
+            <Link href="/coach/reputation">Reputation ledger</Link>
+          </Button>
+        ) : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -48,6 +54,7 @@ export default async function RulesPage({
 
       {activeTab === "gameplay" ? <GameplayRulesSection /> : null}
       {activeTab === "hot-seat" ? <HotSeatRulesSection /> : null}
+      {activeTab === "gm-reputation" ? <GmReputationRulesSection /> : null}
       {activeTab === "team-identity" ? <TeamIdentityRulesSection /> : null}
       {activeTab === "coaching-identity" ? <CoachIdentityRulesSection /> : null}
 

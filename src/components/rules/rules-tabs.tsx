@@ -13,6 +13,11 @@ export const RULES_TABS = [
     description: "In-season reputation, firings, and turnarounds",
   },
   {
+    id: "gm-reputation",
+    label: "GM Reputation",
+    description: "Trades, overpays, and front-office standing",
+  },
+  {
     id: "team-identity",
     label: "Team Identity",
     description: "How your franchise builds the roster",

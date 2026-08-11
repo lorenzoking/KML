@@ -123,6 +123,7 @@ export const coachLedgerEntrySchema = z.object({
     "CAROUSEL",
     "BONUS",
     "PENALTY",
+    "SIM_SCORE",
   ]),
   reason: z.string().min(2).max(300),
   week: z.coerce.number().int().min(1).max(30).optional(),

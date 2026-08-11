@@ -224,7 +224,7 @@ export default async function CoachProfileDetailPage({
         </CardHeader>
         <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
           <p>Coach rep: {row ? `${row.coachRepScore} (${row.coachRepGrade})` : "N/A"}</p>
-          <p>GM rep: {row ? `${row.gmRepScore} (${row.gmRepGrade})` : "N/A"}</p>
+          <p>GM rep: {row ? `${row.gmRepScore} (${row.gmRepGrade} · ${row.gmRepStatus})` : "N/A"}</p>
           <p>Career record: {`${career.wins}-${career.losses}-${career.ties}`}</p>
           <p>Career XP: {career.careerXp}</p>
           <p>Contract years left: {row?.contractYearsLeft ?? 3}</p>
@@ -465,6 +465,7 @@ export default async function CoachProfileDetailPage({
                     "CAROUSEL",
                     "BONUS",
                     "PENALTY",
+                    "SIM_SCORE",
                   ].map((option) => (
                     <option key={option} value={option}>
                       {option}

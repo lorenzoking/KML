@@ -21,7 +21,7 @@ export const HOT_SEAT_QUICK_FACTS = [
   { label: "Hot Seat", value: "70–74" },
   { label: "Firing eligible", value: "65–69" },
   { label: "Extreme risk", value: "Below 65" },
-  { label: "8-loss streak", value: "-6 rep total" },
+  { label: "Bad Sim ladder", value: "Warn → -1 → -2+" },
 ] as const;
 
 export const HOT_SEAT_RULE_SECTIONS: HotSeatRuleSection[] = [
@@ -53,14 +53,16 @@ export const HOT_SEAT_RULE_SECTIONS: HotSeatRuleSection[] = [
     id: "sim-scores",
     title: "Bad Sim Scores",
     summary:
-      "KML is a simulation football league. Following realistic gameplay standards is part of Coaching Reputation.",
+      "KML is a simulation football league. A coach’s ability to follow realistic gameplay standards is part of their Coaching Reputation.",
+    paragraphs: [
+      "Single Poor Sim Score — a single bad Sim Score will generally result in a warning with no reputation deduction. Everyone can have a bad game.",
+    ],
     items: [
-      "A single poor Sim Score generally results in a warning / no reputation deduction",
       "Two Sim Scores of 2 or lower within 4 games: -1 Reputation",
       "Three Sim Scores of 2 or lower within 5 games: additional -2 Reputation",
       "Continued poor Sim play after commissioner warnings: -2 to -5 additional Reputation depending on severity",
     ],
-    note: "Gameplay that repeatedly fails to meet KML’s simulation standards can become a legitimate reason for a coach to lose their job.",
+    note: "Gameplay that repeatedly fails to meet KML’s simulation standards can therefore become a legitimate reason for a coach to lose their job. Commissioners apply these as Coaching Reputation ledger entries (category SIM_SCORE).",
   },
   {
     id: "hot-seat-bands",

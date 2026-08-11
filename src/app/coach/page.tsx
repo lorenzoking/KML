@@ -100,6 +100,12 @@ export default async function CoachOverviewPage({
             <Link href="/coach/reputation" className="rounded-md border px-3 py-2 text-center text-sm">
               Reputation log
             </Link>
+            <Link
+              href="/rules?tab=gm-reputation"
+              className="rounded-md border px-3 py-2 text-center text-sm"
+            >
+              GM Reputation rules
+            </Link>
           </CardContent>
         </Card>
       </div>
@@ -127,7 +133,8 @@ export default async function CoachOverviewPage({
                   Record {row.record} · XP {row.xp} · Rep {row.coachRepScore} ({row.coachRepGrade})
                 </p>
                 <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                  GM Rep {row.gmRepScore} ({row.gmRepGrade}) · {row.jobStatus.replaceAll("_", " ")}
+                  GM Rep {row.gmRepScore} ({row.gmRepGrade} · {row.gmRepStatus}) ·{" "}
+                  {row.jobStatus.replaceAll("_", " ")}
                 </p>
               </div>
             ))}
@@ -160,7 +167,7 @@ export default async function CoachOverviewPage({
                       {row.coachRepScore} ({row.coachRepGrade})
                     </td>
                     <td className="py-2 pr-3">
-                      {row.gmRepScore} ({row.gmRepGrade})
+                      {row.gmRepScore} ({row.gmRepGrade} · {row.gmRepStatus})
                     </td>
                     <td className="py-2 pr-3">{row.jobStatus.replaceAll("_", " ")}</td>
                   </tr>
