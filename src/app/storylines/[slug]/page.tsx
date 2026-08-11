@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import {
@@ -16,11 +17,33 @@ import {
   extractStoryCoverImage,
 } from "@/components/stories/story-body";
 import { getActiveSeason } from "@/lib/league";
+import { buildShareMetadata } from "@/lib/site";
 import {
   ensureDefaultLeagueStories,
   getStoryBySlug,
   STORY_CATEGORY_LABELS,
 } from "@/lib/stories";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const story = await getStoryBySlug(slug);
+  if (!story) {
+    return { title: "Story not found" };
+  }
+
+  const cover = extractStoryCoverImage(story.body);
+  return buildShareMetadata({
+    title: story.title,
+    description: story.summary,
+    path: `/storylines/${story.slug}`,
+    image: cover?.src,
+    type: "article",
+  });
+}
 
 export default async function StorylineDetailPage({
   params,

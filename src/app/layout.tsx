@@ -10,6 +10,12 @@ import {
   isViewingAsUser,
 } from "@/lib/auth";
 import { APP_NAME } from "@/lib/constants";
+import {
+  buildShareMetadata,
+  DEFAULT_OG_IMAGE_PATH,
+  getSiteUrl,
+  SITE_DESCRIPTION,
+} from "@/lib/site";
 import "./globals.css";
 
 const display = Oswald({
@@ -24,18 +30,26 @@ const body = IBM_Plex_Sans({
   weight: ["400", "500", "600", "700"],
 });
 
+const share = buildShareMetadata({
+  description: SITE_DESCRIPTION,
+  path: "/",
+  image: DEFAULT_OG_IMAGE_PATH,
+});
+
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: APP_NAME,
     template: `%s · ${APP_NAME}`,
   },
-  description:
-    "Kings Madden League — built on competition, driven by brotherhood. Standings, approvals, XP, reputation, and league storylines.",
+  description: SITE_DESCRIPTION,
   icons: {
     icon: [{ url: "/brand/kml-icon.png", type: "image/png" }],
     shortcut: "/brand/kml-icon.png",
     apple: "/brand/kml-icon.png",
   },
+  openGraph: share.openGraph,
+  twitter: share.twitter,
 };
 
 // League pages read live DB state; never prerender against Postgres at build time.

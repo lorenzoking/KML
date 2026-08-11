@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { format } from "date-fns";
 import type { StoryCategory } from "@prisma/client";
 import {
@@ -14,11 +15,19 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { extractStoryCoverImage } from "@/components/stories/story-body";
 import { getActiveSeason } from "@/lib/league";
+import { buildShareMetadata } from "@/lib/site";
 import {
   ensureDefaultLeagueStories,
   getPublishedStories,
   STORY_CATEGORY_LABELS,
 } from "@/lib/stories";
+
+export const metadata: Metadata = buildShareMetadata({
+  title: "Storylines",
+  description:
+    "Draft grades, features, and league desk chapters from the Kings Madden League.",
+  path: "/storylines",
+});
 
 const FILTERS: Array<{ key: string; label: string; category?: StoryCategory }> = [
   { key: "all", label: "All" },
