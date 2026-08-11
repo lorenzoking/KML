@@ -241,20 +241,3 @@ export const createLeagueStorySchema = z.object({
 export const updateLeagueStorySchema = createLeagueStorySchema.extend({
   storyId: z.string().min(1),
 });
-
-export const toggleStoryLikeSchema = z.object({
-  storyId: z.string().min(1),
-});
-
-export const createStoryCommentSchema = z.object({
-  storyId: z.string().min(1),
-  body: z
-    .string()
-    .trim()
-    .min(2, "Comment must be at least 2 characters")
-    .max(1000, "Comment is too long"),
-});
-
-export const deleteStoryCommentSchema = z.object({
-  commentId: z.string().min(1),
-});

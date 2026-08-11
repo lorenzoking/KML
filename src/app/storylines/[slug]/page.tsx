@@ -16,9 +16,6 @@ import {
   StoryBody,
   extractStoryCoverImage,
 } from "@/components/stories/story-body";
-import { StoryLikeButton } from "@/components/stories/story-like-button";
-import { StoryComments } from "@/components/stories/story-comments";
-import { getSessionUser, isCommissioner } from "@/lib/auth";
 import { getActiveSeason } from "@/lib/league";
 import { buildShareMetadata } from "@/lib/site";
 import {
@@ -54,15 +51,12 @@ export default async function StorylineDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const user = await getSessionUser();
   const { season } = await getActiveSeason();
   await ensureDefaultLeagueStories(season.id);
 
-  const story = await getStoryBySlug(slug, user?.id);
+  const story = await getStoryBySlug(slug);
   if (!story) notFound();
   const cover = extractStoryCoverImage(story.body);
-  const likedByViewer = Boolean(story.likes?.length);
-  const canModerate = user ? await isCommissioner(user) : false;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -106,25 +100,8 @@ export default async function StorylineDetailPage({
             {story.author?.name ? ` · ${story.author.name}` : ""}
           </p>
         </CardHeader>
-        <CardContent className="space-y-8 pt-6">
+        <CardContent className="pt-6">
           <StoryBody body={story.body} omitFirstImage={Boolean(cover)} />
-          <div className="border-t border-[var(--border)] pt-5">
-            <StoryLikeButton
-              storyId={story.id}
-              likeCount={story._count.likes}
-              likedByViewer={likedByViewer}
-              signedIn={Boolean(user?.isActive)}
-            />
-          </div>
-          <div className="border-t border-[var(--border)] pt-5">
-            <StoryComments
-              storyId={story.id}
-              comments={story.comments}
-              viewerId={user?.id}
-              canModerate={canModerate}
-              signedIn={Boolean(user?.isActive)}
-            />
-          </div>
         </CardContent>
       </Card>
     </div>
