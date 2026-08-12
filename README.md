@@ -183,7 +183,7 @@ query the DB at build time — update `DATABASE_URL` to the pooler URI and redep
 - Advancing a season archives the old season and starts a new one; historical results stay for career stats.
 - Advancing season also decrements active coaches' contract years (floored at 0).
 - Resetting season games voids current-season results only and does not erase prior seasons.
-- Identity lock/change rules are **warning-based** in this phase; commissioner can override.
+- Coaches select their own Team and Coaching Identities; selections lock for three seasons. Only commissioners can override a locked identity.
 - Carousel supports re-sign/extend (0 XP) and team-change market moves (configurable XP) with priority ordered by coach rep then career win %.
 - Fired coaches can trigger vacancy creation, waitlist replacement, or autopilot status.
 

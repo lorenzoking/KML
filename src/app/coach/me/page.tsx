@@ -68,8 +68,8 @@ export default async function MyCoachProfilePage({
             My profile
           </h1>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            Set the name and details the league sees for you — independent of your
-            Google account name.
+            Set your coach details, Team Identity, and Coaching Identity — independent of
+            your Google account name. Identities lock for three seasons after you save.
           </p>
         </div>
         <Button asChild variant="outline" size="sm">

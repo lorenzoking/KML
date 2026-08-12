@@ -53,8 +53,9 @@ export default async function CoachIdentitiesPage() {
             Identities
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-[var(--muted-foreground)]">
-            Team Identity shapes how you build the roster. Coaching Identity shapes how
-            players develop. Align both into one vision.
+            Every coach chooses their own Team Identity and Coaching Identity. Selections
+            lock for three seasons; commissioners can override only when a forced change
+            is needed.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -109,8 +110,8 @@ export default async function CoachIdentitiesPage() {
           <CardHeader>
             <CardTitle>Assign identities</CardTitle>
             <p className="text-sm text-[var(--muted-foreground)]">
-              Commissioners can change Team or Coaching Identity at any time, even after
-              a coach has locked their selection for three seasons.
+              Coaches select their own identities on My Profile. Use this only to override
+              or force a change after a selection is locked.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
