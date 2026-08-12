@@ -164,17 +164,26 @@ export async function selectMyTeamIdentity(formData: FormData) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid Team Identity." };
   }
 
+  const membership = await getUserMembership(user.id, season.id);
   const requestedFranchiseId = String(formData.get("franchiseId") || "");
   let franchiseId = requestedFranchiseId;
+  let targetingOtherFranchise = false;
 
   if (franchiseId) {
-    if (!commissioner) {
-      return { error: "Only commissioners can change another franchise’s Team Identity." };
+    const ownsFranchise = membership?.franchiseId === franchiseId;
+    if (!ownsFranchise) {
+      if (!commissioner) {
+        return {
+          error: "Only commissioners can change another franchise’s Team Identity.",
+        };
+      }
+      targetingOtherFranchise = true;
     }
   } else {
-    const membership = await getUserMembership(user.id, season.id);
     if (!membership) {
-      return { error: "You need an assigned franchise before choosing a Team Identity." };
+      return {
+        error: "You need an assigned franchise before choosing a Team Identity.",
+      };
     }
     franchiseId = membership.franchiseId;
   }
@@ -191,19 +200,21 @@ export async function selectMyTeamIdentity(formData: FormData) {
   });
   if (!franchise) return { error: "Franchise not found." };
 
-  if (
-    !commissioner &&
-    franchise.teamIdentityId &&
+  const isLockedChange =
+    Boolean(franchise.teamIdentityId) &&
     franchise.teamIdentityId !== identity.id &&
-    franchise.teamIdentityChosenSeason != null
-  ) {
-    const unlockSeason = franchise.teamIdentityChosenSeason + 3;
-    if (settings.currentSeason < unlockSeason) {
-      return {
-        error: `Team Identity is locked until Season ${unlockSeason}. Ask a commissioner for an extraordinary change.`,
-      };
-    }
+    franchise.teamIdentityChosenSeason != null &&
+    settings.currentSeason < franchise.teamIdentityChosenSeason + 3;
+
+  // Coaches pick freely until locked; only commissioners may force a change while locked.
+  if (isLockedChange && !commissioner) {
+    const unlockSeason = franchise.teamIdentityChosenSeason! + 3;
+    return {
+      error: `Team Identity is locked until Season ${unlockSeason}. Ask a commissioner for an extraordinary change.`,
+    };
   }
+
+  const isAdminOverride = commissioner && (targetingOtherFranchise || isLockedChange);
 
   await prisma.franchise.update({
     where: { id: franchise.id },
@@ -215,14 +226,16 @@ export async function selectMyTeamIdentity(formData: FormData) {
 
   await writeAuditLog({
     actorId: user.id,
-    action: commissioner ? "ADMIN_OVERRIDE_TEAM_IDENTITY" : "SELECT_MY_TEAM_IDENTITY",
+    action: isAdminOverride
+      ? "ADMIN_OVERRIDE_TEAM_IDENTITY"
+      : "SELECT_MY_TEAM_IDENTITY",
     entityType: "Franchise",
     entityId: franchise.id,
     metadata: {
       identityId: identity.id,
       identitySlug: identity.slug,
       season: settings.currentSeason,
-      override: commissioner,
+      override: isAdminOverride,
     },
   });
 
@@ -244,11 +257,18 @@ export async function selectMyCoachIdentity(formData: FormData) {
 
   const requestedUserId = String(formData.get("userId") || "");
   let targetUserId = user.id;
+  let targetingOtherCoach = false;
+
   if (requestedUserId) {
-    if (!commissioner) {
-      return { error: "Only commissioners can change another coach’s Coaching Identity." };
+    if (requestedUserId !== user.id) {
+      if (!commissioner) {
+        return {
+          error: "Only commissioners can change another coach’s Coaching Identity.",
+        };
+      }
+      targetingOtherCoach = true;
+      targetUserId = requestedUserId;
     }
-    targetUserId = requestedUserId;
   }
 
   const identity = await prisma.identityCatalog.findUnique({
@@ -262,19 +282,22 @@ export async function selectMyCoachIdentity(formData: FormData) {
     where: { userId: targetUserId },
   });
 
-  if (
-    !commissioner &&
-    profile?.coachIdentityId &&
-    profile.coachIdentityId !== identity.id &&
-    profile.coachIdentityChosenSeason != null
-  ) {
-    const unlockSeason = profile.coachIdentityChosenSeason + 3;
-    if (settings.currentSeason < unlockSeason) {
-      return {
-        error: `Coaching Identity is locked until Season ${unlockSeason}. Ask a commissioner for an extraordinary change.`,
-      };
-    }
+  const chosenSeason = profile?.coachIdentityChosenSeason ?? null;
+  const isLockedChange =
+    Boolean(profile?.coachIdentityId) &&
+    profile?.coachIdentityId !== identity.id &&
+    chosenSeason != null &&
+    settings.currentSeason < chosenSeason + 3;
+
+  // Coaches pick freely until locked; only commissioners may force a change while locked.
+  if (isLockedChange && !commissioner) {
+    const unlockSeason = chosenSeason + 3;
+    return {
+      error: `Coaching Identity is locked until Season ${unlockSeason}. Ask a commissioner for an extraordinary change.`,
+    };
   }
+
+  const isAdminOverride = commissioner && (targetingOtherCoach || isLockedChange);
 
   await prisma.coachProfile.upsert({
     where: { userId: targetUserId },
@@ -291,7 +314,7 @@ export async function selectMyCoachIdentity(formData: FormData) {
 
   await writeAuditLog({
     actorId: user.id,
-    action: commissioner
+    action: isAdminOverride
       ? "ADMIN_OVERRIDE_COACH_IDENTITY"
       : "SELECT_MY_COACH_IDENTITY",
     entityType: "CoachProfile",
@@ -300,7 +323,7 @@ export async function selectMyCoachIdentity(formData: FormData) {
       identityId: identity.id,
       identitySlug: identity.slug,
       season: settings.currentSeason,
-      override: commissioner,
+      override: isAdminOverride,
     },
   });
 

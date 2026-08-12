@@ -134,8 +134,8 @@ export function CoachIdentityPicker({
           <p className="text-xs text-[var(--muted-foreground)]">
             {COACH_IDENTITY_CHANGE_RULE}{" "}
             {allowAdminOverride
-              ? "Commissioners can override this lock at any time."
-              : null}{" "}
+              ? "As commissioner, you can override a locked selection."
+              : "Once saved, only a commissioner can force a change before the lock ends."}{" "}
             <Link
               href="/rules?tab=coaching-identity"
               className="text-[var(--primary)] hover:underline"
@@ -145,7 +145,7 @@ export function CoachIdentityPicker({
           </p>
           {!locked ? (
             <SubmitButton>
-              {allowAdminOverride && currentIdentity
+              {allowAdminOverride && currentIdentity && chosenSeason != null
                 ? "Override Coaching Identity"
                 : currentIdentity
                   ? "Update Coaching Identity"

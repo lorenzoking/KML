@@ -140,8 +140,8 @@ export function TeamIdentityPicker({
           <p className="text-xs text-[var(--muted-foreground)]">
             {TEAM_IDENTITY_CHANGE_RULE}{" "}
             {allowAdminOverride
-              ? "Commissioners can override this lock at any time."
-              : null}{" "}
+              ? "As commissioner, you can override a locked selection."
+              : "Once saved, only a commissioner can force a change before the lock ends."}{" "}
             <Link
               href="/rules?tab=team-identity"
               className="text-[var(--primary)] hover:underline"
@@ -151,7 +151,7 @@ export function TeamIdentityPicker({
           </p>
           {!locked ? (
             <SubmitButton>
-              {allowAdminOverride && currentIdentity
+              {allowAdminOverride && currentIdentity && chosenSeason != null
                 ? "Override Team Identity"
                 : currentIdentity
                   ? "Update Team Identity"
