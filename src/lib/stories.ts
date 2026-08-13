@@ -95,8 +95,84 @@ And if the Morning Show is right about chalk? **Petey** walks into February with
 The King is back. The board is set. First champion still blank.
 
 Compete. Conquer. Be legendary.`,
-    isFeatured: true,
+    isFeatured: false,
     sortOrder: -10,
+  },
+  {
+    slug: "season-1-trade-rumors-heating-up",
+    category: StoryCategory.FEATURE,
+    title: "Rumors heating up around the league",
+    eyebrow: "KML Morning Show · Trade desk",
+    summary:
+      "Garrett Wilson, Brian Branch, and Calvin Ridley hit the trade block while Coach Swipa eyes Joey Bosa — and Panthers ownership just flipped to Nick.",
+    body: `![KML Morning Show — Rumors heating up around the league](/stories/trade-rumors-kml.png)
+
+The KML Morning Show didn’t ease into the week. **Mad Dog, Stephen A., and Shannon** slammed the desk with one banner across the board: **rumors are heating up around the league.**
+
+Trades. Controversies. A franchise sale in Carolina. Unfiltered. Unapologetic. Unmatched.
+
+## Trade block: three names the league can’t ignore
+
+The left side of the Morning Show graphic stamped three stars with the same red label — **TRADE RUMORS**:
+
+| Player | Current team | Why the desk is buzzing |
+| --- | --- | --- |
+| **Garrett Wilson** | Jets | Elite WR talent that every contend club would dial for |
+| **Brian Branch** | Lions | Playmaking safety who changes how offenses script weeks |
+| **Calvin Ridley** | Titans | Proven vertical threat available while Tennessee sorts its window |
+
+Nobody on the panel treated this as idle Discord chatter. When Wilson, Branch, and Ridley are all in the same trade conversation, **rosters across KML can flip overnight**. Contenders sharpen their offers. Rebuilders decide whether to cash chips or hold the line.
+
+The ticker said it clean: **trades could shake the league.**
+
+## San Francisco flashpoint: Swipa wants Bosa
+
+The center desk owned the loudest segment.
+
+**Coach Swipa and the 49ers want to sign Joey Bosa** — and the Morning Show’s framing was blunt. That move wouldn’t just add a veteran edge. It would **take snaps away from two young rushers San Francisco has already invested in: Mykel Williams and Romello Height.**
+
+That’s the controversy. Not “is Bosa good?” Everybody knows Bosa can wreck a pocket. The question is whether a coach who just committed draft capital and development time to young edge talent should immediately **steal their reps for a splash signing**.
+
+The graphic put the tension on screen:
+
+- **Joey Bosa** in the red and gold — win-now pressure personified
+- **Coach Swipa** arms crossed on the headset — the decision-maker in the blast radius
+- **Mykel Williams** and **Romello Height** underneath — the young guys watching their runway shrink
+
+And then the desk asked the question that sticks to a coach’s reputation:
+
+**Could Coach Swipa lose his locker room early and begin to gain a bad rep for making irrational decisions?**
+
+In KML, Coaching Reputation and GM Reputation both have memory. A short-sighted vet grab that buries drafted talent isn’t just a depth-chart tweak — it’s a **front-office storyline**. Culture Builder identities hate this tape. Win Now identities love the aggression. Swipa is about to tell the league which one he actually is.
+
+Ticker version: **49ers making moves… or mistakes?**
+
+## Breaking: new Panthers owner
+
+While the trade board burned, Carolina got a different kind of headline.
+
+**Nick bought the franchise from former owner Wdub.**
+
+New keys. New voice. New era in Charlotte. Ownership changes don’t always move the scoreboard in Week 1 — but they **absolutely** change how trades, contracts, and Hot Seat patience get handled. The Morning Show stamped it **BREAKING NEWS** for a reason: every coach in that division just got a new variable.
+
+## Desk takeaways
+
+- **Wilson / Branch / Ridley** are the three trade names every GM should have a plan for — buy, sell, or block.
+- **Swipa’s Bosa chase** is the coaching controversy of the week: veteran juice versus young investment in Mykel Williams and Romello Height.
+- **Nick’s Panthers purchase** ends the Wdub chapter and starts a new Carolina timeline.
+- Reputation is watching. Irrational splash moves don’t just show up in the box score — they show up on the Hot Seat board.
+
+## Morning Show verdict
+
+If you’re a contender, start dialing on **Garrett Wilson, Brian Branch, and Calvin Ridley** before someone else does.
+
+If you’re in San Francisco, watch the edge room. **Bosa might help you win now — or he might cost Swipa the locker room** if Mykel and Romello become afterthoughts.
+
+And if you’re in Carolina: welcome to the Nick era. The ticker already said it — **stay locked in.**
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: true,
+    sortOrder: -20,
   },
   {
     slug: "season-1-team-draft-complete",
