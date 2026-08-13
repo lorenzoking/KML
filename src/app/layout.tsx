@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, Oswald } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { ViewAsUserBanner } from "@/components/layout/view-mode-toggle";
@@ -18,16 +18,42 @@ import {
 } from "@/lib/site";
 import "./globals.css";
 
-const display = Oswald({
-  subsets: ["latin"],
+// Self-hosted so production builds do not depend on fonts.gstatic.com.
+const display = localFont({
+  src: [
+    { path: "../fonts/oswald/oswald-500.woff2", weight: "500", style: "normal" },
+    { path: "../fonts/oswald/oswald-600.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/oswald/oswald-700.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-display",
-  weight: ["500", "600", "700"],
+  display: "swap",
 });
 
-const body = IBM_Plex_Sans({
-  subsets: ["latin"],
+const body = localFont({
+  src: [
+    {
+      path: "../fonts/ibm-plex-sans/ibm-plex-sans-400.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../fonts/ibm-plex-sans/ibm-plex-sans-500.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../fonts/ibm-plex-sans/ibm-plex-sans-600.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../fonts/ibm-plex-sans/ibm-plex-sans-700.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   variable: "--font-body",
-  weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 const share = buildShareMetadata({
