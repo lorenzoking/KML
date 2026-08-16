@@ -3,8 +3,6 @@ import { prisma } from "@/lib/prisma";
 export type CoachStoryLink = {
   userId: string;
   href: string;
-  coachName: string;
-  nameLabels: string[];
   teamLabels: string[];
 };
 
@@ -41,20 +39,6 @@ function plainText(value: string) {
     .trim();
 }
 
-function lastName(value: string) {
-  const parts = value.trim().split(/\s+/).filter(Boolean);
-  const suffix = /^(jr|sr|ii|iii|iv|v)\.?$/i;
-  const filtered = parts.filter((part) => !suffix.test(part.replace(/[.,]/g, "")));
-  const last = (filtered.length > 1 ? filtered[filtered.length - 1] : null)?.replace(/[.,]/g, "");
-  return last && last.length >= 3 ? last : null;
-}
-
-function firstName(value: string) {
-  const parts = value.trim().split(/\s+/).filter(Boolean);
-  const first = parts[0]?.replace(/[.,]/g, "") ?? "";
-  return first.length >= 3 ? first : null;
-}
-
 function nicknameFromFranchise(name: string, city: string) {
   const stripped = name.replace(new RegExp(`^${escapeRegExp(city)}\\s+`, "i"), "").trim();
   return stripped || name;
@@ -68,7 +52,7 @@ export async function getCoachStoryLinks(seasonId: string): Promise<CoachStoryLi
       user: { deletedAt: null },
     },
     include: {
-      user: { select: { id: true, name: true } },
+      user: { select: { id: true } },
       franchise: { select: { name: true, city: true, abbreviation: true } },
     },
   });
@@ -79,37 +63,16 @@ export async function getCoachStoryLinks(seasonId: string): Promise<CoachStoryLi
     cityCounts.set(city, (cityCounts.get(city) ?? 0) + 1);
   }
 
-  const lastNameCounts = new Map<string, number>();
-  const firstNameCounts = new Map<string, number>();
-  for (const row of memberships) {
-    const name = row.user.name?.trim() || "";
-    const last = lastName(name);
-    const first = firstName(name);
-    if (last) lastNameCounts.set(normalize(last), (lastNameCounts.get(normalize(last)) ?? 0) + 1);
-    if (first) {
-      firstNameCounts.set(normalize(first), (firstNameCounts.get(normalize(first)) ?? 0) + 1);
-    }
-  }
-
   return memberships.map((row) => {
-    const coachName = row.user.name?.trim() || "Unnamed coach";
     const nick = nicknameFromFranchise(row.franchise.name, row.franchise.city);
     const teamLabels = [row.franchise.name, nick, row.franchise.abbreviation];
     if ((cityCounts.get(normalize(row.franchise.city)) ?? 0) === 1) {
       teamLabels.push(row.franchise.city);
     }
 
-    const nameLabels = [coachName];
-    const last = lastName(coachName);
-    const first = firstName(coachName);
-    if (last && (lastNameCounts.get(normalize(last)) ?? 0) === 1) nameLabels.push(last);
-    if (first && (firstNameCounts.get(normalize(first)) ?? 0) === 1) nameLabels.push(first);
-
     return {
       userId: row.user.id,
       href: `/coach/profiles/${row.user.id}`,
-      coachName,
-      nameLabels: unique(nameLabels),
       teamLabels: unique(teamLabels),
     };
   });
@@ -233,94 +196,6 @@ export function linkTableRow(
       return linkSplitCoaches(cell, teams);
     }
     return cell;
-  });
-}
-
-export function linkifyCoachMentions(text: string, coaches: CoachStoryLink[]): string {
-  if (!text || coaches.length === 0) return text;
-
-  const withContext = linkCoachNamesNearTeams(text, coaches);
-  const nameTerms = coaches
-    .flatMap((coach) => coach.nameLabels.map((label) => ({ label, href: coach.href })))
-    .sort((a, b) => b.label.length - a.label.length);
-
-  return replaceOutsideLinks(withContext, (chunk) => replaceLabels(chunk, nameTerms));
-}
-
-function isTeamLabel(name: string, coaches: CoachStoryLink[]) {
-  const key = normalize(name);
-  return coaches.some((coach) => coach.teamLabels.some((label) => normalize(label) === key));
-}
-
-function hrefForTeam(team: string, coaches: CoachStoryLink[]) {
-  const key = normalize(team);
-  const coach = coaches.find((row) =>
-    row.teamLabels.some((label) => normalize(label) === key)
-  );
-  return coach?.href ?? null;
-}
-
-function linkNameInMatch(
-  match: string,
-  openBold: string | undefined,
-  name: string,
-  closeBold: string | undefined,
-  href: string
-) {
-  const linked = `[${name}](${href})`;
-  const nameOut =
-    openBold && closeBold ? `**${linked}**` : `${openBold ?? ""}${linked}${closeBold ?? ""}`;
-  return match.replace(`${openBold ?? ""}${name}${closeBold ?? ""}`, nameOut);
-}
-
-function linkCoachNamesNearTeams(text: string, coaches: CoachStoryLink[]) {
-  const teamLabels = unique(coaches.flatMap((coach) => coach.teamLabels)).sort(
-    (a, b) => b.length - a.length
-  );
-  if (!teamLabels.length) return text;
-
-  const teamPattern = teamLabels.map(escapeRegExp).join("|");
-  const nameToken =
-    "(\\*\\*)?([A-Z][\\w.-]{1,30}(?:\\s+[A-Z][\\w.-]{1,30}){0,2})(\\*\\*)?";
-  const teamToken = `(?:\\*\\*)?(${teamPattern})(?:\\*\\*)?`;
-  const nearTeam = new RegExp(
-    `${nameToken}(?:['’]s)?(?:\\s+and\\s+the)?\\s+${teamToken}\\b`,
-    "g"
-  );
-  const parenthetical = new RegExp(`${nameToken}\\s+\\(${teamToken}\\)`, "g");
-
-  const apply = (chunk: string, pattern: RegExp) =>
-    chunk.replace(
-      pattern,
-      (
-        match,
-        openBold: string | undefined,
-        name: string,
-        closeBold: string | undefined,
-        team: string
-      ) => {
-        if (isTeamLabel(name, coaches)) return match;
-        const href = hrefForTeam(team, coaches);
-        if (!href) return match;
-        return linkNameInMatch(match, openBold, name, closeBold, href);
-      }
-    );
-
-  return replaceOutsideLinks(text, (chunk) =>
-    apply(apply(chunk, nearTeam), parenthetical)
-  );
-}
-
-function replaceLabels(
-  text: string,
-  terms: Array<{ label: string; href: string }>
-) {
-  if (!text || terms.length === 0) return text;
-  const pattern = terms.map((term) => escapeRegExp(term.label)).join("|");
-  return text.replace(new RegExp(`\\b(${pattern})\\b`, "gi"), (match) => {
-    const term = terms.find((row) => normalize(row.label) === normalize(match));
-    if (!term) return match;
-    return `[${match}](${term.href})`;
   });
 }
 

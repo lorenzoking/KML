@@ -28,6 +28,8 @@ import {
   STORY_CATEGORY_LABELS,
 } from "@/lib/stories";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {

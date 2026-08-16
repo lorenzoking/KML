@@ -2,7 +2,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import {
-  linkifyCoachMentions,
   linkTableRow,
   type CoachStoryLink,
 } from "@/lib/coach/story-links";
@@ -26,24 +25,23 @@ export function extractStoryCoverImage(body: string): { src: string; alt: string
   return null;
 }
 
-function parseInline(text: string, coaches: CoachStoryLink[] = []): ReactNode[] {
-  const linked = linkifyCoachMentions(text, coaches);
+function parseInline(text: string): ReactNode[] {
   const tokenRe = /(\*\*[^*]+\*\*|\[([^\]]+)\]\(([^)]+)\))/g;
   const nodes: ReactNode[] = [];
   let cursor = 0;
   let key = 0;
 
-  for (const match of linked.matchAll(tokenRe)) {
+  for (const match of text.matchAll(tokenRe)) {
     const start = match.index ?? 0;
     if (start > cursor) {
-      nodes.push(<span key={key++}>{linked.slice(cursor, start)}</span>);
+      nodes.push(<span key={key++}>{text.slice(cursor, start)}</span>);
     }
 
     const token = match[0];
     if (token.startsWith("**") && token.endsWith("**")) {
       nodes.push(
         <strong key={key++} className="font-semibold text-[var(--foreground)]">
-          {parseInline(token.slice(2, -2), [])}
+          {parseInline(token.slice(2, -2))}
         </strong>
       );
     } else {
@@ -55,7 +53,7 @@ function parseInline(text: string, coaches: CoachStoryLink[] = []): ReactNode[] 
       nodes.push(
         isInternal ? (
           <Link key={key++} href={href} className={className}>
-            {parseInline(label, [])}
+            {parseInline(label)}
           </Link>
         ) : (
           <a
@@ -65,7 +63,7 @@ function parseInline(text: string, coaches: CoachStoryLink[] = []): ReactNode[] 
             rel="noreferrer"
             className={className}
           >
-            {parseInline(label, [])}
+            {parseInline(label)}
           </a>
         )
       );
@@ -74,8 +72,8 @@ function parseInline(text: string, coaches: CoachStoryLink[] = []): ReactNode[] 
     cursor = start + token.length;
   }
 
-  if (cursor < linked.length) {
-    nodes.push(<span key={key++}>{linked.slice(cursor)}</span>);
+  if (cursor < text.length) {
+    nodes.push(<span key={key++}>{text.slice(cursor)}</span>);
   }
 
   return nodes;
@@ -201,7 +199,7 @@ export function StoryBody({
   className?: string;
   /** Hide the first image when a cover/hero already renders it. */
   omitFirstImage?: boolean;
-  /** Live coach profile links used to auto-link names in copy. */
+  /** Assigned-franchise links used only in article charts. */
   coachLinks?: CoachStoryLink[];
 }) {
   const blocks = parseStoryBody(body);
@@ -220,7 +218,7 @@ export function StoryBody({
               key={idx}
               className="pt-2 font-[family-name:var(--font-display)] text-lg font-semibold uppercase tracking-[0.04em] text-[var(--foreground)]"
             >
-              {parseInline(block.text, coachLinks)}
+              {parseInline(block.text)}
             </h3>
           );
         }
@@ -231,7 +229,7 @@ export function StoryBody({
               key={idx}
               className="max-w-3xl text-sm leading-relaxed text-[var(--muted-foreground)] sm:text-[15px]"
             >
-              {parseInline(block.text, coachLinks)}
+              {parseInline(block.text)}
             </p>
           );
         }
@@ -248,7 +246,7 @@ export function StoryBody({
             >
               {block.items.map((item, itemIdx) => (
                 <li key={itemIdx} className="leading-relaxed">
-                  {parseInline(item, coachLinks)}
+                  {parseInline(item)}
                 </li>
               ))}
             </ListTag>
@@ -313,7 +311,7 @@ export function StoryBody({
                             : undefined
                         )}
                       >
-                        {parseInline(cell, coachLinks)}
+                        {parseInline(cell)}
                       </td>
                     ))}
                   </tr>

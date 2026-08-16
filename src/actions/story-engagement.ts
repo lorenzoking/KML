@@ -6,6 +6,7 @@ import { getSessionUser, requireCommissioner } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit";
 import {
+  getStoryEngagement,
   resolveFranchiseCoach,
   STORY_REACTION_KEYS,
 } from "@/lib/story-engagement";
@@ -49,7 +50,7 @@ const createPollSchema = z.object({
 
 function revalidateStoryEngagement(slug: string) {
   revalidatePath("/storylines");
-  revalidatePath(`/storylines/${slug}`);
+  revalidatePath(`/storylines/${slug}`, "page");
   revalidatePath("/dashboard");
   revalidatePath("/admin/stories");
 }
@@ -75,7 +76,7 @@ export async function voteStoryPoll(questionId: string, optionId: string) {
     include: {
       question: {
         include: {
-          poll: { include: { story: { select: { slug: true } } } },
+          poll: { include: { story: { select: { id: true, slug: true } } } },
         },
       },
     },
@@ -101,7 +102,11 @@ export async function voteStoryPoll(questionId: string, optionId: string) {
   });
 
   revalidateStoryEngagement(option.question.poll.story.slug);
-  return { success: true };
+  const engagement = await getStoryEngagement(
+    option.question.poll.story.id,
+    auth.user.id
+  );
+  return { success: true, poll: engagement?.poll ?? null };
 }
 
 export async function toggleStoryReaction(storyId: string, emoji: string) {

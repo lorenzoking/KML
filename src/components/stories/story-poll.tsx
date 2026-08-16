@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { voteStoryPoll } from "@/actions/story-engagement";
@@ -20,6 +20,51 @@ function percent(votes: number, total: number) {
   return Math.round((votes / total) * 100);
 }
 
+function leanForOptions(votes: number[]) {
+  const max = Math.max(...votes);
+  const min = Math.min(...votes);
+  if (votes.every((count) => count === 0) || max === min) {
+    return votes.map(() => "split" as const);
+  }
+  return votes.map((count) => (count === max ? ("favorite" as const) : ("underdog" as const)));
+}
+
+function applyPollVote(
+  poll: StoryPollView,
+  questionId: string,
+  optionId: string
+): StoryPollView {
+  const hadAnyVote = poll.questions.some((question) => question.myOptionId);
+  const questions = poll.questions.map((question) => {
+    if (question.id !== questionId) return question;
+    const previous = question.myOptionId;
+    const options = question.options.map((option) => {
+      let votes = option.votes;
+      if (previous === option.id) votes = Math.max(0, votes - 1);
+      if (option.id === optionId && previous !== optionId) votes += 1;
+      return { ...option, votes };
+    });
+    const voteCounts = options.map((option) => option.votes);
+    const leans = leanForOptions(voteCounts);
+    const totalVotes = voteCounts.reduce((sum, count) => sum + count, 0);
+    return {
+      ...question,
+      myOptionId: optionId,
+      totalVotes,
+      options: options.map((option, index) => ({
+        ...option,
+        lean: totalVotes > 0 ? leans[index] ?? null : null,
+      })),
+    };
+  });
+
+  return {
+    ...poll,
+    questions,
+    totalVoters: hadAnyVote ? poll.totalVoters : poll.totalVoters + 1,
+  };
+}
+
 export function StoryPollCard({
   poll,
   signedIn,
@@ -33,17 +78,31 @@ export function StoryPollCard({
   const [pending, startTransition] = useTransition();
   const [pendingQuestionId, setPendingQuestionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [board, setBoard] = useState(poll);
+
+  useEffect(() => {
+    setBoard(poll);
+  }, [poll]);
 
   function pick(questionId: string, optionId: string) {
-    if (!signedIn || !poll.isOpen) return;
+    if (!board.isOpen) return;
+    if (!signedIn) {
+      router.push(signInHref);
+      return;
+    }
+
+    const previous = board;
     setError(null);
     setPendingQuestionId(questionId);
+    setBoard(applyPollVote(board, questionId, optionId));
+
     startTransition(async () => {
       const result = await voteStoryPoll(questionId, optionId);
       if (result && "error" in result && result.error) {
+        setBoard(previous);
         setError(result.error);
-      } else {
-        router.refresh();
+      } else if (result && "poll" in result && result.poll) {
+        setBoard(result.poll);
       }
       setPendingQuestionId(null);
     });
@@ -54,21 +113,21 @@ export function StoryPollCard({
       <CardHeader className="space-y-2 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="elite">League lock-in</Badge>
-          {poll.isOpen ? (
+          {board.isOpen ? (
             <Badge variant="outline">Open</Badge>
           ) : (
             <Badge variant="pressured">Closed</Badge>
           )}
-          {poll.totalVoters > 0 ? (
+          {board.totalVoters > 0 ? (
             <Badge variant="outline">
-              {poll.totalVoters} {poll.totalVoters === 1 ? "coach" : "coaches"} voted
+              {board.totalVoters} {board.totalVoters === 1 ? "coach" : "coaches"} voted
             </Badge>
           ) : null}
         </div>
-        <CardTitle>{poll.title}</CardTitle>
+        <CardTitle>{board.title}</CardTitle>
         <CardDescription>
-          Pick who you think wins each window. After you lock a game, the board
-          shows who the league is treating as the favorite vs the underdog.
+          Pick who you think wins each window. The board updates as soon as you
+          lock a side so you can see favorites vs underdogs.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
@@ -86,7 +145,7 @@ export function StoryPollCard({
           </p>
         ) : null}
 
-        {poll.questions.map((question) => {
+        {board.questions.map((question) => {
           const showResults = !signedIn || Boolean(question.myOptionId);
           const busy = pending && pendingQuestionId === question.id;
           return (
@@ -110,7 +169,7 @@ export function StoryPollCard({
                     <button
                       key={option.id}
                       type="button"
-                      disabled={!signedIn || !poll.isOpen || busy}
+                      disabled={!board.isOpen || busy}
                       onClick={() => pick(question.id, option.id)}
                       className={`rounded-xl border px-3 py-3 text-left transition-[border-color,background-color,transform] disabled:cursor-not-allowed ${
                         selected
@@ -159,7 +218,7 @@ export function StoryPollCard({
           );
         })}
 
-        {!poll.isOpen ? (
+        {!board.isOpen ? (
           <p className="text-xs text-[var(--muted-foreground)]">
             This lock-in is closed. The board stays up as the league tape.
           </p>

@@ -17,7 +17,7 @@ export function StoryEngagement({
   engagement: StoryEngagementView;
   signedIn: boolean;
 }) {
-  const signInHref = `/sign-in`;
+  const signInHref = `/sign-in?next=/storylines/${engagement.slug}`;
 
   if (engagement.poll) {
     return (
