@@ -16,6 +16,7 @@ import {
   StoryBody,
   extractStoryCoverImage,
 } from "@/components/stories/story-body";
+import { getCoachStoryLinks } from "@/lib/coach/story-links";
 import { getActiveSeason } from "@/lib/league";
 import { buildShareMetadata } from "@/lib/site";
 import {
@@ -54,7 +55,10 @@ export default async function StorylineDetailPage({
   const { season } = await getActiveSeason();
   await ensureDefaultLeagueStories(season.id);
 
-  const story = await getStoryBySlug(slug);
+  const [story, coachLinks] = await Promise.all([
+    getStoryBySlug(slug),
+    getCoachStoryLinks(season.id),
+  ]);
   if (!story) notFound();
   const cover = extractStoryCoverImage(story.body);
 
@@ -101,7 +105,11 @@ export default async function StorylineDetailPage({
           </p>
         </CardHeader>
         <CardContent className="pt-6">
-          <StoryBody body={story.body} omitFirstImage={Boolean(cover)} />
+          <StoryBody
+            body={story.body}
+            omitFirstImage={Boolean(cover)}
+            coachLinks={coachLinks}
+          />
         </CardContent>
       </Card>
     </div>

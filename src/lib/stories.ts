@@ -347,7 +347,7 @@ NFC West heat. Primetime lights. Immediate tape for the throne and the challenge
 | **Rams** | Jordan Stowe | **Matthew Stafford** | **Puka Nacua** — the cover-2 breaker that turns 93 OVR offense into points | **Myles Garrett** — the league’s premier edge, now in Hollywood |
 | **49ers** | Swipe | **Brock Purdy** | **George Kittle** — the mismatch that beats zone and sells play-action | **Fred Warner** — the green-dot problem that erases shallow crossers |
 
-San Francisco’s 90 offense can hang with anyone in a shootout. The question is whether Stowe’s 88 defense — now headlined by Garrett — and Hollywood’s star skill make TNF a statement for the league’s best roster or a trap game against NFC West juice.
+San Francisco’s 90 offense can hang with anyone in a shootout. The question is whether Jordan Stowe’s 88 defense — now headlined by Garrett — and Hollywood’s star skill make TNF a statement for the league’s best roster or a trap game against NFC West juice.
 
 ## Sunday Night Football — Cowboys vs Giants
 
@@ -368,12 +368,12 @@ If Lamb eats, SNF becomes another Dallas showcase. If Dart, Nabers, and Carter s
 | --- | --- | --- | --- |
 | Season Opener | Seahawks–Patriots | Petey vs Ren | Super Bowl rematch + chalk vs dark-horse elite user |
 | MNF | Chiefs–Broncos | Trent vs Puddin | 90 OFF fireworks vs 87 DEF identity |
-| TNF | Rams–49ers | Stowe vs Swipe | Best roster in the game vs NFC West heat |
+| TNF | Rams–49ers | Jordan Stowe vs Swipe | Best roster in the game vs NFC West heat |
 | SNF | Cowboys–Giants | Jsmood vs Biz | Star offense vs early-pick prove-it night |
 
 ## Desk verdict
 
-The first champion article told you the map: **Stowe has the mountain**, **Petey has the chalk**, **Ren has the dark-horse toys**, and a handful of game-changers are waiting to ruin someone’s Sunday.
+The first champion article told you the map: **Jordan Stowe has the mountain**, **Petey has the chalk**, **Ren has the dark-horse toys**, and a handful of game-changers are waiting to ruin someone’s Sunday.
 
 Week 1 Primetime doesn’t settle the Lombardi. It does something meaner — it puts the theories on tape, starting with a Super Bowl rematch kickoff.
 

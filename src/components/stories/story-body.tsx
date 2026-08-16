@@ -1,5 +1,11 @@
 import Image from "next/image";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import {
+  linkifyCoachMentions,
+  type CoachStoryLink,
+} from "@/lib/coach/story-links";
 
 type Block =
   | { type: "heading"; text: string }
@@ -19,19 +25,59 @@ export function extractStoryCoverImage(body: string): { src: string; alt: string
   return null;
 }
 
-function parseInline(text: string) {
-  // Very small bold support: **text**
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, idx) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={idx} className="font-semibold text-[var(--foreground)]">
-          {part.slice(2, -2)}
+function parseInline(text: string, coaches: CoachStoryLink[] = []): ReactNode[] {
+  const linked = linkifyCoachMentions(text, coaches);
+  const tokenRe = /(\*\*[^*]+\*\*|\[([^\]]+)\]\(([^)]+)\))/g;
+  const nodes: ReactNode[] = [];
+  let cursor = 0;
+  let key = 0;
+
+  for (const match of linked.matchAll(tokenRe)) {
+    const start = match.index ?? 0;
+    if (start > cursor) {
+      nodes.push(<span key={key++}>{linked.slice(cursor, start)}</span>);
+    }
+
+    const token = match[0];
+    if (token.startsWith("**") && token.endsWith("**")) {
+      nodes.push(
+        <strong key={key++} className="font-semibold text-[var(--foreground)]">
+          {parseInline(token.slice(2, -2), [])}
         </strong>
       );
+    } else {
+      const label = match[2] ?? token;
+      const href = match[3] ?? "";
+      const isInternal = href.startsWith("/");
+      const className =
+        "font-medium text-[var(--primary)] underline underline-offset-2 hover:text-[var(--foreground)]";
+      nodes.push(
+        isInternal ? (
+          <Link key={key++} href={href} className={className}>
+            {parseInline(label, [])}
+          </Link>
+        ) : (
+          <a
+            key={key++}
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className={className}
+          >
+            {parseInline(label, [])}
+          </a>
+        )
+      );
     }
-    return <span key={idx}>{part}</span>;
-  });
+
+    cursor = start + token.length;
+  }
+
+  if (cursor < linked.length) {
+    nodes.push(<span key={key++}>{linked.slice(cursor)}</span>);
+  }
+
+  return nodes;
 }
 
 function parseStoryBody(body: string): Block[] {
@@ -148,11 +194,14 @@ export function StoryBody({
   body,
   className,
   omitFirstImage = false,
+  coachLinks = [],
 }: {
   body: string;
   className?: string;
   /** Hide the first image when a cover/hero already renders it. */
   omitFirstImage?: boolean;
+  /** Live coach profile links used to auto-link names in copy. */
+  coachLinks?: CoachStoryLink[];
 }) {
   const blocks = parseStoryBody(body);
   let skippedFirstImage = false;
@@ -170,7 +219,7 @@ export function StoryBody({
               key={idx}
               className="pt-2 font-[family-name:var(--font-display)] text-lg font-semibold uppercase tracking-[0.04em] text-[var(--foreground)]"
             >
-              {block.text}
+              {parseInline(block.text, coachLinks)}
             </h3>
           );
         }
@@ -181,7 +230,7 @@ export function StoryBody({
               key={idx}
               className="max-w-3xl text-sm leading-relaxed text-[var(--muted-foreground)] sm:text-[15px]"
             >
-              {parseInline(block.text)}
+              {parseInline(block.text, coachLinks)}
             </p>
           );
         }
@@ -198,7 +247,7 @@ export function StoryBody({
             >
               {block.items.map((item, itemIdx) => (
                 <li key={itemIdx} className="leading-relaxed">
-                  {parseInline(item)}
+                  {parseInline(item, coachLinks)}
                 </li>
               ))}
             </ListTag>
@@ -260,7 +309,7 @@ export function StoryBody({
                             : undefined
                         )}
                       >
-                        {parseInline(cell)}
+                        {parseInline(cell, coachLinks)}
                       </td>
                     ))}
                   </tr>
