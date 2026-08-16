@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
@@ -16,6 +15,7 @@ import {
   StoryBody,
   extractStoryCoverImage,
 } from "@/components/stories/story-body";
+import { StoryLightboxImage } from "@/components/stories/story-lightbox-image";
 import { getCoachStoryLinks } from "@/lib/coach/story-links";
 import { getActiveSeason } from "@/lib/league";
 import { buildShareMetadata } from "@/lib/site";
@@ -76,13 +76,13 @@ export default async function StorylineDetailPage({
       <Card className="overflow-hidden border-[color-mix(in_srgb,var(--primary)_28%,var(--border))]">
         {cover ? (
           <div className="relative aspect-[3/2] w-full border-b border-[var(--border)] bg-black sm:aspect-[16/10]">
-            <Image
+            <StoryLightboxImage
               src={cover.src}
               alt={cover.alt}
               fill
               priority
-              className="object-cover object-top"
               sizes="(max-width: 768px) 100vw, 768px"
+              previewClassName="object-cover object-top"
             />
           </div>
         ) : null}

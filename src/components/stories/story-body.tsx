@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -6,6 +5,7 @@ import {
   linkifyCoachMentions,
   type CoachStoryLink,
 } from "@/lib/coach/story-links";
+import { StoryLightboxImage } from "@/components/stories/story-lightbox-image";
 
 type Block =
   | { type: "heading"; text: string }
@@ -260,14 +260,15 @@ export function StoryBody({
               key={idx}
               className="overflow-hidden rounded-xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--muted)_40%,transparent)]"
             >
-              <Image
+              <StoryLightboxImage
                 src={block.src}
                 alt={block.alt}
                 width={1536}
                 height={1024}
-                className="h-auto w-full object-cover"
                 sizes="(max-width: 768px) 100vw, 720px"
                 priority={idx === 0}
+                previewClassName="h-auto w-full object-contain"
+                caption={block.alt}
               />
               {block.alt ? (
                 <figcaption className="border-t border-[var(--border)] px-3 py-2 text-xs text-[var(--muted-foreground)]">
