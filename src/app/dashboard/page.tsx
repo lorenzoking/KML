@@ -26,7 +26,7 @@ import { getUserCareerStats } from "@/lib/career";
 import { formatRecord } from "@/lib/utils";
 import { GAME_TYPE_LABELS } from "@/lib/constants";
 import { computeGmReputationScore, computeReputationScore } from "@/lib/reputation";
-import { getReputationGrade } from "@/lib/coach/grades";
+import { getReputationGrade, getReputationGradeLabel } from "@/lib/coach/grades";
 import { getJobSecurityStatus } from "@/lib/coach/job-security";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import {
@@ -249,7 +249,7 @@ export default async function DashboardPage({
             <MiniStat
               label="Coach grade"
               value={getReputationGrade(reputation.score)}
-              hint={`Rep ${reputation.score}`}
+              hint={`${reputation.score} · ${getReputationGradeLabel(getReputationGrade(reputation.score))}`}
             />
             <MiniStat
               label="Season XP"

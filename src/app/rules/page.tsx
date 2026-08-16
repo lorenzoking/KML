@@ -34,7 +34,7 @@ export default async function RulesPage({
             <Link href="/coach/me">Choose my identities</Link>
           </Button>
         )}
-        {activeTab === "gm-reputation" ? (
+        {activeTab === "gm-reputation" || activeTab === "hot-seat" ? (
           <Button asChild variant="outline" size="sm">
             <Link href="/coach/reputation">Reputation ledger</Link>
           </Button>
@@ -64,13 +64,13 @@ export default async function RulesPage({
             <CardTitle>Coaching Carousel & contracts</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
-            <p>All coaches begin on a 3-year contract and start at B coaching reputation.</p>
+            <p>All coaches begin on a 3-year contract and start at 85 (B) coaching reputation.</p>
             <p>
               At season end, carousel opens before free agency: re-sign, extend, or enter
               the market.
             </p>
-            <p>Re-sign/extend requires B (75+) and costs 0 XP.</p>
-            <p>Changing teams requires B (75+) and costs {settings.buyoutXpCost} XP.</p>
+            <p>Re-sign/extend requires {settings.carouselMinCoachRep}+ coaching reputation and costs 0 XP.</p>
+            <p>Changing teams requires {settings.carouselMinCoachRep}+ coaching reputation and costs {settings.buyoutXpCost} XP.</p>
             <p>
               Market pick order runs by coaching reputation first, then career winning
               percentage.

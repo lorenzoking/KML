@@ -230,7 +230,7 @@ model LeagueSetting {
   currentWeek        Int      @default(1)
   xpGamePlayed       Int      @default(1)
   xpWinBonus         Int      @default(4)
-  startingRepScore   Int      @default(75)
+  startingRepScore   Int      @default(85)
   startingGmRepScore Int      @default(75)
   hotSeatThreshold   Int      @default(59)
   firingThreshold    Int      @default(44)
@@ -257,6 +257,8 @@ model GameSubmission {
   /// Madden/KML realism rating for the opponent's play (1–5), reported by the submitter. Scores ≤2 feed Bad Sim rules for that opponent.
   opponentSimScore Int
   notes          String?
+  /// Official KML Primetime window (desk slate or submitter-marked).
+  isPrimetime    Boolean          @default(false)
   status         SubmissionStatus @default(PENDING)
   reviewedById   String?
   reviewedAt     DateTime?
@@ -290,6 +292,7 @@ model GameResult {
   /// Opponent Sim Score from the approved submission (away team = opponent when submitter is home).
   opponentSimScore Int?
   winnerTeamId String?
+  isPrimetime  Boolean   @default(false)
   isVoided     Boolean   @default(false)
   voidedAt     DateTime?
   voidedById   String?
@@ -331,17 +334,20 @@ model XPAdjustment {
 }
 
 model ReputationAdjustment {
-  id          String             @id @default(cuid())
-  userId      String
-  amount      Int
-  gmAmount    Int                @default(0)
-  category    ReputationCategory @default(GENERAL)
-  seasonId    String?
-  week        Int?
-  reason      String
-  evidenceUrl String?
-  createdById String?
-  createdAt   DateTime           @default(now())
+  id           String             @id @default(cuid())
+  userId       String
+  amount       Int
+  gmAmount     Int                @default(0)
+  category     ReputationCategory @default(GENERAL)
+  seasonId     String?
+  week         Int?
+  reason       String
+  evidenceUrl  String?
+  isAutomatic  Boolean            @default(false)
+  submissionId String?
+  ruleKey      String?
+  createdById  String?
+  createdAt    DateTime           @default(now())
 
   user      User    @relation("RepTarget", fields: [userId], references: [id], onDelete: Cascade)
   createdBy User?   @relation("RepCreator", fields: [createdById], references: [id])
@@ -351,6 +357,8 @@ model ReputationAdjustment {
   @@index([seasonId])
   @@index([category])
   @@index([createdAt])
+  @@index([submissionId])
+  @@index([userId, seasonId, ruleKey])
 }
 
 model IdentityCatalog {

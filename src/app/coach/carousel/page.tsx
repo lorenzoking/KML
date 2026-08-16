@@ -78,7 +78,7 @@ export default async function CoachCarouselPage() {
             Carousel status: <span className="font-medium">{settings.carouselOpen ? "Open" : "Closed"}</span>
           </p>
           <p className="text-[var(--muted-foreground)]">
-            Rep floor {settings.carouselMinCoachRep} (B or better) · Change-team cost {settings.buyoutXpCost} XP
+            Rep floor {settings.carouselMinCoachRep}+ · Change-team cost {settings.buyoutXpCost} XP
           </p>
           {commissioner ? (
             <form
@@ -107,8 +107,8 @@ export default async function CoachCarouselPage() {
           <CardTitle>Carousel rules at a glance</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
-          <p>Every coach starts with a 3-year contract and B reputation (75).</p>
-          <p>When carousel is open, you can re-sign/extend with your current team for 0 XP if rep is B or better (75+).</p>
+          <p>Every coach starts with a 3-year contract and 85 (B) coaching reputation.</p>
+          <p>When carousel is open, you can re-sign/extend with your current team for 0 XP if coaching reputation is {settings.carouselMinCoachRep}+.</p>
           <p>Changing teams costs {settings.buyoutXpCost} XP and requires rep {settings.carouselMinCoachRep}+.</p>
           <p>Market order is Coach Rep, then career winning percentage.</p>
           <p>Fired coaches can compete for open vacancies. If no opening exists, they enter an autopilot season.</p>

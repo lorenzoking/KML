@@ -3,9 +3,9 @@ export type ReputationLabel = "Elite" | "Stable" | "Pressured" | "Hot Seat";
 export type GmReputationStatus = "High" | "Neutral" | "Low";
 
 export function getReputationLabel(score: number): ReputationLabel {
-  if (score >= 85) return "Elite";
-  if (score >= 70) return "Stable";
-  if (score >= 55) return "Pressured";
+  if (score >= 93) return "Elite";
+  if (score >= 83) return "Stable";
+  if (score >= 75) return "Pressured";
   return "Hot Seat";
 }
 

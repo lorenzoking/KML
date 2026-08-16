@@ -69,14 +69,15 @@ const DEFAULT_RULES = `# Kings Madden League — Rulebook
 - Commissioners may apply manual XP adjustments with a reason.
 
 ## Coach Reputation
-- Every coach starts with a baseline reputation score.
-- Commissioners apply positive or negative adjustments with a reason.
-- Labels: Elite, Stable, Pressured, Hot Seat.
+- Every coach starts at 85 (B). Reputation follows the coach, not the franchise.
+- Normal wins and losses do not move reputation — only noteworthy results, Primetime, streaks, blowouts, and season trajectory.
+- Approved games apply those adjustments automatically. Commissioners can still add manual ledger entries.
+- Grades: A+ Elite (97–100), A Championship (93–96), B+ Highly Respected (87–92), B Stable (83–86), C Hot Seat (75–82), D Firing Territory (70–74), F Termination (below 70).
 
 ## Coaching Carousel
-- Coaches start on 3-year contracts with a B baseline reputation.
-- Re-signing or extending with your current team costs 0 XP and requires B or higher.
-- Changing teams during carousel requires B or higher and costs 25 XP.
+- Coaches start on 3-year contracts with a B baseline reputation (85).
+- Re-signing or extending with your current team costs 0 XP and requires 75+ coaching reputation.
+- Changing teams during carousel requires 75+ coaching reputation and costs 25 XP.
 - Market order is coaching reputation first, then career win percentage.
 
 ## Sportsmanship
@@ -143,7 +144,7 @@ async function main() {
       currentWeek: 3,
       xpGamePlayed: 1,
       xpWinBonus: 4,
-      startingRepScore: 75,
+      startingRepScore: 85,
       startingGmRepScore: 75,
       hotSeatThreshold: 59,
       firingThreshold: 44,

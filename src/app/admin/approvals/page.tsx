@@ -48,7 +48,9 @@ export default async function ApprovalsPage() {
         </h2>
         <p className="text-sm text-[var(--muted-foreground)]">
           Approve to create official results. Played games award XP; simulated
-          games update standings only (no coach XP). Reject keeps audit history.
+          games update standings only (no coach XP). Noteworthy results also move
+          Coaching Reputation. Primetime is taken from the submitter checkbox or
+          the official Primetime poll slate. Reject keeps audit history.
         </p>
       </div>
 
@@ -69,6 +71,7 @@ export default async function ApprovalsPage() {
                 <CardDescription>
                   Season {s.season.number} · Week {s.week} ·{" "}
                   {GAME_TYPE_LABELS[s.gameType]}
+                  {s.isPrimetime ? " · Primetime" : ""}
                   {s.gameType === "SIMULATED" ? " · no XP" : ""} ·{" "}
                   {s.opponentTeam.abbreviation} Sim {s.opponentSimScore}/5 · submitted by{" "}
                   {s.submitter.name ?? s.submitter.email} ·{" "}

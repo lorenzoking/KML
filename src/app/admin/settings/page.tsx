@@ -93,7 +93,7 @@ export default async function SettingsAdminPage() {
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="startingRepScore">Starting reputation score</Label>
+                <Label htmlFor="startingRepScore">Starting coaching reputation (85 = B)</Label>
                 <Input
                   id="startingRepScore"
                   name="startingRepScore"
@@ -103,7 +103,7 @@ export default async function SettingsAdminPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="carouselMinCoachRep">Carousel minimum rep (B floor)</Label>
+                <Label htmlFor="carouselMinCoachRep">Carousel minimum coach reputation</Label>
                 <Input
                   id="carouselMinCoachRep"
                   name="carouselMinCoachRep"

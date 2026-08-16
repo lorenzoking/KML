@@ -134,6 +134,24 @@ export function SubmissionForm({
         </p>
       </div>
 
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 px-3 py-3">
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            name="isPrimetime"
+            value="true"
+            className="mt-1 h-4 w-4"
+          />
+          <span>
+            <span className="font-semibold">KML Primetime game</span>
+            <span className="mt-0.5 block text-xs text-[var(--muted-foreground)]">
+              Check this if the desk put this matchup on the Primetime slate. Primetime
+              wins, losses, and upsets move Coaching Reputation.
+            </span>
+          </span>
+        </label>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
         <Textarea id="notes" name="notes" placeholder="Optional context for commissioners" />

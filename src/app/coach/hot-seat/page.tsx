@@ -47,7 +47,7 @@ export default async function CoachHotSeatPage() {
               <p className="text-sm">{row.jobStatus.replaceAll("_", " ")}</p>
             </div>
             <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-              Rep {row.coachRepScore} / GM {row.gmRepScore} · Exp {row.expectationScore} ·
+              Rep {row.coachRepScore} ({row.coachRepGrade}) / GM {row.gmRepScore} · Exp {row.expectationScore} ·
               Strikes T{row.tankingStrikes}/G{row.gmStrikes}
             </p>
             <p className="mt-1 text-xs text-[var(--muted-foreground)]">{row.jobRecoveryNote}</p>

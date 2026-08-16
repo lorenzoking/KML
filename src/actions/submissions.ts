@@ -25,6 +25,7 @@ export async function submitGameResult(formData: FormData) {
     userScore: formData.get("userScore"),
     opponentScore: formData.get("opponentScore"),
     opponentSimScore: formData.get("opponentSimScore"),
+    isPrimetime: formData.get("isPrimetime") === "true",
     notes: formData.get("notes") || undefined,
   });
 
@@ -84,6 +85,7 @@ export async function submitGameResult(formData: FormData) {
       userScore: data.userScore,
       opponentScore: data.opponentScore,
       opponentSimScore: data.opponentSimScore,
+      isPrimetime: data.isPrimetime,
       notes: data.notes,
       status: SubmissionStatus.PENDING,
     },
@@ -99,6 +101,7 @@ export async function submitGameResult(formData: FormData) {
       userScore: data.userScore,
       opponentScore: data.opponentScore,
       opponentSimScore: data.opponentSimScore,
+      isPrimetime: data.isPrimetime,
     },
   });
 

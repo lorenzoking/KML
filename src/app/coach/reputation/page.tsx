@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { isCommissioner, requireUser } from "@/lib/auth";
 import { getActiveSeason } from "@/lib/league";
+import { COACHING_REP_GRADES } from "@/lib/hot-seat-rules";
 import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -64,11 +66,20 @@ export default async function CoachReputationPage({
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
             <p>
-              On-field standing: losing streaks, blowouts, Bad Sim Scores, and Hot Seat
-              pressure. Bad Sim deductions use category <span className="font-medium text-[var(--foreground)]">SIM_SCORE</span>.
+              Live rating that follows the coach, not the franchise. Everyone starts at 85 (B).
+              Normal wins and losses do not move it — only noteworthy results, Primetime,
+              streaks, blowouts, and season trajectory. Bad Sim still uses category{" "}
+              <span className="font-medium text-[var(--foreground)]">SIM_SCORE</span>.
             </p>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {COACHING_REP_GRADES.map((band) => (
+                <Badge key={band.label} variant="outline">
+                  {band.label} {band.range} · {band.detail}
+                </Badge>
+              ))}
+            </div>
             <Link href="/rules?tab=hot-seat" className="inline-block text-sm font-medium text-[var(--primary)] hover:underline">
-              Hot Seat & Bad Sim rules
+              Coaching Reputation & Hot Seat rules
             </Link>
           </CardContent>
         </Card>

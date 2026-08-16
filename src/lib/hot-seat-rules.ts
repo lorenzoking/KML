@@ -9,6 +9,75 @@ export type HotSeatRuleSection = {
   note?: string;
 };
 
+export const COACHING_REP_INTRO = {
+  title: "Coaching Reputation",
+  body: "Coaching Reputation is a live rating that follows YOU, not the franchise. Every coach starts at 85 (B). Normal wins and losses do not move it — you have to do something noteworthy, good or bad.",
+  note: "Big moments stack. An average team beating a contender by 24 on Primetime can land Beat Contender +2, Primetime Win +2, and Blowout +1 in the same game. The same stacking applies on the way down.",
+} as const;
+
+export const COACHING_REP_GRADES = [
+  { range: "97–100", label: "A+", detail: "Elite" },
+  { range: "93–96", label: "A", detail: "Championship Level" },
+  { range: "87–92", label: "B+", detail: "Highly Respected" },
+  { range: "83–86", label: "B", detail: "Stable" },
+  { range: "75–82", label: "C", detail: "Hot Seat" },
+  { range: "70–74", label: "D", detail: "Firing Territory" },
+  { range: "Below 70", label: "F", detail: "Termination Level" },
+] as const;
+
+export const COACHING_REP_RULE_SECTIONS: HotSeatRuleSection[] = [
+  {
+    id: "rep-gains",
+    title: "Reputation gains",
+    summary: "Noteworthy wins move the needle. Ordinary wins do not.",
+    items: [
+      "Beat a Contender: +2 — an average or lower-level team knocks off a championship-caliber opponent",
+      "Major Upset: +3 — a struggling team defeats one of KML’s top teams (replaces Beat a Contender)",
+      "Primetime Win: +2 — winning an official KML Primetime matchup",
+      "Primetime Upset: +3 — pulling off an upset when the league is watching (replaces Primetime Win)",
+      "3-game winning streak: +1 · 5-game: +2 additional · 8-game: +2 additional",
+      "Each streak milestone can only be earned once during that streak",
+      "Blowout win (21+): +1 — only against a competitive opponent. Running it up on an overmatched team does not count",
+    ],
+  },
+  {
+    id: "rep-losses",
+    title: "Reputation losses",
+    summary: "Pressure comes from how you lose, when you lose, and whether it is becoming a pattern.",
+    items: [
+      "Major Upset Loss: -3 — an established team takes a major unexpected defeat",
+      "Primetime Loss: -2",
+      "Primetime Blowout Loss: -3 (replaces Primetime Loss when the margin is 21+)",
+      "3-game losing streak: -1 · 5-game: -2 additional · 8-game: -2 additional",
+      "Blowout loss (21+): -2",
+      "Embarrassing loss (35+): -3 instead of the 21+ blowout penalty",
+    ],
+  },
+  {
+    id: "rep-trajectory",
+    title: "Season trajectory",
+    summary: "Reputation also tracks whether a coach is changing the direction of the season. Each tier is awarded at most once per season.",
+    items: [
+      "Season Turnaround: +2 — example: start 2–5, recover to .500 or better",
+      "Major Turnaround: +3 — example: start 1–6 and fight back into contention",
+      "Season Collapse: -2 — example: start 6–2 and fall to .500",
+      "Major Collapse: -3 — example: start 8–2 and slide under .500 late",
+    ],
+  },
+  {
+    id: "rep-why",
+    title: "Why reputation matters",
+    summary: "The score feeds job security and Coaching Carousel value. It does not replace commissioner judgment on Bad Sim or conduct.",
+    items: [
+      "High reputation creates job security, contract opportunities, and market value",
+      "Low reputation creates Hot Seat pressure and eventually puts the job in danger",
+      "A coach does not lose reputation simply for losing a game",
+      "Simply winning games is not enough to become elite — big wins, Primetime, streaks, upsets, and turnarounds build the résumé",
+      "Approved games write these adjustments automatically. Voiding a game reverses them. Commissioners can still add manual ledger entries",
+    ],
+  },
+];
+
 export const HOT_SEAT_INTRO = {
   title: "In-season Hot Seat & firing",
   body: "KML coaches are not guaranteed to finish the season simply because they began the year as the franchise’s head coach. Ownership expectations exist throughout the season.",
@@ -30,11 +99,11 @@ export const HOT_SEAT_RULE_SECTIONS: HotSeatRuleSection[] = [
     title: "Losing streaks",
     summary: "Penalties are cumulative. The streak resets once the team wins a game.",
     items: [
-      "4 consecutive losses: -1 Reputation",
-      "6 consecutive losses: additional -2 Reputation",
-      "8 consecutive losses: additional -3 Reputation",
-      "An 8-game losing streak therefore totals -6 Reputation",
-      "Only the highest new threshold reached is deducted — you do not repeatedly lose points every week for remaining above the same threshold",
+      "3 consecutive losses: -1 Reputation (automatic)",
+      "5 consecutive losses: additional -2 Reputation (automatic)",
+      "8 consecutive losses: additional -2 Reputation (automatic)",
+      "An 8-game losing streak therefore totals -5 Reputation from streak milestones",
+      "Each milestone is awarded once during that streak. A win resets the streak",
     ],
   },
   {
@@ -43,10 +112,10 @@ export const HOT_SEAT_RULE_SECTIONS: HotSeatRuleSection[] = [
     summary:
       "Isolated blowouts are treated differently from repeated blowouts. Ownership cares when the team stops looking competitive.",
     items: [
-      "Lose by 21–27 points: warning — no automatic deduction",
-      "Lose by 28–34 points: -1 Reputation",
-      "Lose by 35+ points: -2 Reputation",
-      "3 losses by 21+ points within a 5-game span: additional -2 Reputation",
+      "Blowout loss (21+): -2 Reputation (automatic)",
+      "Embarrassing loss (35+): -3 instead of the 21+ penalty (automatic)",
+      "These stack with Primetime, upset, and streak penalties in the same game",
+      "Blowout wins (21+) only add +1 against a competitive opponent",
     ],
   },
   {
@@ -152,9 +221,10 @@ export const HOT_SEAT_RULE_SECTIONS: HotSeatRuleSection[] = [
     title: "Coaching turnaround",
     summary: "Coaches should have a chance to coach their way off the Hot Seat.",
     items: [
-      "3-game winning streak: +1 Reputation",
-      "5-game winning streak: additional +2 Reputation",
-      "Beat a 90+ OVR / major contender: no automatic reputation bonus, but may be considered during Hot Seat evaluation",
+      "3-game winning streak: +1 Reputation (automatic)",
+      "5-game winning streak: additional +2 Reputation (automatic)",
+      "8-game winning streak: additional +2 Reputation (automatic)",
+      "Beat a contender / Primetime / blowouts: see Coaching Reputation above — those now apply automatically on approved games",
       "Hot Seat recovery: if a coach on the Hot Seat goes 4–1 or better over their next 5 games, +2 Reputation and Hot Seat designation may be removed",
     ],
     note: "This creates legitimate comeback storylines — a coach could enter Week 10 looking destined to be fired and completely change the narrative by finishing strong.",

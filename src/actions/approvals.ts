@@ -8,6 +8,10 @@ import { getLeagueSettings } from "@/lib/league";
 import { approvalSchema } from "@/lib/validations";
 import { writeAuditLog } from "@/lib/audit";
 import { awardsCoachXp, xpFromApprovedGame } from "@/lib/xp";
+import {
+  applyReputationForApprovedGame,
+  detectPrimetimeMatchup,
+} from "@/lib/coach/reputation-from-game";
 
 export async function reviewSubmission(formData: FormData) {
   const commissioner = await requireCommissioner();
@@ -70,8 +74,19 @@ export async function reviewSubmission(formData: FormData) {
     : lost
       ? submission.opponentTeamId
       : null;
+  const markedPrimetime = submission.isPrimetime;
+  let isPrimetime = markedPrimetime;
 
   await prisma.$transaction(async (tx) => {
+    isPrimetime =
+      markedPrimetime ||
+      (await detectPrimetimeMatchup(
+        tx,
+        submission.seasonId,
+        submission.userTeamId,
+        submission.opponentTeamId
+      ));
+
     await tx.gameSubmission.update({
       where: { id: submissionId },
       data: {
@@ -79,6 +94,7 @@ export async function reviewSubmission(formData: FormData) {
         reviewedById: commissioner.id,
         reviewedAt: new Date(),
         decisionNote: decisionNote || "Approved",
+        isPrimetime,
       },
     });
 
@@ -94,6 +110,7 @@ export async function reviewSubmission(formData: FormData) {
         awayScore: submission.opponentScore,
         opponentSimScore: submission.opponentSimScore,
         winnerTeamId,
+        isPrimetime,
       },
     });
 
@@ -154,6 +171,29 @@ export async function reviewSubmission(formData: FormData) {
         }
       }
     }
+
+    await applyReputationForApprovedGame(tx, {
+      submissionId: submission.id,
+      seasonId: submission.seasonId,
+      week: submission.week,
+      gameType: submission.gameType,
+      userTeam: {
+        id: submission.userTeam.id,
+        name: submission.userTeam.name,
+        abbreviation: submission.userTeam.abbreviation,
+      },
+      opponentTeam: {
+        id: submission.opponentTeam.id,
+        name: submission.opponentTeam.name,
+        abbreviation: submission.opponentTeam.abbreviation,
+      },
+      userScore: submission.userScore,
+      opponentScore: submission.opponentScore,
+      winnerTeamId,
+      submitterId: submission.submitterId,
+      isPrimetime,
+      createdById: commissioner.id,
+    });
   });
 
   await writeAuditLog({
@@ -168,6 +208,7 @@ export async function reviewSubmission(formData: FormData) {
       opponentSimScore: submission.opponentSimScore,
       gameType: submission.gameType,
       awardsXp: awardsCoachXp(submission.gameType),
+      isPrimetime,
     },
   });
 
@@ -182,4 +223,7 @@ function revalidateAll() {
   revalidatePath("/submissions");
   revalidatePath("/dashboard");
   revalidatePath("/standings");
+  revalidatePath("/coach");
+  revalidatePath("/coach/reputation");
+  revalidatePath("/coach/hot-seat");
 }

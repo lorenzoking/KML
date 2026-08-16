@@ -12,17 +12,36 @@ export type ReputationGrade =
   | "F";
 
 export function getReputationGrade(score: number): ReputationGrade {
-  if (score >= 95) return "A+";
-  if (score >= 90) return "A";
-  if (score >= 85) return "A-";
-  if (score >= 80) return "B+";
-  if (score >= 75) return "B";
-  if (score >= 70) return "B-";
-  if (score >= 65) return "C+";
-  if (score >= 60) return "C";
-  if (score >= 55) return "C-";
-  if (score >= 45) return "D";
+  if (score >= 97) return "A+";
+  if (score >= 93) return "A";
+  if (score >= 87) return "B+";
+  if (score >= 83) return "B";
+  if (score >= 75) return "C";
+  if (score >= 70) return "D";
   return "F";
+}
+
+export function getReputationGradeLabel(grade: ReputationGrade): string {
+  switch (grade) {
+    case "A+":
+      return "Elite";
+    case "A":
+      return "Championship Level";
+    case "B+":
+      return "Highly Respected";
+    case "B":
+      return "Stable";
+    case "C":
+    case "C+":
+    case "C-":
+      return "Hot Seat";
+    case "D":
+      return "Firing Territory";
+    case "F":
+      return "Termination Level";
+    default:
+      return "Stable";
+  }
 }
 
 export function gradeToNumeric(grade: ReputationGrade): number {

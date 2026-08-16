@@ -15,11 +15,13 @@ export const gameSubmissionSchema = z
     opponentTeamId: z.string().min(1, "Opponent is required"),
     userScore: z.coerce.number().int().min(0).max(200),
     opponentScore: z.coerce.number().int().min(0).max(200),
-    opponentSimScore: z.coerce
-      .number()
-      .int()
-      .min(1, "Opponent Sim Score must be 1–5")
-      .max(5, "Opponent Sim Score must be 1–5"),
+      opponentSimScore: z
+        .coerce
+        .number()
+        .int()
+        .min(1, "Opponent Sim Score must be 1–5")
+        .max(5, "Opponent Sim Score must be 1–5"),
+    isPrimetime: z.coerce.boolean().default(false),
     notes: z.string().max(500).optional(),
   })
   .refine((data) => data.userScore !== data.opponentScore || true, {

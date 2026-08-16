@@ -15,6 +15,7 @@ import {
   voidGameSchema,
 } from "@/lib/validations";
 import { writeAuditLog } from "@/lib/audit";
+import { reverseAutomaticReputation } from "@/lib/coach/reputation-from-game";
 
 async function voidSubmissionInTx(
   tx: Prisma.TransactionClient,
@@ -79,6 +80,8 @@ async function voidSubmissionInTx(
       },
     });
   }
+
+  await reverseAutomaticReputation(tx, submissionId, commissionerId);
 
   return submission;
 }
