@@ -283,66 +283,140 @@ Welcome to the Kings Madden League.`,
     sortOrder: 0,
   },
   {
-    slug: "season-1-week-1-preview",
+    slug: "season-1-week-1-primetime",
     category: StoryCategory.GAME_OF_WEEK,
     title: "KML Primetime Week 1: big games, big stage",
-    eyebrow: "Games of the week · Week 1",
+    eyebrow: "Games of the week · Season opener",
     summary:
-      "Season opener Super Bowl rematch energy, MNF in the Rockies, TNF in the Bay, and SNF in the NFC East — Week 1 is already primetime.",
-    body: `![KML Primetime Week 1 — Big games. Big stage. This is KML.](/stories/wk1-gotw.png)
+      "Seahawks–Rams kicks off KML as a Super Bowl rematch on the Primetime board — Morning Show chalk vs the best roster in Madden 27 — plus MNF, TNF, and SNF heaters.",
+    body: `![KML Primetime Week 1](/stories/wk1-gotw.png)
 
-**KML PRIMETIME. WEEK 1.**
+**Big games. Big stage. This is KML.**
 
-The league didn’t ease into Season 1. The desk threw four lights on the board and stamped the footer that matters: **Big games. Big stage. This is KML.**
+Week 1 doesn’t wait for September drama to build itself. The Primetime board is already lit: a **Season Opener Super Bowl rematch**, **Monday Night Football**, **Thursday Night Football**, and **Sunday Night Football** — four stages, four storylines, and the first real tape of the Madden 27 cycle.
 
-## Season opener — Seahawks vs Rams
+If you read the [Morning Show’s first-champion speculation](/storylines/season-1-first-champion-speculation), you already know the tension. Roster overalls tell you who *should* win. League history tells you who *can*. Week 1 is where those two theories collide for the first time.
 
-**Seattle Seahawks vs Los Angeles Rams** opens the year with a label you don’t invent lightly: **Super Bowl rematch.**
+## ★★ Season Opener — Seahawks vs Rams (Super Bowl rematch)
 
-Whether you treat that as legacy heat or Week 1 mythology, the stage is the same. Petey’s Seahawks — the Morning Show’s chalk club — against Jordan Stowe’s Rams, the highest-rated toy box in Madden 27. Opening night doesn’t hand out Lombardis. It does hand out **belief**.
+This is the kickoff. The graphic stamped it twice for a reason: **Season Opener** and **Super Bowl rematch**.
 
-If Seattle answers the Rams early, the chalk gets louder. If Los Angeles flexes that 91 overall on Day 1, the rest of the league starts measuring the mountain.
+On one sideline: **MONEYTEAMPETEY** and the **Seahawks (84 OVR)**. On the other: **Jordan Stowe** and the **Rams (91 OVR)** — the highest-rated franchise in Madden 27, with a league-best **93 offense** and **88 defense**.
 
-## Monday Night Football — Chiefs vs Broncos
+That is not a normal Week 1. That is the Morning Show’s **player chalk** against the league’s **team favorite**.
 
-**Kansas City Chiefs vs Denver Broncos.** MNF.
+### Why this game matters (user + team)
 
-AFC West pressure with the lights on. Denver’s defense-first identity against Kansas City’s weekly expectation to dictate terms. Monday night is where early-season narratives either get oxygen — or get buried before the Discord cooldown ends.
+When the desk argued who lifts the first Lombardi, they drew a hard line:
 
-## Thursday Night Football — Rams vs 49ers
+- **Best team on paper:** Jordan Stowe’s Rams
+- **Morning Show chalk:** Petey’s Seahawks — “Seahawks in 5”
 
-**Los Angeles Rams vs San Francisco 49ers.** TNF.
+Put those two in the same building for Game 1 and you get the cleanest early measuring stick in the league. Stowe has the toys. Petey has the reputation as a scheme-first killer who doesn’t need 91 overall to cut people down. If Seattle walks into Hollywood and hangs, every “team merchant” narrative in Discord gets louder overnight. If the Rams steamroll, the throne stays exactly where the ratings board said it belonged.
 
-Division heat. West Coast volume. And a 49ers desk already cooking after the Morning Show’s Swipa–Bosa segment. Thursday night doesn’t care about your trade rumors — but it will show whether San Francisco’s edge room and Los Angeles’ win-now roster are ready for real snaps.
+*(Nearby context from that same speculation board: **Ren / Wrinzo’s Patriots (86)** were the dark-horse-with-toys pick — elite user + top-six roster. They’re not on this Primetime card, but they’re the reminder that user skill and roster power don’t always wear the same jersey.)*
 
-Two Rams spotlights in the same primetime package? That’s the point of Week 1: **LA is in the middle of everything.**
+### Stars & X-factors
 
-## Sunday Night Football — Cowboys vs Giants
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Seahawks** | Petey | **Sam Darnold** | **Jaxon Smith-Njigba** — the volume WR who forces coverages to break | **Devon Witherspoon** — takeaway juice that flips field position |
+| **Rams** | Jordan Stowe | **Matthew Stafford** | **Puka Nacua** — the mismatch that turns 93 OVR offense into points | **Kyren Williams** — clock control + explosive lanes behind Hollywood’s OL |
 
-**Dallas Cowboys vs New York Giants.** SNF.
+**Desk keys:** Can Petey keep Stafford off schedule and make this a one-score dogfight? Or does Puka/Stafford turn the opener into a statement that 91 overall was never a debate?
 
-NFC East football under the sunroof. Rivalry week energy without needing a logo stamp to explain it. Sunday night closes the primetime slate the way it should — messy, loud, and personal.
+---
 
-## Primetime slate
+## ★ Monday Night Football — Chiefs vs Broncos
 
-| Window | Matchup | Why it’s on the board |
-| --- | --- | --- |
-| **Season opener** | Seahawks vs Rams | Super Bowl rematch energy to tip Season 1 |
-| **MNF** | Chiefs vs Broncos | AFC West Monday night pressure |
-| **TNF** | Rams vs 49ers | Division collision with Bay Area storylines attached |
-| **SNF** | Cowboys vs Giants | NFC East rivalry to close the weekend |
+**Trent’s Chiefs (84 OVR · 90 OFF)** against **Puddin’s Broncos (86 OVR · 87 DEF)**.
 
-## Desk notes
+This is explosiveness versus identity. Kansas City still grades as a **90 overall offense** — perennial contending DNA. Denver took one of the cleanest “surprise” boards in the draft: elite defense, improved attack, and a coach with a clear stop-and-steal plan.
 
-- Submit results after you play — primetime only becomes history when the scores are official.
-- Opponent Sim Scores still ride with every submission. Bad film travels as fast as highlight clips.
-- Week 1 won’t crown a champion. It will decide who starts Season 1 with momentum — and who starts answering questions.
+### Stars & X-factors
 
-Big games. Big stage. **This is KML.**
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Chiefs** | Trent | **Patrick Mahomes** | **Rashee Rice / Xavier Worthy** — the vertical answers after the pocket breaks | **Chris Jones** — interior wrecking ball that creates free rushers |
+| **Broncos** | Puddin | **Bo Nix** | **Patrick Surtain II** — erase a WR1 and force Mahomes left | **Courtland Sutton** — contested-catch outlet when Denver needs a drive to breathe |
+
+**Desk keys:** If Mahomes gets clean looks, MNF becomes a track meet. If Surtain and the 87 DEF front force checkdowns, Puddin’s Broncos can win ugly — exactly the path the Morning Show respects.
+
+---
+
+## ★ Thursday Night Football — Rams vs 49ers
+
+Yes — **Jordan Stowe’s Rams** again. Week 1 doesn’t ease the throne into the season. It puts Hollywood on a short week against **Swipe’s 49ers (85 OVR · 90 OFF)** — the late-draft steal with a premium attack and the coaching storyline already buzzing from the Bosa trade desk.
+
+NFC West heat. Primetime lights. Immediate tape for two win-now rooms.
+
+### Stars & X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Rams** | Jordan Stowe | **Matthew Stafford** | **Puka Nacua** — again the cover-2 breaker | **Jared Verse** — edge pressure that ruins play-action timing |
+| **49ers** | Swipe | **Brock Purdy** | **George Kittle** — the mismatch that beats zone and sells play-action | **Fred Warner** — the green-dot problem that erases shallow crossers |
+
+**Desk keys:** San Francisco’s 90 offense can hang with anyone in a shootout. The question is whether Stowe’s 88 defense — and Hollywood’s star skill — make TNF a statement rematch of the opener or a trap game for the league’s best roster.
+
+---
+
+## ★★ Sunday Night Football — Cowboys vs Giants
+
+**Jsmood’s Cowboys (83 OVR · 87 OFF)** versus **Biz’s Giants (79 OVR)**.
+
+User-wise, this is pressure versus proof. Dallas still brings offensive firepower and star skill. New York took a mid/low overall early in the draft — Biz has to outcoach the rating from Week 1 or the “bar was too high” narrative starts immediately.
+
+### Stars & X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Cowboys** | Jsmood | **Dak Prescott** | **CeeDee Lamb** — the gravity WR who opens the entire tree | **Micah Parsons** — chase-down chaos that ends drives |
+| **Giants** | Biz | **Young QB room** | **Malik Nabers** — the explosive answer that keeps 79 OVR dangerous | **Dexter Lawrence** — collapse the pocket and force Dak off his spot |
+
+**Desk keys:** If Lamb eats, SNF becomes another Dallas showcase. If Nabers and the interior front steal a possession game, Biz gets the first “don’t sleep on the rating” headline of Season 1.
+
+---
+
+## Primetime Week 1 cheat sheet
+
+| Window | Matchup | Coaches | Why it’s on the board |
+| --- | --- | --- | --- |
+| Season Opener | Seahawks–Rams | Petey vs Jordan Stowe | Super Bowl rematch branding + chalk vs best roster |
+| MNF | Chiefs–Broncos | Trent vs Puddin | 90 OFF fireworks vs 87 DEF identity |
+| TNF | Rams–49ers | Stowe vs Swipe | Hollywood’s second stage vs NFC West heat |
+| SNF | Cowboys–Giants | Jsmood vs Biz | Star offense vs early-pick prove-it night |
+
+## Desk verdict
+
+The first champion article told you the map: **Stowe has the mountain**, **Petey has the chalk**, **Ren has the dark-horse toys**, and a handful of game-changers are waiting to ruin someone’s Sunday.
+
+Week 1 Primetime doesn’t settle the Lombardi. It does something meaner — it **puts the theories on tape**.
+
+Submit the scores. Stamp the Sim Scores. Let the desk argue.
 
 Compete. Conquer. Be legendary.`,
     isFeatured: true,
     sortOrder: -30,
+  },
+  {
+    slug: "season-1-week-1-preview",
+    category: StoryCategory.GAME_OF_WEEK,
+    title: "Week 1 is loading: first impressions will travel fast",
+    eyebrow: "Games of the week",
+    summary:
+      "Opening week sets the tone — early wins build belief, early slides start the hot-seat whispers.",
+    body: `Week 1 does not decide a season, but it writes the first headline.
+
+## What to watch
+
+- Premium offenses: **Lions**, **Bills**, **Rams**, **49ers**, **Chiefs**
+- Defense-first traps: **Broncos**, **Texans**, **Steelers**
+- Rebuild openers: **Dolphins**, **Titans**, **Jets**, **Browns**
+
+Submit your scores promptly. The story only feels alive when the results are official.`,
+    isFeatured: false,
+    sortOrder: 10,
   },
   {
     slug: "season-1-players-of-the-week-placeholder",
