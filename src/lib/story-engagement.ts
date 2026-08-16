@@ -51,6 +51,7 @@ export type StoryCommentView = {
   body: string;
   createdAt: string;
   authorName: string;
+  authorUserId: string;
   isMine: boolean;
 };
 
@@ -351,6 +352,7 @@ export async function getStoryEngagement(
       body: row.body,
       createdAt: row.createdAt.toISOString(),
       authorName: row.user.name?.trim() || "League coach",
+      authorUserId: row.userId,
       isMine: row.userId === userId,
     })),
   };

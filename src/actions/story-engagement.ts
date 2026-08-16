@@ -182,16 +182,27 @@ export async function addStoryComment(formData: FormData) {
   });
   if (recent) return { error: "Give it a second before posting again." };
 
-  await prisma.storyComment.create({
+  const row = await prisma.storyComment.create({
     data: {
       storyId: parsed.data.storyId,
       userId: auth.user.id,
       body: parsed.data.body,
     },
+    include: { user: { select: { name: true } } },
   });
 
   revalidateStoryEngagement(story.slug);
-  return { success: true };
+  return {
+    success: true,
+    comment: {
+      id: row.id,
+      body: row.body,
+      createdAt: row.createdAt.toISOString(),
+      authorName: row.user.name?.trim() || "League coach",
+      authorUserId: row.userId,
+      isMine: true,
+    },
+  };
 }
 
 export async function deleteStoryComment(commentId: string) {

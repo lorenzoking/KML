@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -24,6 +24,11 @@ export function StoryComments({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [body, setBody] = useState("");
+  const [thread, setThread] = useState(comments);
+
+  useEffect(() => {
+    setThread(comments);
+  }, [comments]);
 
   function submit(formData: FormData) {
     setError(null);
@@ -31,6 +36,10 @@ export function StoryComments({
       const result = await addStoryComment(formData);
       if (result && "error" in result && result.error) {
         setError(result.error);
+      } else if (result && "comment" in result && result.comment) {
+        setBody("");
+        setThread((current) => [...current, result.comment]);
+        router.refresh();
       } else {
         setBody("");
         router.refresh();
@@ -40,9 +49,12 @@ export function StoryComments({
 
   function remove(commentId: string) {
     setError(null);
+    const previous = thread;
+    setThread((current) => current.filter((comment) => comment.id !== commentId));
     startTransition(async () => {
       const result = await deleteStoryComment(commentId);
       if (result && "error" in result && result.error) {
+        setThread(previous);
         setError(result.error);
       } else {
         router.refresh();
@@ -93,19 +105,24 @@ export function StoryComments({
 
       {error ? <p className="text-sm text-rose-300">{error}</p> : null}
 
-      {comments.length === 0 ? (
+      {thread.length === 0 ? (
         <p className="text-sm text-[var(--muted-foreground)]">
           No comments yet. Open the thread.
         </p>
       ) : (
         <ul className="space-y-3">
-          {comments.map((comment) => (
+          {thread.map((comment) => (
             <li
               key={comment.id}
               className="rounded-xl border border-[var(--border)] bg-[var(--card)]/60 px-3 py-3"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="text-sm font-semibold">{comment.authorName}</p>
+                <Link
+                  href={`/coach/profiles/${comment.authorUserId}`}
+                  className="text-sm font-semibold text-[var(--primary)] underline underline-offset-2 hover:text-[var(--foreground)]"
+                >
+                  {comment.authorName}
+                </Link>
                 <p className="text-xs text-[var(--muted-foreground)]">
                   {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                 </p>
