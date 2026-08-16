@@ -299,9 +299,9 @@ The Morning Show already argued who lifts the first Lombardi. Roster overalls te
 
 ## Season Opener — Seahawks vs Patriots
 
-This is the kickoff. Season opener. Super Bowl rematch.
+This is the kickoff. Season opener. Super Bowl rematch — the same brands that just played for the real Lombardi, now opening KML.
 
-On one sideline: **Petey** and the **Seahawks (84 OVR)** — the Morning Show’s chalk pick to hoist the first Lombardi. On the other: **Ren** and the **Patriots (86 OVR · 87 OFF · 85 DEF)** — one of KML’s known best users sitting on a top-six roster.
+On one sideline: **Petey** and the **Seahawks (84 OVR)** — the Morning Show’s chalk pick to hoist the first Lombardi, with **Sam Darnold** as the defending Super Bowl quarterback. On the other: **Ren** and the **Patriots (86 OVR · 87 OFF · 85 DEF)** — one of KML’s known best users sitting on a top-six roster built around **Drake Maye** and **A.J. Brown**.
 
 That is not a normal Week 1. That is player chalk versus dark-horse toys in a rematch frame, with the entire league watching the first snap of Season 1.
 
@@ -319,9 +319,9 @@ Put those two in the same building for Game 1 and you get the cleanest early mea
 | Side | Coach | QB to watch | Primary X-factor | Secondary juice |
 | --- | --- | --- | --- | --- |
 | **Seahawks** | Petey | **Sam Darnold** | **Jaxon Smith-Njigba** — the volume WR who forces coverages to break | **Devon Witherspoon** — takeaway juice that flips field position |
-| **Patriots** | Ren | **Drake Maye** | **Stefon Diggs** — the timing route artist who eats zone | **Christian Gonzalez** — erase a WR1 and force Petey left |
+| **Patriots** | Ren | **Drake Maye** | **A.J. Brown** — the contested-catch WR1 New England traded for this offseason | **Christian Gonzalez** — erase JSN and force Petey left |
 
-Can Petey keep Maye off schedule and win with complementary football? Or does Diggs and Maye turn the Super Bowl rematch into New England’s first statement of the Madden 27 cycle?
+Can Petey keep Maye off schedule and win with complementary football? Or does Maye and A.J. Brown turn the Super Bowl rematch into New England’s first statement of the Madden 27 cycle?
 
 ## Monday Night Football — Chiefs vs Broncos
 
@@ -338,16 +338,16 @@ If Mahomes gets clean looks, MNF becomes a track meet. If Surtain and the 87 DEF
 
 ## Thursday Night Football — Rams vs 49ers
 
-**Jordan Stowe’s Rams (91 OVR)** — the best roster in Madden 27 — against **Swipe’s 49ers (85 OVR · 90 OFF)**, the late-draft steal with a premium attack and the coaching storyline already buzzing from the Bosa trade desk.
+**Jordan Stowe’s Rams (91 OVR)** — the best roster in Madden 27, now with **Myles Garrett** on the edge after the June trade — against **Swipe’s 49ers (85 OVR · 90 OFF)**, the late-draft steal with a premium attack and the coaching storyline already buzzing from the Bosa trade desk.
 
 NFC West heat. Primetime lights. Immediate tape for the throne and the challenger next door.
 
 | Side | Coach | QB to watch | Primary X-factor | Secondary juice |
 | --- | --- | --- | --- | --- |
-| **Rams** | Jordan Stowe | **Matthew Stafford** | **Puka Nacua** — the cover-2 breaker that turns 93 OVR offense into points | **Jared Verse** — edge pressure that ruins play-action timing |
+| **Rams** | Jordan Stowe | **Matthew Stafford** | **Puka Nacua** — the cover-2 breaker that turns 93 OVR offense into points | **Myles Garrett** — the league’s premier edge, now in Hollywood |
 | **49ers** | Swipe | **Brock Purdy** | **George Kittle** — the mismatch that beats zone and sells play-action | **Fred Warner** — the green-dot problem that erases shallow crossers |
 
-San Francisco’s 90 offense can hang with anyone in a shootout. The question is whether Stowe’s 88 defense — and Hollywood’s star skill — make TNF a statement for the league’s best roster or a trap game against NFC West juice.
+San Francisco’s 90 offense can hang with anyone in a shootout. The question is whether Stowe’s 88 defense — now headlined by Garrett — and Hollywood’s star skill make TNF a statement for the league’s best roster or a trap game against NFC West juice.
 
 ## Sunday Night Football — Cowboys vs Giants
 
@@ -357,10 +357,10 @@ User-wise, this is pressure versus proof. Dallas still brings offensive firepowe
 
 | Side | Coach | QB to watch | Primary X-factor | Secondary juice |
 | --- | --- | --- | --- | --- |
-| **Cowboys** | Jsmood | **Dak Prescott** | **CeeDee Lamb** — the gravity WR who opens the entire tree | **Micah Parsons** — chase-down chaos that ends drives |
-| **Giants** | Biz | **Young QB room** | **Malik Nabers** — the explosive answer that keeps 79 OVR dangerous | **Dexter Lawrence** — collapse the pocket and force Dak off his spot |
+| **Cowboys** | Jsmood | **Dak Prescott** | **CeeDee Lamb** — the gravity WR who opens the entire tree | **Rashan Gary** — the new-look pass rush that has to replace Parsons production |
+| **Giants** | Biz | **Jaxson Dart** | **Malik Nabers** — the explosive answer that keeps 79 OVR dangerous | **Abdul Carter** — Year 2 edge chaos next to Brian Burns |
 
-If Lamb eats, SNF becomes another Dallas showcase. If Nabers and the interior front steal a possession game, Biz gets the first “don’t sleep on the rating” headline of Season 1.
+If Lamb eats, SNF becomes another Dallas showcase. If Dart, Nabers, and Carter steal a possession game, Biz gets the first “don’t sleep on the rating” headline of Season 1.
 
 ## Primetime Week 1 cheat sheet
 
