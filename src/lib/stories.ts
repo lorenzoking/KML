@@ -171,7 +171,7 @@ If you’re in San Francisco, watch the edge room. **Bosa might help you win now
 And if you’re in Carolina: welcome to the Nick era. The ticker already said it — **stay locked in.**
 
 Compete. Conquer. Be legendary.`,
-    isFeatured: true,
+    isFeatured: false,
     sortOrder: -20,
   },
   {
@@ -285,21 +285,64 @@ Welcome to the Kings Madden League.`,
   {
     slug: "season-1-week-1-preview",
     category: StoryCategory.GAME_OF_WEEK,
-    title: "Week 1 is loading: first impressions will travel fast",
-    eyebrow: "Games of the week",
+    title: "KML Primetime Week 1: big games, big stage",
+    eyebrow: "Games of the week · Week 1",
     summary:
-      "Opening week sets the tone — early wins build belief, early slides start the hot-seat whispers.",
-    body: `Week 1 does not decide a season, but it writes the first headline.
+      "Season opener Super Bowl rematch energy, MNF in the Rockies, TNF in the Bay, and SNF in the NFC East — Week 1 is already primetime.",
+    body: `![KML Primetime Week 1 — Big games. Big stage. This is KML.](/stories/wk1-gotw.png)
 
-## What to watch
+**KML PRIMETIME. WEEK 1.**
 
-- Premium offenses: **Lions**, **Bills**, **Rams**, **49ers**, **Chiefs**
-- Defense-first traps: **Broncos**, **Texans**, **Steelers**
-- Rebuild openers: **Dolphins**, **Titans**, **Jets**, **Browns**
+The league didn’t ease into Season 1. The desk threw four lights on the board and stamped the footer that matters: **Big games. Big stage. This is KML.**
 
-Submit your scores promptly. The story only feels alive when the results are official.`,
-    isFeatured: false,
-    sortOrder: 10,
+## Season opener — Seahawks vs Rams
+
+**Seattle Seahawks vs Los Angeles Rams** opens the year with a label you don’t invent lightly: **Super Bowl rematch.**
+
+Whether you treat that as legacy heat or Week 1 mythology, the stage is the same. Petey’s Seahawks — the Morning Show’s chalk club — against Jordan Stowe’s Rams, the highest-rated toy box in Madden 27. Opening night doesn’t hand out Lombardis. It does hand out **belief**.
+
+If Seattle answers the Rams early, the chalk gets louder. If Los Angeles flexes that 91 overall on Day 1, the rest of the league starts measuring the mountain.
+
+## Monday Night Football — Chiefs vs Broncos
+
+**Kansas City Chiefs vs Denver Broncos.** MNF.
+
+AFC West pressure with the lights on. Denver’s defense-first identity against Kansas City’s weekly expectation to dictate terms. Monday night is where early-season narratives either get oxygen — or get buried before the Discord cooldown ends.
+
+## Thursday Night Football — Rams vs 49ers
+
+**Los Angeles Rams vs San Francisco 49ers.** TNF.
+
+Division heat. West Coast volume. And a 49ers desk already cooking after the Morning Show’s Swipa–Bosa segment. Thursday night doesn’t care about your trade rumors — but it will show whether San Francisco’s edge room and Los Angeles’ win-now roster are ready for real snaps.
+
+Two Rams spotlights in the same primetime package? That’s the point of Week 1: **LA is in the middle of everything.**
+
+## Sunday Night Football — Cowboys vs Giants
+
+**Dallas Cowboys vs New York Giants.** SNF.
+
+NFC East football under the sunroof. Rivalry week energy without needing a logo stamp to explain it. Sunday night closes the primetime slate the way it should — messy, loud, and personal.
+
+## Primetime slate
+
+| Window | Matchup | Why it’s on the board |
+| --- | --- | --- |
+| **Season opener** | Seahawks vs Rams | Super Bowl rematch energy to tip Season 1 |
+| **MNF** | Chiefs vs Broncos | AFC West Monday night pressure |
+| **TNF** | Rams vs 49ers | Division collision with Bay Area storylines attached |
+| **SNF** | Cowboys vs Giants | NFC East rivalry to close the weekend |
+
+## Desk notes
+
+- Submit results after you play — primetime only becomes history when the scores are official.
+- Opponent Sim Scores still ride with every submission. Bad film travels as fast as highlight clips.
+- Week 1 won’t crown a champion. It will decide who starts Season 1 with momentum — and who starts answering questions.
+
+Big games. Big stage. **This is KML.**
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: true,
+    sortOrder: -30,
   },
   {
     slug: "season-1-players-of-the-week-placeholder",

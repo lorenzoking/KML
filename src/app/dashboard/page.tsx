@@ -127,11 +127,17 @@ export default async function DashboardPage({
 
   const coachingStories = byCategory("COACHING");
   const draftStories = byCategory("DRAFT");
+  const gamesOfWeekStories = byCategory("GAME_OF_WEEK");
   const otherStories = secondaryStories.filter(
     (s) =>
       !["GAME_OF_WEEK", "PLAYER_OF_WEEK", "COACHING", "DRAFT"].includes(s.category)
   );
-  const moreStories = [...coachingStories, ...draftStories, ...otherStories];
+  const moreStories = [
+    ...gamesOfWeekStories,
+    ...coachingStories,
+    ...draftStories,
+    ...otherStories,
+  ];
 
   const firstName = (user.name ?? "Coach").split(" ")[0];
 
