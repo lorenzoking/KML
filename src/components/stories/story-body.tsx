@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import {
   linkifyCoachMentions,
+  linkTableRow,
   type CoachStoryLink,
 } from "@/lib/coach/story-links";
 import { StoryLightboxImage } from "@/components/stories/story-lightbox-image";
@@ -295,12 +296,14 @@ export function StoryBody({
                 </tr>
               </thead>
               <tbody>
-                {block.rows.map((row, rowIdx) => (
+                {block.rows.map((row, rowIdx) => {
+                  const linkedRow = linkTableRow(block.headers, row, coachLinks);
+                  return (
                   <tr
                     key={rowIdx}
                     className="border-t border-[var(--border)] odd:bg-[color-mix(in_srgb,var(--muted)_35%,transparent)]"
                   >
-                    {row.map((cell, cellIdx) => (
+                    {linkedRow.map((cell, cellIdx) => (
                       <td
                         key={`${rowIdx}-${cellIdx}`}
                         className={cn(
@@ -314,7 +317,8 @@ export function StoryBody({
                       </td>
                     ))}
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

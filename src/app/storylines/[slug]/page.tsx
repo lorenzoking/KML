@@ -16,9 +16,12 @@ import {
   extractStoryCoverImage,
 } from "@/components/stories/story-body";
 import { StoryLightboxImage } from "@/components/stories/story-lightbox-image";
+import { StoryEngagement } from "@/components/stories/story-engagement";
+import { getSessionUser } from "@/lib/auth";
 import { getCoachStoryLinks } from "@/lib/coach/story-links";
 import { getActiveSeason } from "@/lib/league";
 import { buildShareMetadata } from "@/lib/site";
+import { safeGetStoryEngagement } from "@/lib/story-engagement";
 import {
   ensureDefaultLeagueStories,
   getStoryBySlug,
@@ -55,12 +58,14 @@ export default async function StorylineDetailPage({
   const { season } = await getActiveSeason();
   await ensureDefaultLeagueStories(season.id);
 
-  const [story, coachLinks] = await Promise.all([
+  const [story, coachLinks, user] = await Promise.all([
     getStoryBySlug(slug),
     getCoachStoryLinks(season.id),
+    getSessionUser(),
   ]);
   if (!story) notFound();
   const cover = extractStoryCoverImage(story.body);
+  const engagement = await safeGetStoryEngagement(story.id, user?.id);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -112,6 +117,10 @@ export default async function StorylineDetailPage({
           />
         </CardContent>
       </Card>
+
+      {engagement ? (
+        <StoryEngagement engagement={engagement} signedIn={Boolean(user?.isActive)} />
+      ) : null}
     </div>
   );
 }

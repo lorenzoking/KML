@@ -11,10 +11,12 @@ import {
   updateLeagueStorySchema,
 } from "@/lib/validations";
 
-function revalidateStoryPaths() {
+function revalidateStoryPaths(slug?: string) {
   revalidatePath("/dashboard");
   revalidatePath("/admin/stories");
   revalidatePath("/admin");
+  revalidatePath("/storylines");
+  if (slug) revalidatePath(`/storylines/${slug}`);
 }
 
 export async function createLeagueStory(formData: FormData) {
@@ -76,7 +78,7 @@ export async function createLeagueStory(formData: FormData) {
     metadata: { slug: row.slug, category: row.category },
   });
 
-  revalidateStoryPaths();
+  revalidateStoryPaths(row.slug);
   return { success: true };
 }
 
@@ -128,6 +130,6 @@ export async function updateLeagueStory(formData: FormData) {
     metadata: parsed.data,
   });
 
-  revalidateStoryPaths();
+  revalidateStoryPaths(row.slug);
   return { success: true };
 }

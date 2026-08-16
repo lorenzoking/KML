@@ -15,14 +15,39 @@ import { createLeagueStory, updateLeagueStory } from "@/actions/stories";
 import { prisma } from "@/lib/prisma";
 import { ensureDefaultLeagueStories, STORY_CATEGORY_LABELS } from "@/lib/stories";
 import { getActiveSeason } from "@/lib/league";
+import { StoryPollAdminForm } from "@/components/stories/story-poll-admin-form";
+
+async function getAdminStories() {
+  try {
+    return await prisma.leagueStory.findMany({
+      orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }, { publishedAt: "desc" }],
+      include: {
+        polls: {
+          select: {
+            id: true,
+            title: true,
+            isOpen: true,
+            _count: { select: { questions: true } },
+          },
+          take: 1,
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Admin story polls unavailable:", error);
+    const stories = await prisma.leagueStory.findMany({
+      orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }, { publishedAt: "desc" }],
+    });
+    return stories.map((story) => ({ ...story, polls: [] }));
+  }
+}
 
 export default async function AdminStoriesPage() {
   const { season } = await getActiveSeason();
   await ensureDefaultLeagueStories(season.id);
 
-  const stories = await prisma.leagueStory.findMany({
-    orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }, { publishedAt: "desc" }],
-  });
+  const stories = await getAdminStories();
 
   return (
     <div className="space-y-6">
@@ -30,7 +55,8 @@ export default async function AdminStoriesPage() {
         <h2 className="text-xl font-semibold uppercase tracking-wide">League stories</h2>
         <p className="text-sm text-[var(--muted-foreground)]">
           Write the front page, games of the week, players of the week, and coaching
-          storylines that make the dashboard feel alive.
+          storylines that make the dashboard feel alive. Primetime slates can get a
+          winner poll; every other article gets reactions and comments automatically.
         </p>
       </div>
 
@@ -195,6 +221,21 @@ export default async function AdminStoriesPage() {
                 </div>
                 <SubmitButton size="sm">Save story</SubmitButton>
               </form>
+              <div className="mt-4">
+                <StoryPollAdminForm
+                  storyId={story.id}
+                  poll={
+                    story.polls[0]
+                      ? {
+                          id: story.polls[0].id,
+                          title: story.polls[0].title,
+                          isOpen: story.polls[0].isOpen,
+                          questionCount: story.polls[0]._count.questions,
+                        }
+                      : null
+                  }
+                />
+              </div>
             </CardContent>
           </Card>
         ))}

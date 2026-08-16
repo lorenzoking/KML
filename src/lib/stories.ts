@@ -1,6 +1,7 @@
 import { StoryCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { buildDraftGradesArticleBody } from "@/lib/draft-grades";
+import { safeEnsureDefaultStoryPolls } from "@/lib/story-engagement";
 
 export const STORY_CATEGORY_LABELS: Record<StoryCategory, string> = {
   FEATURE: "Front page",
@@ -475,6 +476,8 @@ export async function ensureDefaultLeagueStories(seasonId?: string) {
       },
     });
   }
+
+  await safeEnsureDefaultStoryPolls();
 }
 
 export async function getPublishedStories(options?: {
