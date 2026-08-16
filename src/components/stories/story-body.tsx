@@ -72,11 +72,26 @@ function parseStoryBody(body: string): Block[] {
       continue;
     }
 
+    if (trimmed === "---" || trimmed === "***") {
+      flushParagraph();
+      flushList();
+      flushTable();
+      continue;
+    }
+
     if (trimmed.startsWith("## ")) {
       flushParagraph();
       flushList();
       flushTable();
       blocks.push({ type: "heading", text: trimmed.slice(3).trim() });
+      continue;
+    }
+
+    if (trimmed.startsWith("### ")) {
+      flushParagraph();
+      flushList();
+      flushTable();
+      blocks.push({ type: "heading", text: trimmed.slice(4).trim() });
       continue;
     }
 
