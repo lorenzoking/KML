@@ -51,6 +51,7 @@ function applyPollVote(
       ...question,
       myOptionId: optionId,
       totalVotes,
+      finalScore: question.finalScore,
       options: options.map((option, index) => ({
         ...option,
         lean: totalVotes > 0 ? leans[index] ?? null : null,
@@ -154,6 +155,11 @@ export function StoryPollCard({
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--primary)]">
                   {question.prompt}
                 </p>
+                {question.finalScore ? (
+                  <p className="mt-1 text-sm font-medium text-[var(--foreground)]">
+                    Final: {question.finalScore}
+                  </p>
+                ) : null}
                 {showResults && question.totalVotes > 0 ? (
                   <p className="mt-1 text-xs text-[var(--muted-foreground)]">
                     {question.totalVotes}{" "}
@@ -179,7 +185,15 @@ export function StoryPollCard({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <span className="text-sm font-semibold">{option.label}</span>
-                        {showResults && option.lean && question.totalVotes > 0 ? (
+                        {option.result === "won" ? (
+                          <Badge variant="elite" className="shrink-0">
+                            Winner
+                          </Badge>
+                        ) : option.result === "lost" ? (
+                          <Badge variant="outline" className="shrink-0">
+                            Lost
+                          </Badge>
+                        ) : showResults && option.lean && question.totalVotes > 0 ? (
                           <Badge
                             variant={option.lean === "favorite" ? "elite" : "outline"}
                             className="shrink-0"
@@ -220,7 +234,8 @@ export function StoryPollCard({
 
         {!board.isOpen ? (
           <p className="text-xs text-[var(--muted-foreground)]">
-            This lock-in is closed. The board stays up as the league tape.
+            This lock-in is closed. Winners update from approved results and the
+            board stays up as the league tape.
           </p>
         ) : signedIn ? (
           <p className="text-xs text-[var(--muted-foreground)]">

@@ -28,12 +28,14 @@ export type StoryPollView = {
     prompt: string;
     myOptionId: string | null;
     totalVotes: number;
+    finalScore: string | null;
     options: Array<{
       id: string;
       label: string;
       franchiseAbbr: string | null;
       votes: number;
       lean: "favorite" | "underdog" | "split" | null;
+      result: "won" | "lost" | null;
     }>;
   }>;
 };
@@ -233,13 +235,73 @@ function leanForOptions(votes: number[]) {
   return votes.map((count) => (count === max ? ("favorite" as const) : ("underdog" as const)));
 }
 
+type MatchupResult = {
+  homeTeamId: string;
+  awayTeamId: string;
+  homeScore: number;
+  awayScore: number;
+  winnerTeamId: string | null;
+  homeTeam: { abbreviation: string };
+  awayTeam: { abbreviation: string };
+};
+
+function findQuestionMatchup(
+  results: MatchupResult[],
+  franchiseIds: Array<string | null | undefined>
+) {
+  const ids = franchiseIds.filter((id): id is string => Boolean(id));
+  if (ids.length < 2) return null;
+  return (
+    results.find((row) => {
+      const teams = new Set([row.homeTeamId, row.awayTeamId]);
+      return ids.every((id) => teams.has(id));
+    }) ?? null
+  );
+}
+
+function optionResult(
+  matchup: MatchupResult | null,
+  franchiseId: string | null | undefined
+): "won" | "lost" | null {
+  if (!matchup || !franchiseId || !matchup.winnerTeamId) return null;
+  if (matchup.homeTeamId !== franchiseId && matchup.awayTeamId !== franchiseId) {
+    return null;
+  }
+  return matchup.winnerTeamId === franchiseId ? "won" : "lost";
+}
+
+function formatQuestionFinalScore(
+  matchup: MatchupResult | null,
+  options: Array<{ franchiseId: string | null; franchiseAbbr: string | null }>
+) {
+  if (!matchup) return null;
+  const parts = options.map((option) => {
+    if (!option.franchiseId) return null;
+    const score =
+      option.franchiseId === matchup.homeTeamId
+        ? matchup.homeScore
+        : option.franchiseId === matchup.awayTeamId
+          ? matchup.awayScore
+          : null;
+    const abbr =
+      option.franchiseAbbr ??
+      (option.franchiseId === matchup.homeTeamId
+        ? matchup.homeTeam.abbreviation
+        : matchup.awayTeam.abbreviation);
+    if (score == null) return null;
+    return { abbr, score };
+  });
+  if (parts.length !== 2 || parts.some((part) => !part)) return null;
+  return `${parts[0]!.abbr} ${parts[0]!.score}–${parts[1]!.score} ${parts[1]!.abbr}`;
+}
+
 export async function getStoryEngagement(
   storyId: string,
   userId?: string | null
 ): Promise<StoryEngagementView | null> {
   const story = await prisma.leagueStory.findUnique({
     where: { id: storyId },
-    select: { id: true, slug: true },
+    select: { id: true, slug: true, seasonId: true, week: true },
   });
   if (!story) return null;
 
@@ -257,7 +319,17 @@ export async function getStoryEngagement(
   });
 
   if (pollRow) {
-    const [voteCounts, myVotes] = await Promise.all([
+    const franchiseIds = [
+      ...new Set(
+        pollRow.questions.flatMap((question) =>
+          question.options
+            .map((option) => option.franchiseId)
+            .filter((id): id is string => Boolean(id))
+        )
+      ),
+    ];
+
+    const [voteCounts, myVotes, matchupResults] = await Promise.all([
       prisma.storyPollVote.groupBy({
         by: ["questionId", "optionId"],
         where: { question: { pollId: pollRow.id } },
@@ -267,6 +339,27 @@ export async function getStoryEngagement(
         ? prisma.storyPollVote.findMany({
             where: { userId, question: { pollId: pollRow.id } },
             select: { questionId: true, optionId: true },
+          })
+        : Promise.resolve([]),
+      story.seasonId && franchiseIds.length >= 2
+        ? prisma.gameResult.findMany({
+            where: {
+              seasonId: story.seasonId,
+              isVoided: false,
+              ...(story.week ? { week: story.week } : {}),
+              homeTeamId: { in: franchiseIds },
+              awayTeamId: { in: franchiseIds },
+            },
+            orderBy: [{ week: "asc" }, { createdAt: "asc" }],
+            select: {
+              homeTeamId: true,
+              awayTeamId: true,
+              homeScore: true,
+              awayScore: true,
+              winnerTeamId: true,
+              homeTeam: { select: { abbreviation: true } },
+              awayTeam: { select: { abbreviation: true } },
+            },
           })
         : Promise.resolve([]),
     ]);
@@ -295,17 +388,23 @@ export async function getStoryEngagement(
           );
           const leans = leanForOptions(optionVotes);
           const totalVotes = optionVotes.reduce((sum, count) => sum + count, 0);
+          const matchup = findQuestionMatchup(
+            matchupResults,
+            question.options.map((option) => option.franchiseId)
+          );
           return {
             id: question.id,
             prompt: question.prompt,
             myOptionId: myMap.get(question.id) ?? null,
             totalVotes,
+            finalScore: formatQuestionFinalScore(matchup, question.options),
             options: question.options.map((option, index) => ({
               id: option.id,
               label: option.label,
               franchiseAbbr: option.franchiseAbbr,
               votes: optionVotes[index] ?? 0,
               lean: totalVotes > 0 ? leans[index] : null,
+              result: optionResult(matchup, option.franchiseId),
             })),
           };
         }),
