@@ -36,6 +36,8 @@ import {
 import { GAME_TYPE_LABELS } from "@/lib/constants";
 import { format } from "date-fns";
 import { ScrollToHash } from "@/components/games/scroll-to-hash";
+import { formatBothSimScores } from "@/lib/sim-score";
+import type { SubmissionStatus } from "@prisma/client";
 
 export default async function GamesPage({
   searchParams,
@@ -96,7 +98,23 @@ export default async function GamesPage({
           }),
           user
             ? prisma.gameSubmission.findMany({
-                where: { submitterId: user.id },
+                where: {
+                  OR: [
+                    { submitterId: user.id },
+                    {
+                      status: { in: ["PENDING", "APPROVED"] },
+                      opponentTeam: {
+                        memberships: {
+                          some: {
+                            userId: user.id,
+                            seasonId: season.id,
+                            isActive: true,
+                          },
+                        },
+                      },
+                    },
+                  ],
+                },
                 include: { userTeam: true, opponentTeam: true, season: true },
                 orderBy: { createdAt: "desc" },
                 take: 12,
@@ -129,12 +147,17 @@ export default async function GamesPage({
   const [membership, [franchises, weekGames, myHistory], [rawStandings, memberships]] =
     await Promise.all([membershipPromise, weekDataPromise, standingsDataPromise]);
 
-  // Public viewers only see approved/voided history; coaches see their pending too.
+  // Public viewers only see approved/voided history; coaches see games they're in.
+  const myTeamId = membership?.franchiseId;
   const visibleGames = weekGames.filter((game) => {
     if (game.status === "APPROVED" || game.status === "VOIDED") return true;
     if (!user) return false;
     if (commissionerUi) return true;
-    return game.submitterId === user.id;
+    if (game.submitterId === user.id) return true;
+    return Boolean(
+      myTeamId &&
+        (game.userTeamId === myTeamId || game.opponentTeamId === myTeamId)
+    );
   });
 
   const approvedWeekGames = visibleGames.filter((g) => g.status === "APPROVED");
@@ -329,22 +352,23 @@ export default async function GamesPage({
                   ) : (
                     <ul className="space-y-3">
                       {myHistory.map((s) => (
-                        <li
-                          key={s.id}
-                          className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-medium">
-                              S{s.season.number} W{s.week}:{" "}
-                              {s.userTeam.abbreviation} {s.userScore}–
-                              {s.opponentScore} {s.opponentTeam.abbreviation}
-                            </span>
-                            <StatusBadge status={s.status} />
-                          </div>
-                          <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                            Opponent Sim Score {s.opponentSimScore}/5 (
-                            {s.opponentTeam.abbreviation})
-                          </p>
+                        <li key={s.id}>
+                          <Link
+                            href={`/games/${s.id}`}
+                            className="block rounded-lg border border-[var(--border)] px-3 py-2 text-sm transition-colors hover:bg-[var(--muted)]"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-medium">
+                                S{s.season.number} W{s.week}:{" "}
+                                {s.userTeam.abbreviation} {s.userScore}–
+                                {s.opponentScore} {s.opponentTeam.abbreviation}
+                              </span>
+                              <StatusBadge status={s.status} />
+                            </div>
+                            <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+                              {formatBothSimScores(s)}
+                            </p>
+                          </Link>
                         </li>
                       ))}
                     </ul>
@@ -379,27 +403,11 @@ export default async function GamesPage({
                     </p>
                     <ul className="space-y-3">
                       {approvedWeekGames.map((game) => (
-                        <li
-                          key={game.id}
-                          className="rounded-lg border border-[var(--border)] px-4 py-3"
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <p className="text-lg font-semibold tracking-wide">
-                              {game.userTeam.abbreviation} {game.userScore}–{" "}
-                              {game.opponentScore} {game.opponentTeam.abbreviation}
-                            </p>
-                            <StatusBadge status={game.status} />
-                          </div>
-                          <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                            {game.userTeam.name} vs {game.opponentTeam.name} ·{" "}
-                            {GAME_TYPE_LABELS[game.gameType]}
-                            {game.gameType === "SIMULATED" ? " · no XP" : ""} ·{" "}
-                            {game.opponentTeam.abbreviation} Sim {game.opponentSimScore}
-                            /5 · {game.submitter.name?.trim() || "Unnamed coach"}
-                            {game.reviewedAt
-                              ? ` · ${format(game.reviewedAt, "MMM d")}`
-                              : ""}
-                          </p>
+                        <li key={game.id}>
+                          <WeekGameLink
+                            game={game}
+                            myTeamId={myTeamId}
+                          />
                         </li>
                       ))}
                     </ul>
@@ -413,22 +421,12 @@ export default async function GamesPage({
                     </p>
                     <ul className="space-y-3">
                       {pendingWeekGames.map((game) => (
-                        <li
-                          key={game.id}
-                          className="rounded-lg border border-dashed border-[var(--border)] px-4 py-3"
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <p className="font-medium">
-                              {game.userTeam.abbreviation} {game.userScore}–
-                              {game.opponentScore} {game.opponentTeam.abbreviation}
-                            </p>
-                            <StatusBadge status={game.status} />
-                          </div>
-                          <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                            Waiting on commissioners · {game.opponentTeam.abbreviation}{" "}
-                            Sim {game.opponentSimScore}/5 ·{" "}
-                            {game.submitter.name?.trim() || "Unnamed coach"}
-                          </p>
+                        <li key={game.id}>
+                          <WeekGameLink
+                            game={game}
+                            myTeamId={myTeamId}
+                            pending
+                          />
                         </li>
                       ))}
                     </ul>
@@ -520,5 +518,65 @@ export default async function GamesPage({
         </>
       )}
     </div>
+  );
+}
+
+function WeekGameLink({
+  game,
+  myTeamId,
+  pending = false,
+}: {
+  game: {
+    id: string;
+    status: SubmissionStatus;
+    userScore: number;
+    opponentScore: number;
+    opponentSimScore: number;
+    userTeamSimScore: number | null;
+    gameType: keyof typeof GAME_TYPE_LABELS;
+    reviewedAt: Date | null;
+    userTeam: { id: string; name: string; abbreviation: string };
+    opponentTeam: { id: string; name: string; abbreviation: string };
+    submitter: { name: string | null };
+  };
+  myTeamId?: string;
+  pending?: boolean;
+}) {
+  const needsMySim =
+    Boolean(myTeamId) &&
+    game.opponentTeam.id === myTeamId &&
+    game.userTeamSimScore == null;
+
+  return (
+    <Link
+      href={`/games/${game.id}`}
+      className={`block rounded-lg border px-4 py-3 transition-colors hover:bg-[var(--muted)] ${
+        pending
+          ? "border-dashed border-[var(--border)]"
+          : "border-[var(--border)]"
+      }`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className={pending ? "font-medium" : "text-lg font-semibold tracking-wide"}>
+          {game.userTeam.abbreviation} {game.userScore}–{game.opponentScore}{" "}
+          {game.opponentTeam.abbreviation}
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          {needsMySim ? (
+            <Badge variant="outline">Submit Sim Score</Badge>
+          ) : null}
+          <StatusBadge status={game.status} />
+        </div>
+      </div>
+      <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+        {pending
+          ? "Waiting on commissioners"
+          : `${game.userTeam.name} vs ${game.opponentTeam.name}`}{" "}
+        · {GAME_TYPE_LABELS[game.gameType]}
+        {game.gameType === "SIMULATED" ? " · no XP" : ""} ·{" "}
+        {formatBothSimScores(game)} · {game.submitter.name?.trim() || "Unnamed coach"}
+        {!pending && game.reviewedAt ? ` · ${format(game.reviewedAt, "MMM d")}` : ""}
+      </p>
+    </Link>
   );
 }

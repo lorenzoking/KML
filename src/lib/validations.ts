@@ -28,6 +28,15 @@ export const gameSubmissionSchema = z
     message: "Scores recorded",
   });
 
+export const simScoreSubmissionSchema = z.object({
+  submissionId: z.string().min(1),
+  simScore: z.coerce
+    .number()
+    .int()
+    .min(1, "Opponent Sim Score must be 1–5")
+    .max(5, "Opponent Sim Score must be 1–5"),
+});
+
 export const approvalSchema = z.object({
   submissionId: z.string().min(1),
   decision: z.enum(["APPROVE", "REJECT"]),

@@ -13,6 +13,7 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { reviewSubmission } from "@/actions/approvals";
 import { prisma } from "@/lib/prisma";
 import { GAME_TYPE_LABELS } from "@/lib/constants";
+import { formatBothSimScores } from "@/lib/sim-score";
 import { format } from "date-fns";
 
 export default async function ApprovalsPage() {
@@ -73,17 +74,32 @@ export default async function ApprovalsPage() {
                   {GAME_TYPE_LABELS[s.gameType]}
                   {s.isPrimetime ? " · Primetime" : ""}
                   {s.gameType === "SIMULATED" ? " · no XP" : ""} ·{" "}
-                  {s.opponentTeam.abbreviation} Sim {s.opponentSimScore}/5 · submitted by{" "}
+                  {formatBothSimScores(s)} · submitted by{" "}
                   {s.submitter.name ?? s.submitter.email} ·{" "}
                   {format(s.createdAt, "MMM d, h:mm a")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {s.opponentSimScore <= 2 ? (
+                {s.opponentSimScore <= 2 ||
+                (s.userTeamSimScore != null && s.userTeamSimScore <= 2) ? (
                   <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
-                    Low opponent Sim Score ({s.opponentTeam.abbreviation}{" "}
-                    {s.opponentSimScore}/5) — may count toward Bad Sim Reputation for
-                    that coach if the pattern continues.
+                    Low Sim Score
+                    {s.opponentSimScore <= 2
+                      ? ` (${s.opponentTeam.abbreviation} ${s.opponentSimScore}/5)`
+                      : ""}
+                    {s.userTeamSimScore != null && s.userTeamSimScore <= 2
+                      ? ` (${s.userTeam.abbreviation} ${s.userTeamSimScore}/5)`
+                      : ""}{" "}
+                    — may count toward Bad Sim Reputation for that coach if the
+                    pattern continues.
+                    {s.userTeamSimScore == null
+                      ? ` ${s.opponentTeam.abbreviation} has not submitted a Sim Score yet.`
+                      : ""}
+                  </p>
+                ) : s.userTeamSimScore == null ? (
+                  <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
+                    {s.opponentTeam.abbreviation} has not submitted a Sim Score for{" "}
+                    {s.userTeam.abbreviation} yet. They can add it from the game page.
                   </p>
                 ) : null}
                 {s.notes ? (
@@ -148,7 +164,7 @@ export default async function ApprovalsPage() {
                       {s.opponentTeam.abbreviation}
                     </p>
                     <p className="text-xs text-[var(--muted-foreground)]">
-                      {s.opponentTeam.abbreviation} Sim {s.opponentSimScore}/5 ·{" "}
+                      {formatBothSimScores(s)} ·{" "}
                       {s.reviewedBy?.name ?? "Commissioner"}
                       {s.decisionNote ? ` · ${s.decisionNote}` : ""}
                     </p>

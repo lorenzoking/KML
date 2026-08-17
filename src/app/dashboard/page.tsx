@@ -29,6 +29,7 @@ import { computeGmReputationScore, computeReputationScore } from "@/lib/reputati
 import { getReputationGrade, getReputationGradeLabel } from "@/lib/coach/grades";
 import { getJobSecurityStatus } from "@/lib/coach/job-security";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { formatBothSimScores } from "@/lib/sim-score";
 import {
   ensureDefaultLeagueStories,
   getPublishedStories,
@@ -96,10 +97,16 @@ export default async function DashboardPage({
     override: coachProfile?.hotSeatStatusOverride,
   });
 
-  const [recentApproved, pendingCount] = await Promise.all([
+  const [recentApproved, pendingCount, needsSimScore] = await Promise.all([
     membership
       ? prisma.gameSubmission.findMany({
-          where: { submitterId: user.id, status: "APPROVED" },
+          where: {
+            status: "APPROVED",
+            OR: [
+              { userTeamId: membership.franchiseId },
+              { opponentTeamId: membership.franchiseId },
+            ],
+          },
           include: { opponentTeam: true, userTeam: true },
           orderBy: { reviewedAt: "desc" },
           take: 5,
@@ -108,6 +115,17 @@ export default async function DashboardPage({
     commissionerUi
       ? prisma.gameSubmission.count({ where: { status: "PENDING" } })
       : Promise.resolve(0),
+    membership
+      ? prisma.gameSubmission.findMany({
+          where: {
+            opponentTeamId: membership.franchiseId,
+            userTeamSimScore: null,
+            status: { in: ["PENDING", "APPROVED"] },
+          },
+          include: { opponentTeam: true, userTeam: true },
+          orderBy: { createdAt: "desc" },
+        })
+      : Promise.resolve([]),
   ]);
 
   const DASHBOARD_LINK_ONLY_SLUGS = new Set(["season-1-team-draft-grades"]);
@@ -372,6 +390,33 @@ export default async function DashboardPage({
         </Card>
 
         <div className="grid gap-4">
+          {needsSimScore.length > 0 ? (
+            <Card className="border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]">
+              <CardHeader>
+                <CardTitle>Sim Score needed</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {needsSimScore.map((s) => (
+                    <li key={s.id}>
+                      <Link
+                        href={`/games/${s.id}`}
+                        className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2 text-sm transition-colors hover:bg-[var(--muted)]"
+                      >
+                        <span>
+                          W{s.week}: {s.userTeam.abbreviation} {s.userScore}–
+                          {s.opponentScore} {s.opponentTeam.abbreviation} · rate{" "}
+                          {s.userTeam.abbreviation}
+                        </span>
+                        <StatusBadge status={s.status} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ) : null}
+
           <Card>
             <CardHeader>
               <CardTitle>Your pending results</CardTitle>
@@ -385,16 +430,18 @@ export default async function DashboardPage({
               ) : (
                 <ul className="space-y-2">
                   {pendingMine.map((s) => (
-                    <li
-                      key={s.id}
-                      className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-                    >
-                      <span>
-                        W{s.week}: {s.userTeam.abbreviation} {s.userScore}–
-                        {s.opponentScore} {s.opponentTeam.abbreviation} ·{" "}
-                        {s.opponentTeam.abbreviation} Sim {s.opponentSimScore}/5
-                      </span>
-                      <StatusBadge status={s.status} />
+                    <li key={s.id}>
+                      <Link
+                        href={`/games/${s.id}`}
+                        className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2 text-sm transition-colors hover:bg-[var(--muted)]"
+                      >
+                        <span>
+                          W{s.week}: {s.userTeam.abbreviation} {s.userScore}–
+                          {s.opponentScore} {s.opponentTeam.abbreviation} ·{" "}
+                          {formatBothSimScores(s)}
+                        </span>
+                        <StatusBadge status={s.status} />
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -412,21 +459,23 @@ export default async function DashboardPage({
               ) : (
                 <ul className="space-y-2">
                   {recentApproved.map((s) => (
-                    <li
-                      key={s.id}
-                      className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium">
-                          {s.userTeam.abbreviation} {s.userScore}–{s.opponentScore}{" "}
-                          {s.opponentTeam.abbreviation}
-                        </span>
-                        <StatusBadge status={s.status} />
-                      </div>
-                      <p className="text-xs text-[var(--muted-foreground)]">
-                        Week {s.week} · {GAME_TYPE_LABELS[s.gameType]} ·{" "}
-                        {s.opponentTeam.abbreviation} Sim {s.opponentSimScore}/5
-                      </p>
+                    <li key={s.id}>
+                      <Link
+                        href={`/games/${s.id}`}
+                        className="block rounded-lg border border-[var(--border)] px-3 py-2 text-sm transition-colors hover:bg-[var(--muted)]"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium">
+                            {s.userTeam.abbreviation} {s.userScore}–{s.opponentScore}{" "}
+                            {s.opponentTeam.abbreviation}
+                          </span>
+                          <StatusBadge status={s.status} />
+                        </div>
+                        <p className="text-xs text-[var(--muted-foreground)]">
+                          Week {s.week} · {GAME_TYPE_LABELS[s.gameType]} ·{" "}
+                          {formatBothSimScores(s)}
+                        </p>
+                      </Link>
                     </li>
                   ))}
                 </ul>

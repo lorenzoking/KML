@@ -256,6 +256,8 @@ model GameSubmission {
   opponentScore  Int
   /// Madden/KML realism rating for the opponent's play (1–5), reported by the submitter. Scores ≤2 feed Bad Sim rules for that opponent.
   opponentSimScore Int
+  /// Sim Score the opponent coach gave the submitting team (1–5). Null until that coach submits.
+  userTeamSimScore Int?
   notes          String?
   /// Official KML Primetime window (desk slate or submitter-marked).
   isPrimetime    Boolean          @default(false)
@@ -291,6 +293,8 @@ model GameResult {
   awayScore    Int
   /// Opponent Sim Score from the approved submission (away team = opponent when submitter is home).
   opponentSimScore Int?
+  /// Sim Score the away/opponent coach gave the home/submitting team.
+  userTeamSimScore Int?
   winnerTeamId String?
   isPrimetime  Boolean   @default(false)
   isVoided     Boolean   @default(false)

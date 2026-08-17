@@ -109,6 +109,7 @@ export async function reviewSubmission(formData: FormData) {
         homeScore: submission.userScore,
         awayScore: submission.opponentScore,
         opponentSimScore: submission.opponentSimScore,
+        userTeamSimScore: submission.userTeamSimScore,
         winnerTeamId,
         isPrimetime,
       },
@@ -219,7 +220,7 @@ export async function reviewSubmission(formData: FormData) {
 function revalidateAll() {
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
-  revalidatePath("/games");
+  revalidatePath("/games", "layout");
   revalidatePath("/submissions");
   revalidatePath("/dashboard");
   revalidatePath("/standings");

@@ -130,7 +130,8 @@ export function SubmissionForm({
         </Select>
         <p className="text-xs text-[var(--muted-foreground)]">
           Enter the Madden Sim Score for your opponent&apos;s play — not your own. Scores of
-          2 or lower feed KML Bad Sim Reputation rules for that coach.
+          2 or lower feed KML Bad Sim Reputation rules for that coach. They will submit a
+          Sim Score for you by opening this game after it&apos;s posted.
         </p>
       </div>
 
