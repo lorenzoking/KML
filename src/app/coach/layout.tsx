@@ -14,7 +14,7 @@ export default async function CoachLayout({
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Coach Hub</h1>
         <p className="text-sm text-[var(--muted-foreground)]">
-          Coaching identities, XP races, job security, carousel, and reputation.
+          League standing, job security, XP, identities, and carousel — all in one place.
           {commissionerUi ? " Commissioner actions are enabled." : ""}
         </p>
       </div>

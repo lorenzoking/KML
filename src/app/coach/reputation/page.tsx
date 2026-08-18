@@ -1,11 +1,19 @@
 import { addCoachLedgerEntry } from "@/actions/coach";
+import { ReputationStandings } from "@/components/coach/reputation-standings";
 import { SubmitButton } from "@/components/forms/submit-button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { isCommissioner, requireUser } from "@/lib/auth";
+import { getCoachBoardRows } from "@/lib/coach/coach-board";
 import { getActiveSeason } from "@/lib/league";
 import { COACHING_REP_GRADES } from "@/lib/hot-seat-rules";
 import { prisma } from "@/lib/prisma";
@@ -31,7 +39,7 @@ export default async function CoachReputationPage({
   const week = params.week ? Number(params.week) : undefined;
   const { season } = await getActiveSeason();
 
-  const [repRows, users] = await Promise.all([
+  const [repRows, users, board] = await Promise.all([
     prisma.reputationAdjustment.findMany({
       where: { seasonId: season.id },
       include: { user: true, createdBy: true },
@@ -45,6 +53,7 @@ export default async function CoachReputationPage({
           orderBy: { user: { name: "asc" } },
         })
       : Promise.resolve([]),
+    getCoachBoardRows(season.id),
   ]);
 
   const filtered = repRows.filter((row) => {
@@ -59,6 +68,18 @@ export default async function CoachReputationPage({
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Coach reputation standings</CardTitle>
+          <CardDescription>
+            Ranked by live coaching reputation. Grade follows the coach, not the franchise.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ReputationStandings rows={board} />
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>

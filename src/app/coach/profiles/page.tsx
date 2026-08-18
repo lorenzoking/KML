@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { JobStatusBadge } from "@/components/coach/job-status-badge";
 import { requireUser } from "@/lib/auth";
 import { getActiveSeason } from "@/lib/league";
 import { getCoachBoardRows } from "@/lib/coach/coach-board";
@@ -56,8 +57,11 @@ export default async function CoachProfilesPage({
                 Team identity: {row.teamIdentity ?? "Unassigned"}
               </p>
               <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                Contract {row.contractYearsLeft}y · {row.jobStatus.replaceAll("_", " ")}
+                Contract {row.contractYearsLeft}y
               </p>
+              <div className="mt-2">
+                <JobStatusBadge status={row.jobStatus} />
+              </div>
             </div>
           ))}
         </div>
@@ -85,7 +89,9 @@ export default async function CoachProfilesPage({
                   <td className="py-2 pr-3">{row.coachIdentity ?? "Unassigned"}</td>
                   <td className="py-2 pr-3">{row.teamIdentity ?? "Unassigned"}</td>
                   <td className="py-2 pr-3">{row.contractYearsLeft}y</td>
-                  <td className="py-2 pr-3">{row.jobStatus.replaceAll("_", " ")}</td>
+                  <td className="py-2 pr-3">
+                    <JobStatusBadge status={row.jobStatus} />
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -27,7 +27,7 @@ import { formatRecord } from "@/lib/utils";
 import { GAME_TYPE_LABELS } from "@/lib/constants";
 import { computeGmReputationScore, computeReputationScore } from "@/lib/reputation";
 import { getReputationGrade, getReputationGradeLabel } from "@/lib/coach/grades";
-import { getJobSecurityStatus } from "@/lib/coach/job-security";
+import { formatJobStatus, getJobSecurityStatus, jobStatusBadgeVariant } from "@/lib/coach/job-security";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { formatBothSimScores } from "@/lib/sim-score";
 import {
@@ -261,7 +261,7 @@ export default async function DashboardPage({
             />
             <MiniStat
               label="Job security"
-              value={jobStatus.replaceAll("_", " ")}
+              value={formatJobStatus(jobStatus)}
               hint={`${coachProfile?.contractYearsLeft ?? 3} yrs left`}
             />
             <MiniStat
@@ -369,8 +369,8 @@ export default async function DashboardPage({
               />
               <ProfilePill
                 label="Job security"
-                value={jobStatus.replaceAll("_", " ")}
-                badgeVariant={jobSecurityBadgeVariant(jobStatus)}
+                value={formatJobStatus(jobStatus)}
+                badgeVariant={jobStatusBadgeVariant(jobStatus)}
               />
               <ProfilePill
                 label="Reputation"
@@ -561,21 +561,4 @@ function ProfilePill({
       )}
     </div>
   );
-}
-
-function jobSecurityBadgeVariant(status: string) {
-  switch (status) {
-    case "SECURE":
-      return "elite" as const;
-    case "STABLE":
-      return "stable" as const;
-    case "WATCH":
-    case "PRESSURED":
-      return "pressured" as const;
-    case "HOT_SEAT":
-    case "FIRING_ELIGIBLE":
-      return "hotseat" as const;
-    default:
-      return "outline" as const;
-  }
 }

@@ -1,9 +1,28 @@
 import Link from "next/link";
-import { getActiveSeason } from "@/lib/league";
-import { getCoachBoardRows } from "@/lib/coach/coach-board";
-import { getXpStandings } from "@/lib/coach/xp-board";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { JobStatusBadge } from "@/components/coach/job-status-badge";
+import { LeagueJobPulse } from "@/components/coach/league-job-pulse";
+import { ReputationStandings } from "@/components/coach/reputation-standings";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { getCoachBoardRows } from "@/lib/coach/coach-board";
+import { AT_RISK_JOB_STATUSES, JOB_STATUS_BANDS } from "@/lib/coach/job-security";
+import { getActiveSeason } from "@/lib/league";
 
 type SearchParams = Promise<{
   q?: string;
@@ -22,10 +41,7 @@ export default async function CoachOverviewPage({
   const conference = (params.conference ?? "").trim().toUpperCase();
 
   const { season, settings } = await getActiveSeason();
-  const [rows, xpRows] = await Promise.all([
-    getCoachBoardRows(season.id),
-    getXpStandings(season.id),
-  ]);
+  const rows = await getCoachBoardRows(season.id);
 
   const filtered = rows.filter((row) => {
     const qMatch =
@@ -38,74 +54,88 @@ export default async function CoachOverviewPage({
     return qMatch && statusMatch && conferenceMatch;
   });
 
-  const topXp = xpRows[0];
-  const topCoachRep = [...rows].sort((a, b) => b.coachRepScore - a.coachRepScore)[0];
-  const hotSeats = rows.filter(
-    (r) => r.jobStatus === "HOT_SEAT" || r.jobStatus === "FIRING_ELIGIBLE"
+  const atRisk = rows.filter((row) => AT_RISK_JOB_STATUSES.has(row.jobStatus));
+  const hotSeatCount = rows.filter(
+    (row) => row.jobStatus === "HOT_SEAT" || row.jobStatus === "FIRING_ELIGIBLE"
   ).length;
+  const board = [...filtered].sort((a, b) => {
+    if (b.coachRepScore !== a.coachRepScore) return b.coachRepScore - a.coachRepScore;
+    return a.coach.localeCompare(b.coach);
+  });
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Metric title="Season" value={`S${settings.currentSeason} · W${settings.currentWeek}`} />
-        <Metric title="Tracked coaches" value={String(rows.length)} />
-        <Metric title="Hot seat coaches" value={String(hotSeats)} />
-        <Metric
-          title="Top XP coach"
-          value={topXp ? `${topXp.coach} (${topXp.totalXp})` : "No data"}
-        />
+      <div className="flex flex-col gap-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--primary)]">
+          Season {settings.currentSeason} · Week {settings.currentWeek}
+        </p>
+        <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">League pulse</h2>
+        <p className="text-sm text-[var(--muted-foreground)]">
+          {rows.length} coaches · {hotSeatCount} on the hot seat · {atRisk.length} watched or worse
+        </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <LeagueJobPulse rows={rows} />
+
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Top leaders</CardTitle>
+          <CardHeader className="flex flex-row items-start justify-between gap-3">
+            <div>
+              <CardTitle>Reputation standings</CardTitle>
+              <CardDescription>Live coach ranking for the whole league.</CardDescription>
+            </div>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/coach/reputation">Full list</Link>
+            </Button>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p>
-              XP Leader:{" "}
-              <span className="font-medium">
-                {topXp ? `${topXp.coach} (${topXp.teamAbbr})` : "N/A"}
-              </span>
-            </p>
-            <p>
-              Coach Rep Leader:{" "}
-              <span className="font-medium">
-                {topCoachRep ? `${topCoachRep.coach} (${topCoachRep.coachRepScore})` : "N/A"}
-              </span>
-            </p>
-            <p>
-              Open Carousel:{" "}
-              <span className="font-medium">{settings.carouselOpen ? "Yes" : "No"}</span>
-            </p>
+          <CardContent>
+            <ReputationStandings rows={rows} limit={8} compact />
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader>
-            <CardTitle>Quick links</CardTitle>
+          <CardHeader className="flex flex-row items-start justify-between gap-3">
+            <div>
+              <CardTitle>Needs attention</CardTitle>
+              <CardDescription>
+                Watch, Pressured, Hot Seat, and firing-eligible coaches.
+              </CardDescription>
+            </div>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/coach/hot-seat">Job board</Link>
+            </Button>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-2">
-            <Link href="/coach/me" className="rounded-md border px-3 py-2 text-center text-sm">
-              My profile
-            </Link>
-            <Link href="/coach/xp" className="rounded-md border px-3 py-2 text-center text-sm">
-              XP standings
-            </Link>
-            <Link href="/coach/hot-seat" className="rounded-md border px-3 py-2 text-center text-sm">
-              Hot seat board
-            </Link>
-            <Link href="/coach/carousel" className="rounded-md border px-3 py-2 text-center text-sm">
-              Carousel
-            </Link>
-            <Link href="/coach/reputation" className="rounded-md border px-3 py-2 text-center text-sm">
-              Reputation log
-            </Link>
-            <Link
-              href="/rules?tab=gm-reputation"
-              className="rounded-md border px-3 py-2 text-center text-sm"
-            >
-              GM Reputation rules
-            </Link>
+          <CardContent>
+            {atRisk.length === 0 ? (
+              <p className="text-sm text-[var(--muted-foreground)]">
+                Nobody is on watch or worse. The league is stable.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {atRisk
+                  .sort((a, b) => a.jobScore - b.jobScore)
+                  .map((row) => (
+                    <Link
+                      key={row.userId}
+                      href={`/coach/profiles/${row.userId}`}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] px-3 py-2.5"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {row.coach}{" "}
+                          <span className="text-[var(--muted-foreground)]">
+                            {row.teamAbbr}
+                          </span>
+                        </p>
+                        <p className="truncate text-xs text-[var(--muted-foreground)]">
+                          {row.record} · Rep {row.coachRepScore} {row.coachRepGrade}
+                        </p>
+                      </div>
+                      <JobStatusBadge status={row.jobStatus} />
+                    </Link>
+                  ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -113,83 +143,116 @@ export default async function CoachOverviewPage({
       <Card>
         <CardHeader>
           <CardTitle>Coach board</CardTitle>
+          <CardDescription>
+            Every active coach, ranked by reputation. Filter to scan the league faster.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form className="grid gap-2 sm:grid-cols-3">
-            <Input name="q" placeholder="Search coach, team, identity" defaultValue={params.q ?? ""} />
-            <Input name="status" placeholder="Status (SECURE, HOT_SEAT...)" defaultValue={params.status ?? ""} />
-            <Input name="conference" placeholder="Conference (AFC/NFC)" defaultValue={params.conference ?? ""} />
+          <form className="grid gap-2 sm:grid-cols-4">
+            <Input
+              name="q"
+              placeholder="Search coach, team, identity"
+              defaultValue={params.q ?? ""}
+            />
+            <Select name="status" defaultValue={status || ""}>
+              <option value="">All job statuses</option>
+              {JOB_STATUS_BANDS.map((band) => (
+                <option key={band.status} value={band.status}>
+                  {band.label}
+                </option>
+              ))}
+            </Select>
+            <Select name="conference" defaultValue={conference || ""}>
+              <option value="">All conferences</option>
+              <option value="AFC">AFC</option>
+              <option value="NFC">NFC</option>
+            </Select>
+            <Button type="submit" variant="outline">
+              Filter
+            </Button>
           </form>
-          <div className="space-y-3 md:hidden">
-            {filtered.map((row) => (
-              <div key={row.userId} className="rounded-md border p-3 text-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <Link href={`/coach/profiles/${row.userId}`} className="font-medium underline underline-offset-2">
-                    {row.coach}
+
+          {board.length === 0 ? (
+            <p className="text-sm text-[var(--muted-foreground)]">No coaches match those filters.</p>
+          ) : (
+            <>
+              <div className="space-y-2 md:hidden">
+                {board.map((row, index) => (
+                  <Link
+                    key={row.userId}
+                    href={`/coach/profiles/${row.userId}`}
+                    className="block rounded-xl border border-[var(--border)] p-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">
+                          <span className="mr-1.5 tabular-nums text-[var(--muted-foreground)]">
+                            {index + 1}.
+                          </span>
+                          {row.coach}
+                        </p>
+                        <p className="text-xs text-[var(--muted-foreground)]">
+                          {row.teamAbbr} · {row.record} · XP {row.xp}
+                        </p>
+                      </div>
+                      <JobStatusBadge status={row.jobStatus} />
+                    </div>
+                    <p className="mt-2 text-xs text-[var(--muted-foreground)]">
+                      Rep {row.coachRepScore} {row.coachRepGrade} · GM {row.gmRepScore}{" "}
+                      {row.gmRepGrade}
+                    </p>
                   </Link>
-                  <span className="text-xs text-[var(--muted-foreground)]">{row.teamAbbr}</span>
-                </div>
-                <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-                  Record {row.record} · XP {row.xp} · Rep {row.coachRepScore} ({row.coachRepGrade})
-                </p>
-                <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                  GM Rep {row.gmRepScore} ({row.gmRepGrade} · {row.gmRepStatus}) ·{" "}
-                  {row.jobStatus.replaceAll("_", " ")}
-                </p>
-              </div>
-            ))}
-          </div>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full text-sm">
-              <thead className="text-left text-[var(--muted-foreground)]">
-                <tr className="border-b">
-                  <th className="py-2 pr-3">Coach</th>
-                  <th className="py-2 pr-3">Team</th>
-                  <th className="py-2 pr-3">Record</th>
-                  <th className="py-2 pr-3">XP</th>
-                  <th className="py-2 pr-3">Rep</th>
-                  <th className="py-2 pr-3">GM Rep</th>
-                  <th className="py-2 pr-3">Job Security</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((row) => (
-                  <tr key={row.userId} className="border-b">
-                    <td className="py-2 pr-3">
-                      <Link href={`/coach/profiles/${row.userId}`} className="underline underline-offset-2">
-                        {row.coach}
-                      </Link>
-                    </td>
-                    <td className="py-2 pr-3">{row.teamAbbr}</td>
-                    <td className="py-2 pr-3">{row.record}</td>
-                    <td className="py-2 pr-3">{row.xp}</td>
-                    <td className="py-2 pr-3">
-                      {row.coachRepScore} ({row.coachRepGrade})
-                    </td>
-                    <td className="py-2 pr-3">
-                      {row.gmRepScore} ({row.gmRepGrade} · {row.gmRepStatus})
-                    </td>
-                    <td className="py-2 pr-3">{row.jobStatus.replaceAll("_", " ")}</td>
-                  </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">#</TableHead>
+                      <TableHead>Coach</TableHead>
+                      <TableHead>Team</TableHead>
+                      <TableHead>Record</TableHead>
+                      <TableHead>Rep</TableHead>
+                      <TableHead>GM Rep</TableHead>
+                      <TableHead>XP</TableHead>
+                      <TableHead>Job security</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {board.map((row, index) => (
+                      <TableRow key={row.userId}>
+                        <TableCell className="tabular-nums text-[var(--muted-foreground)]">
+                          {index + 1}
+                        </TableCell>
+                        <TableCell>
+                          <Link
+                            href={`/coach/profiles/${row.userId}`}
+                            className="font-medium hover:underline"
+                          >
+                            {row.coach}
+                          </Link>
+                        </TableCell>
+                        <TableCell>{row.teamAbbr}</TableCell>
+                        <TableCell className="tabular-nums">{row.record}</TableCell>
+                        <TableCell className="tabular-nums">
+                          {row.coachRepScore} {row.coachRepGrade}
+                        </TableCell>
+                        <TableCell className="tabular-nums">
+                          {row.gmRepScore} {row.gmRepGrade}
+                        </TableCell>
+                        <TableCell className="tabular-nums">{row.xp}</TableCell>
+                        <TableCell>
+                          <JobStatusBadge status={row.jobStatus} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function Metric({ title, value }: { title: string; value: string }) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm text-[var(--muted-foreground)]">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <p className="text-base font-semibold sm:text-xl">{value}</p>
-      </CardContent>
-    </Card>
   );
 }

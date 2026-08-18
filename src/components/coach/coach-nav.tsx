@@ -8,9 +8,14 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { href: "/coach", label: "Overview", match: (path: string) => path === "/coach" },
   {
-    href: "/coach/me",
-    label: "My Profile",
-    match: (path: string) => path.startsWith("/coach/me"),
+    href: "/coach/reputation",
+    label: "Reputation",
+    match: (path: string) => path.startsWith("/coach/reputation"),
+  },
+  {
+    href: "/coach/hot-seat",
+    label: "Hot Seat",
+    match: (path: string) => path.startsWith("/coach/hot-seat"),
   },
   {
     href: "/coach/xp",
@@ -28,19 +33,14 @@ const LINKS = [
     match: (path: string) => path.startsWith("/coach/identities"),
   },
   {
-    href: "/coach/hot-seat",
-    label: "Hot Seat",
-    match: (path: string) => path.startsWith("/coach/hot-seat"),
-  },
-  {
     href: "/coach/carousel",
     label: "Carousel",
     match: (path: string) => path.startsWith("/coach/carousel"),
   },
   {
-    href: "/coach/reputation",
-    label: "Reputation Log",
-    match: (path: string) => path.startsWith("/coach/reputation"),
+    href: "/coach/me",
+    label: "My Profile",
+    match: (path: string) => path.startsWith("/coach/me"),
   },
 ] as const;
 

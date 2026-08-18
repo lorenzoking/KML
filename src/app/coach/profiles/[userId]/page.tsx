@@ -19,6 +19,7 @@ import { ensureDefaultCoachIdentities } from "@/lib/coach/ensure-coach-identitie
 import { ensureDefaultTeamIdentities } from "@/lib/coach/ensure-team-identities";
 import { getCoachIdentityRuleBySlug } from "@/lib/coach/coach-identity-rules";
 import { getTeamIdentityRuleBySlug } from "@/lib/coach/team-identity-rules";
+import { formatJobStatus } from "@/lib/coach/job-security";
 import { getActiveSeason } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
 
@@ -121,7 +122,7 @@ export default async function CoachProfileDetailPage({
           title="Coach Identity"
           value={profile?.coachIdentity?.name ?? "Unassigned"}
         />
-        <Metric title="Job security" value={row?.jobStatus.replaceAll("_", " ") ?? "N/A"} />
+        <Metric title="Job security" value={row ? formatJobStatus(row.jobStatus) : "N/A"} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

@@ -6,8 +6,10 @@ import {
   getGmReputationStatus,
   type GmReputationStatus,
 } from "@/lib/reputation";
-import { getReputationGrade } from "@/lib/coach/grades";
+import { getReputationGrade, type ReputationGrade } from "@/lib/coach/grades";
+import { HotSeatStatus } from "@prisma/client";
 import {
+  getJobSecurityScore,
   getJobSecurityStatus,
   getRecoveryNote,
 } from "@/lib/coach/job-security";
@@ -19,7 +21,7 @@ export type CoachBoardRow = {
   teamAbbr: string | null;
   conference: string | null;
   coachRepScore: number;
-  coachRepGrade: string;
+  coachRepGrade: ReputationGrade;
   gmRepScore: number;
   gmRepGrade: string;
   gmRepStatus: GmReputationStatus;
@@ -31,7 +33,8 @@ export type CoachBoardRow = {
   contractYearsLeft: number;
   tankingStrikes: number;
   gmStrikes: number;
-  jobStatus: string;
+  jobStatus: HotSeatStatus;
+  jobScore: number;
   jobRecoveryNote: string;
   coachIdentity: string | null;
   teamIdentity: string | null;
@@ -105,7 +108,7 @@ async function loadCoachBoardRows(
       const losses = standing?.losses ?? 0;
       const coachProfile = membership.user.coachProfile;
       const expectationScore = coachProfile?.expectationScore ?? 0;
-      const status = getJobSecurityStatus({
+      const jobInput = {
         coachRepScore,
         gmRepScore,
         expectationScore,
@@ -115,7 +118,9 @@ async function loadCoachBoardRows(
         firingThreshold: settings.firingThreshold,
         watchThreshold: settings.watchThreshold,
         override: coachProfile?.hotSeatStatusOverride ?? undefined,
-      });
+      };
+      const jobScore = getJobSecurityScore(jobInput);
+      const status = getJobSecurityStatus(jobInput);
       const seasonsWithTeam =
         seasonsByCoachTeam.get(
           `${membership.userId}:${membership.franchiseId}`
@@ -141,6 +146,7 @@ async function loadCoachBoardRows(
         tankingStrikes: coachProfile?.tankingStrikes ?? 0,
         gmStrikes: coachProfile?.gmStrikes ?? 0,
         jobStatus: status,
+        jobScore,
         jobRecoveryNote: getRecoveryNote(status),
         coachIdentity: coachProfile?.coachIdentity?.name ?? null,
         teamIdentity: membership.franchise.teamIdentity?.name ?? null,
