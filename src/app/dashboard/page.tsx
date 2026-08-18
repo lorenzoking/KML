@@ -1,40 +1,45 @@
 import Link from "next/link";
 import Image from "next/image";
-import type { StoryCategory } from "@prisma/client";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+  ClipboardCheck,
+  Flag,
+  ListOrdered,
+  Send,
+  Shield,
+  Shirt,
+  Star,
+  Trophy,
+  User,
+  UserRound,
+  Vote,
+} from "lucide-react";
+import { CoachAvatar } from "@/components/coach/coach-avatar";
+import { JobStatusBadge } from "@/components/coach/job-status-badge";
+import { Group, GroupRow, HomeSection, Shortcut } from "@/components/dashboard/ios";
+import { cn, formatRecord } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
-import { ReputationBadge, StatusBadge } from "@/components/status-badge";
+import { Button } from "@/components/ui/button";
 import { extractStoryCoverImage } from "@/components/stories/story-body";
 import { isCommissioner, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   getActiveSeason,
-  getFranchiseSeasonRecord,
   getReputation,
+  getSeasonStandings,
   getUserMembership,
   getXpTotal,
 } from "@/lib/league";
 import { getUserCareerStats } from "@/lib/career";
-import { formatRecord } from "@/lib/utils";
-import { GAME_TYPE_LABELS } from "@/lib/constants";
-import { computeGmReputationScore, computeReputationScore } from "@/lib/reputation";
+import { computeGmReputationScore } from "@/lib/reputation";
 import { getReputationGrade, getReputationGradeLabel } from "@/lib/coach/grades";
-import { formatJobStatus, getJobSecurityStatus, jobStatusBadgeVariant } from "@/lib/coach/job-security";
-import { BrandLogo } from "@/components/brand/brand-logo";
-import { formatBothSimScores } from "@/lib/sim-score";
+import { formatJobStatus, getJobSecurityStatus } from "@/lib/coach/job-security";
 import {
-  ensureDefaultLeagueStories,
-  getPublishedStories,
-  STORY_CATEGORY_LABELS,
-} from "@/lib/stories";
+  buildDashboardPulse,
+  coachHonorific,
+} from "@/lib/coach/dashboard-pulse";
+import { myOutstandingSimScore } from "@/lib/sim-score";
+import { ensureDefaultLeagueStories, getPublishedStories } from "@/lib/stories";
+import { safeGetOpenPollsNeedingVote } from "@/lib/story-engagement";
 
 export default async function DashboardPage({
   searchParams,
@@ -57,6 +62,7 @@ export default async function DashboardPage({
     pendingMine,
     stories,
     teamRequestUser,
+    standings,
   ] = await Promise.all([
     getUserMembership(user.id, season.id),
     getXpTotal(user.id),
@@ -71,16 +77,14 @@ export default async function DashboardPage({
       include: { opponentTeam: true, userTeam: true },
       orderBy: { createdAt: "desc" },
     }),
-    getPublishedStories({ take: 10 }),
+    getPublishedStories({ take: 4 }),
     prisma.user.findUnique({
       where: { id: user.id },
       include: { requestedFranchise: true },
     }),
+    getSeasonStandings(season.id),
   ]);
 
-  const teamStanding = membership
-    ? await getFranchiseSeasonRecord(season.id, membership.franchiseId)
-    : undefined;
   const gmRepScore = computeGmReputationScore(
     settings.startingGmRepScore,
     reputation.adjustments
@@ -97,7 +101,40 @@ export default async function DashboardPage({
     override: coachProfile?.hotSeatStatusOverride,
   });
 
-  const [recentApproved, pendingCount, needsSimScore] = await Promise.all([
+  const [weekGame, pendingCount, myLiveGames, recentApproved, openPolls, openVacancies] =
+    await Promise.all([
+    membership
+      ? prisma.gameSubmission.findFirst({
+          where: {
+            seasonId: season.id,
+            week: settings.currentWeek,
+            status: { in: ["PENDING", "APPROVED"] },
+            OR: [
+              { userTeamId: membership.franchiseId },
+              { opponentTeamId: membership.franchiseId },
+            ],
+          },
+          include: { opponentTeam: true, userTeam: true },
+          orderBy: { createdAt: "desc" },
+        })
+      : Promise.resolve(null),
+    commissionerUi
+      ? prisma.gameSubmission.count({ where: { status: "PENDING" } })
+      : Promise.resolve(0),
+    membership
+      ? prisma.gameSubmission.findMany({
+          where: {
+            seasonId: season.id,
+            status: { in: ["PENDING", "APPROVED"] },
+            OR: [
+              { userTeamId: membership.franchiseId },
+              { opponentTeamId: membership.franchiseId },
+            ],
+          },
+          include: { opponentTeam: true, userTeam: true },
+          orderBy: { createdAt: "desc" },
+        })
+      : Promise.resolve([]),
     membership
       ? prisma.gameSubmission.findMany({
           where: {
@@ -109,456 +146,553 @@ export default async function DashboardPage({
           },
           include: { opponentTeam: true, userTeam: true },
           orderBy: { reviewedAt: "desc" },
-          take: 5,
+          take: 4,
         })
       : Promise.resolve([]),
-    commissionerUi
-      ? prisma.gameSubmission.count({ where: { status: "PENDING" } })
+    safeGetOpenPollsNeedingVote(user.id),
+    settings.carouselOpen
+      ? prisma.carouselVacancy.count({
+          where: { seasonId: season.id, isOpen: true },
+        })
       : Promise.resolve(0),
-    membership
-      ? prisma.gameSubmission.findMany({
-          where: {
-            opponentTeamId: membership.franchiseId,
-            userTeamSimScore: null,
-            status: { in: ["PENDING", "APPROVED"] },
-          },
-          include: { opponentTeam: true, userTeam: true },
-          orderBy: { createdAt: "desc" },
-        })
-      : Promise.resolve([]),
   ]);
 
-  const DASHBOARD_LINK_ONLY_SLUGS = new Set(["season-1-team-draft-grades"]);
-
-  const deskStories = stories.filter(
-    (s) => !DASHBOARD_LINK_ONLY_SLUGS.has(s.slug)
-  );
   const featured =
-    deskStories.find((s) => s.isFeatured) ??
-    deskStories.find((s) => s.category === "DRAFT") ??
-    deskStories[0];
+    stories.find((s) => s.isFeatured) ??
+    stories.find((s) => s.category === "FEATURE") ??
+    stories[0];
   const featuredCover = featured ? extractStoryCoverImage(featured.body) : null;
-  const secondaryStories = deskStories.filter((s) => s.id !== featured?.id);
 
-  const byCategory = (category: StoryCategory) =>
-    secondaryStories.filter((s) => s.category === category);
+  const coachName = coachHonorific(user.name);
+  const seasonXp =
+    career.bySeason.find((s) => s.seasonId === season.id)?.xp ?? 0;
+  const standingRow = membership
+    ? standings.find((row) => row.franchiseId === membership.franchiseId)
+    : undefined;
+  const record = standingRow
+    ? formatRecord(standingRow.wins, standingRow.losses)
+    : "0-0";
+  const conferenceRank = membership
+    ? standings
+        .filter((row) => row.conference === membership.franchise.conference)
+        .findIndex((row) => row.franchiseId === membership.franchiseId) + 1
+    : 0;
 
-  const coachingStories = byCategory("COACHING");
-  const draftStories = byCategory("DRAFT");
-  const otherStories = secondaryStories.filter(
-    (s) =>
-      !["GAME_OF_WEEK", "PLAYER_OF_WEEK", "COACHING", "DRAFT"].includes(s.category)
+  const pendingThisWeek = pendingMine.filter(
+    (game) => game.id !== weekGame?.id
   );
-  const moreStories = [...coachingStories, ...draftStories, ...otherStories];
+  const recentOnly = recentApproved.filter((game) => game.id !== weekGame?.id).slice(0, 3);
+  const outstandingSim = membership
+    ? myLiveGames
+        .map((game) => ({
+          game,
+          outstanding: myOutstandingSimScore(game, membership.franchiseId),
+        }))
+        .filter(
+          (row): row is typeof row & { outstanding: NonNullable<typeof row.outstanding> } =>
+            Boolean(row.outstanding && !row.outstanding.alreadySubmitted)
+        )
+        .sort((a, b) => {
+          const aNow = a.game.week === settings.currentWeek ? 0 : 1;
+          const bNow = b.game.week === settings.currentWeek ? 0 : 1;
+          return aNow - bNow || a.game.week - b.game.week;
+        })
+    : [];
 
-  const firstName = (user.name ?? "Coach").split(" ")[0];
+  const latestRep =
+    reputation.adjustments.find((row) => row.amount !== 0) ?? null;
+  const pulse = buildDashboardPulse({
+    displayName: user.name,
+    teamName: membership?.franchise.name ?? null,
+    teamAbbr: membership?.franchise.abbreviation ?? null,
+    coachIdentity: coachProfile?.coachIdentity?.name ?? null,
+    currentWeek: settings.currentWeek,
+    jobStatus,
+    reputationScore: reputation.score,
+    weekGame,
+    myFranchiseId: membership?.franchiseId ?? null,
+    latestRep: latestRep
+      ? { amount: latestRep.amount, reason: latestRep.reason, week: latestRep.week }
+      : null,
+    featured: featured
+      ? {
+          title: featured.title,
+          summary: featured.summary,
+          body: featured.body,
+          eyebrow: featured.eyebrow,
+        }
+      : null,
+  });
+  const teamColor =
+    membership?.franchise.primaryColor &&
+    membership.franchise.primaryColor.toLowerCase() !== "#000000"
+      ? membership.franchise.primaryColor
+      : "#d4af37";
+
+  const toDos: Array<{
+    href: string;
+    icon: typeof Star;
+    iconClassName: string;
+    title: string;
+    subtitle: string;
+  }> = [];
+
+  if (!membership) {
+    toDos.push({
+      href: "/request-team",
+      icon: Flag,
+      iconClassName: "bg-[var(--primary)] text-[var(--primary-foreground)]",
+      title: teamRequestUser?.requestedFranchise
+        ? `Requested ${teamRequestUser.requestedFranchise.abbreviation}`
+        : "Request your team",
+      subtitle: teamRequestUser?.requestedFranchise
+        ? "Waiting on a commissioner to assign you"
+        : "Tell us which franchise you drafted",
+    });
+  }
+
+  if (!coachProfile?.coachIdentityId) {
+    toDos.push({
+      href: "/coach/me",
+      icon: UserRound,
+      iconClassName:
+        "bg-[color-mix(in_srgb,var(--primary)_18%,var(--muted))] text-[var(--primary)]",
+      title: "Pick a coach identity",
+      subtitle: "How you want to be known around the league",
+    });
+  }
+
+  if (membership && !membership.franchise.teamIdentityId) {
+    toDos.push({
+      href: "/coach/me",
+      icon: Shirt,
+      iconClassName: "bg-[#1a1a1a] text-[var(--primary)] dark:bg-[#2a2a2a]",
+      title: "Pick a team identity",
+      subtitle: `Set the identity for ${membership.franchise.abbreviation}`,
+    });
+  }
+
+  for (const { game, outstanding } of outstandingSim) {
+    const rated =
+      outstanding.ratedTeamId === game.userTeamId ? game.userTeam : game.opponentTeam;
+    const thisWeek = game.week === settings.currentWeek;
+    toDos.push({
+      href: `/games/${game.id}`,
+      icon: Star,
+      iconClassName: "bg-amber-500 text-white",
+      title: thisWeek
+        ? "Submit opponent Sim Score"
+        : "Sim Score needed",
+      subtitle: `Week ${game.week}: rate ${rated.abbreviation} · ${game.userTeam.abbreviation} ${game.userScore}–${game.opponentScore} ${game.opponentTeam.abbreviation}`,
+    });
+  }
+
+  for (const poll of openPolls) {
+    toDos.push({
+      href: poll.href,
+      icon: Vote,
+      iconClassName: "bg-[var(--primary)] text-[var(--primary-foreground)]",
+      title: poll.remaining === poll.total ? "Vote in the poll" : "Finish your poll picks",
+      subtitle:
+        poll.remaining === poll.total
+          ? poll.title
+          : `${poll.title} · ${poll.remaining} of ${poll.total} still open`,
+    });
+  }
+
+  if (settings.carouselOpen && openVacancies > 0) {
+    toDos.push({
+      href: "/coach/carousel",
+      icon: Flag,
+      iconClassName: "bg-amber-500 text-white",
+      title: "Carousel is open",
+      subtitle: `${openVacancies} job${openVacancies === 1 ? "" : "s"} on the board`,
+    });
+  }
+
+  for (const game of pendingThisWeek) {
+    toDos.push({
+      href: `/games/${game.id}`,
+      icon: ClipboardCheck,
+      iconClassName: "bg-[#1a1a1a] text-[var(--primary)] dark:bg-[#2a2a2a]",
+      title: "Result pending approval",
+      subtitle: `W${game.week}: ${game.userTeam.abbreviation} ${game.userScore}–${game.opponentScore} ${game.opponentTeam.abbreviation}`,
+    });
+  }
+
+  if (commissionerUi && pendingCount > 0) {
+    toDos.push({
+      href: "/admin/approvals",
+      icon: ClipboardCheck,
+      iconClassName: "bg-[var(--primary)] text-[var(--primary-foreground)]",
+      title: "Approvals waiting",
+      subtitle: `${pendingCount} result${pendingCount === 1 ? "" : "s"} to review`,
+    });
+  }
 
   return (
-    <div className="space-y-8">
+    <div
+      className="relative isolate mx-auto w-full max-w-2xl space-y-8"
+      style={{ ["--team" as string]: teamColor }}
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-20 left-1/2 h-80 w-[150%] -translate-x-1/2"
+        style={{
+          background: `radial-gradient(ellipse at 50% 0%, color-mix(in srgb, ${teamColor} 46%, transparent) 0%, transparent 58%), radial-gradient(ellipse at 88% 8%, color-mix(in srgb, var(--primary) 34%, transparent) 0%, transparent 52%)`,
+        }}
+      />
+
       {params.teamRequested === "1" ? (
-        <p className="success-banner rounded-md px-3 py-2 text-sm">
+        <p className="success-banner relative rounded-2xl px-4 py-3 text-sm">
           Team request sent. A commissioner will assign you soon.
         </p>
       ) : null}
 
-      {!membership ? (
-        <Card className="border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]">
-          <CardHeader>
-            <CardTitle>
-              {teamRequestUser?.requestedFranchise
-                ? `Requested: ${teamRequestUser.requestedFranchise.name}`
-                : "Tell us which team you drafted"}
-            </CardTitle>
-            <CardDescription>
-              {teamRequestUser?.requestedFranchise
-                ? "Your request is visible to commissioners. You can still update it until you are assigned."
-                : "Google only shows your Gmail name. Request your franchise so we know who to assign."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <Button asChild>
-              <Link href="/request-team">
-                {teamRequestUser?.requestedFranchise
-                  ? "Update team request"
-                  : "Request your team"}
-              </Link>
-            </Button>
-            {teamRequestUser?.teamRequestNote ? (
-              <p className="w-full text-sm text-[var(--muted-foreground)]">
-                Note: {teamRequestUser.teamRequestNote}
-              </p>
-            ) : null}
-          </CardContent>
-        </Card>
+      <header className="relative animate-rise space-y-3 pt-1">
+        <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[var(--primary)]">
+          Season {settings.currentSeason} · Week {settings.currentWeek}
+        </p>
+        <h1 className="font-[family-name:var(--font-display)] text-[2.15rem] font-semibold leading-[1.02] tracking-[0.03em] sm:text-[2.55rem]">
+          <span className="text-[var(--primary)]">Coach</span> {coachName}
+        </h1>
+        <p className="max-w-xl text-[15px] leading-relaxed text-[var(--foreground)]/90">
+          {pulse.message}
+        </p>
+      </header>
+
+      {membership ? (
+        <Link
+          href={`/coach/profiles/${user.id}`}
+          className="relative animate-rise flex items-center gap-3 overflow-hidden rounded-[1.6rem] border border-[color-mix(in_srgb,var(--team)_35%,var(--border))] bg-[color-mix(in_srgb,var(--team)_10%,var(--surface-raised))] px-4 py-3.5 pl-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)] transition-transform active:scale-[0.99]"
+        >
+          <span
+            aria-hidden
+            className="absolute inset-y-0 left-0 w-1.5"
+            style={{ background: teamColor }}
+          />
+          <CoachAvatar
+            user={{
+              name: user.name,
+              image: user.image,
+              coachProfile,
+            }}
+            size="md"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[17px] font-semibold leading-tight">
+              {membership.franchise.name}
+            </p>
+            <p className="mt-0.5 truncate text-[13px] text-[var(--muted-foreground)]">
+              {membership.franchise.abbreviation} · {record}
+              {conferenceRank
+                ? ` · ${membership.franchise.conference} #${conferenceRank}`
+                : ""}
+            </p>
+          </div>
+          <JobStatusBadge status={jobStatus} />
+        </Link>
       ) : null}
 
-      <section className="field-stripe relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] px-5 py-8 shadow-[0_20px_60px_rgba(0,0,0,0.14)] animate-rise sm:px-8 sm:py-10">
-        <div className="absolute -right-10 -top-8 opacity-20">
-          <BrandLogo size="lg" className="h-40 w-40 sm:h-52 sm:w-52" />
-        </div>
-        <div className="absolute -right-16 -top-20 size-64 rounded-full bg-[var(--primary)]/15 blur-3xl" />
-        <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-[color-mix(in_srgb,var(--primary)_18%,transparent)] to-transparent" />
-        <div className="relative grid gap-6 lg:grid-cols-[1.4fr_0.8fr] lg:items-end">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <BrandLogo size="sm" className="drop-shadow-[0_0_16px_rgba(212,175,55,0.4)]" />
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-                Welcome to the league desk
-              </p>
-            </div>
-            <h1 className="max-w-2xl text-3xl font-semibold uppercase leading-[1.05] tracking-[0.04em] sm:text-5xl">
-              {firstName}, the season has a story — and you&apos;re in it
-            </h1>
-            <p className="max-w-2xl text-sm leading-relaxed text-[var(--muted-foreground)] sm:text-base">
-              This is your home for the Kings Madden League narrative: draft chapters,
-              coaching pressure, and the storylines that make the league feel alive.
-            </p>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
-              <span>
-                Season {settings.currentSeason} · Week {settings.currentWeek}
-              </span>
-              <span className="text-[var(--muted-foreground)]">
-                {membership?.franchise.name ?? "Awaiting franchise assignment"}
-              </span>
-              <span className="text-[var(--muted-foreground)]">
-                {formatRecord(career.wins, career.losses)} career
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-2 pt-1">
-              {membership ? (
-                <Button asChild>
-                  <Link href="/games?tab=week#submit-result">Submit result</Link>
-                </Button>
-              ) : (
-                <Button asChild>
-                  <Link href="/request-team">Request team</Link>
-                </Button>
-              )}
-              <Button asChild variant="outline">
-                <Link href="/games?tab=standings">Standings</Link>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link href="/storylines">Storylines</Link>
-              </Button>
-              <Button asChild variant="ghost">
-                <Link href="/coach">Coach Hub</Link>
-              </Button>
-              {commissionerUi ? (
-                <Button asChild variant="outline">
-                  <Link href="/admin/approvals">
-                    Approvals{pendingCount ? ` (${pendingCount})` : ""}
-                  </Link>
-                </Button>
-              ) : null}
-            </div>
-          </div>
+      {toDos.length > 0 ? (
+        <HomeSection label="Needs you">
+          <Group className="border-[color-mix(in_srgb,var(--primary)_28%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_7%,var(--surface-raised))]">
+            {toDos.map((item) => (
+              <GroupRow
+                key={`${item.href}-${item.title}`}
+                href={item.href}
+                icon={item.icon}
+                iconClassName={item.iconClassName}
+                title={item.title}
+                subtitle={item.subtitle}
+              />
+            ))}
+          </Group>
+        </HomeSection>
+      ) : null}
 
-          <div className="stagger grid grid-cols-2 gap-2 sm:gap-3">
-            <MiniStat
-              label="Your team"
-              value={membership?.franchise.abbreviation ?? "—"}
-              hint={teamStanding ? formatRecord(teamStanding.wins, teamStanding.losses) : "0-0"}
-            />
-            <MiniStat
-              label="Job security"
-              value={formatJobStatus(jobStatus)}
-              hint={`${coachProfile?.contractYearsLeft ?? 3} yrs left`}
-            />
-            <MiniStat
-              label="Coach grade"
-              value={getReputationGrade(reputation.score)}
-              hint={`${reputation.score} · ${getReputationGradeLabel(getReputationGrade(reputation.score))}`}
-            />
-            <MiniStat
-              label="Season XP"
-              value={String(
-                career.bySeason.find((s) => s.seasonId === season.id)?.xp ?? 0
-              )}
-              hint={`Career ${xpTotal}`}
-            />
+      <HomeSection label={`Week ${settings.currentWeek}`}>
+        {membership && weekGame ? (
+          <WeekMatchup
+            game={weekGame}
+            myFranchiseId={membership.franchiseId}
+            needsSim={outstandingSim.some((row) => row.game.id === weekGame.id)}
+          />
+        ) : membership ? (
+          <div className="rounded-[1.6rem] border border-[color-mix(in_srgb,var(--primary)_30%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_8%,var(--surface-raised))] px-5 py-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
+            <p className="text-[17px] font-semibold">Your game isn’t in yet</p>
+            <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted-foreground)]">
+              Play this week, then drop the score. That’s the only result the
+              desk needs from you right now.
+            </p>
+            <Button asChild className="mt-4 h-12 w-full rounded-2xl">
+              <Link href="/games?tab=week#submit-result">Submit result</Link>
+            </Button>
           </div>
-        </div>
-      </section>
+        ) : (
+          <div className="rounded-[1.6rem] border border-[var(--border)] bg-[var(--surface-raised)] px-5 py-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
+            <p className="text-[17px] font-semibold">No franchise yet</p>
+            <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted-foreground)]">
+              Request your team and this slot becomes your weekly matchup.
+            </p>
+          </div>
+        )}
+      </HomeSection>
+
+      <nav className="stagger grid grid-cols-4 gap-1 px-1">
+        <Shortcut href="/games?tab=week" label="Games" icon={Trophy} tone="gold" />
+        <Shortcut
+          href="/games?tab=standings"
+          label="Standings"
+          icon={ListOrdered}
+          tone="ink"
+        />
+        <Shortcut href="/coach" label="Coach" icon={Shield} tone="soft" />
+        {membership ? (
+          <Shortcut
+            href={`/coach/profiles/${user.id}`}
+            label="Profile"
+            icon={User}
+            tone="gold"
+          />
+        ) : (
+          <Shortcut href="/games?tab=week#submit-result" label="Submit" icon={Send} tone="warn" />
+        )}
+      </nav>
 
       {featured ? (
-        <section className="animate-rise">
-          <Card className="overflow-hidden border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]">
+        <HomeSection label="Front page">
+          <Link
+            href={`/storylines/${featured.slug}`}
+            className="group relative block overflow-hidden rounded-[1.6rem] border border-[color-mix(in_srgb,var(--primary)_40%,var(--border))] bg-black shadow-[0_16px_40px_rgba(212,175,55,0.16)] transition-transform active:scale-[0.99]"
+          >
             {featuredCover ? (
-              <Link
-                href={`/storylines/${featured.slug}`}
-                className="relative block aspect-[16/10] w-full border-b border-[var(--border)] bg-black sm:aspect-[2/1]"
-              >
+              <div className="relative aspect-[4/5] sm:aspect-[16/10]">
                 <Image
                   src={featuredCover.src}
                   alt={featuredCover.alt}
                   fill
                   priority
-                  className="object-cover object-top transition duration-300 hover:scale-[1.01]"
-                  sizes="(max-width: 768px) 100vw, 960px"
+                  className="object-cover object-top transition duration-500 group-hover:scale-[1.02]"
+                  sizes="(max-width: 768px) 100vw, 672px"
                 />
-              </Link>
-            ) : null}
-            <CardHeader className="space-y-3 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="elite">Front page</Badge>
-                <Badge variant="outline">
-                  {STORY_CATEGORY_LABELS[featured.category]}
-                </Badge>
               </div>
-              <div>
-                {featured.eyebrow ? (
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--primary)]">
-                    {featured.eyebrow}
-                  </p>
-                ) : null}
-                <CardTitle className="mt-1 text-2xl sm:text-3xl">{featured.title}</CardTitle>
-                <CardDescription className="mt-2 max-w-3xl text-sm sm:text-base">
-                  {featured.summary}
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-5">
-              <div className="flex flex-wrap gap-2">
-                <Button asChild size="sm">
-                  <Link href={`/storylines/${featured.slug}`}>Open full story</Link>
-                </Button>
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/storylines">All storylines</Link>
-                </Button>
-                <Button asChild variant="ghost" size="sm">
-                  <Link href="/storylines/season-1-team-draft-grades">
-                    Team draft grades
-                  </Link>
-                </Button>
-                {commissionerUi ? (
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/admin/stories">Edit stories</Link>
-                  </Button>
-                ) : null}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
+            ) : (
+              <div className="aspect-[16/10] bg-[linear-gradient(160deg,#1a1408,black)]" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 space-y-2 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
+                {featured.eyebrow ?? "Front page"}
+              </p>
+              <h2 className="font-[family-name:var(--font-body)] text-[1.45rem] font-semibold leading-tight tracking-tight text-white sm:text-[1.7rem]">
+                {featured.title}
+              </h2>
+              <p className="line-clamp-2 text-[14px] leading-relaxed text-white/75">
+                {featured.summary}
+              </p>
+            </div>
+          </Link>
+        </HomeSection>
       ) : null}
 
-      {moreStories.length > 0 ? (
-        <section className="stagger grid gap-4 md:grid-cols-2">
-          {moreStories.map((story) => (
-            <StoryCard key={story.id} story={story} />
-          ))}
-        </section>
-      ) : null}
-
-      <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Your coaching chapter</CardTitle>
-            <CardDescription>
-              Identity, reputation, and job security at a glance.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <ProfilePill
-                label="Coach identity"
-                value={coachProfile?.coachIdentity?.name ?? "Unassigned"}
-              />
-              <ProfilePill
-                label="Team identity"
-                value={membership?.franchise.teamIdentity?.name ?? "Unassigned"}
-              />
-              <ProfilePill
-                label="Job security"
-                value={formatJobStatus(jobStatus)}
-                badgeVariant={jobStatusBadgeVariant(jobStatus)}
-              />
-              <ProfilePill
-                label="Reputation"
-                value={`${reputation.score} (${getReputationGrade(reputation.score)})`}
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <ReputationBadge label={reputation.label} />
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/coach/profiles/${user.id}`}>Full profile</Link>
-              </Button>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/coach/carousel">Carousel</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-4">
-          {needsSimScore.length > 0 ? (
-            <Card className="border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]">
-              <CardHeader>
-                <CardTitle>Sim Score needed</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {needsSimScore.map((s) => (
-                    <li key={s.id}>
-                      <Link
-                        href={`/games/${s.id}`}
-                        className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2 text-sm transition-colors hover:bg-[var(--muted)]"
-                      >
-                        <span>
-                          W{s.week}: {s.userTeam.abbreviation} {s.userScore}–
-                          {s.opponentScore} {s.opponentTeam.abbreviation} · rate{" "}
-                          {s.userTeam.abbreviation}
-                        </span>
-                        <StatusBadge status={s.status} />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          ) : null}
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Your pending results</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {pendingMine.length === 0 ? (
-                <EmptyState
-                  title="No pending results"
-                  description="Submit from Games when your match finishes."
-                />
-              ) : (
-                <ul className="space-y-2">
-                  {pendingMine.map((s) => (
-                    <li key={s.id}>
-                      <Link
-                        href={`/games/${s.id}`}
-                        className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-2 text-sm transition-colors hover:bg-[var(--muted)]"
-                      >
-                        <span>
-                          W{s.week}: {s.userTeam.abbreviation} {s.userScore}–
-                          {s.opponentScore} {s.opponentTeam.abbreviation} ·{" "}
-                          {formatBothSimScores(s)}
-                        </span>
-                        <StatusBadge status={s.status} />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent approved games</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {recentApproved.length === 0 ? (
-                <EmptyState title="No approved games yet" />
-              ) : (
-                <ul className="space-y-2">
-                  {recentApproved.map((s) => (
-                    <li key={s.id}>
-                      <Link
-                        href={`/games/${s.id}`}
-                        className="block rounded-lg border border-[var(--border)] px-3 py-2 text-sm transition-colors hover:bg-[var(--muted)]"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium">
-                            {s.userTeam.abbreviation} {s.userScore}–{s.opponentScore}{" "}
-                            {s.opponentTeam.abbreviation}
-                          </span>
-                          <StatusBadge status={s.status} />
-                        </div>
-                        <p className="text-xs text-[var(--muted-foreground)]">
-                          Week {s.week} · {GAME_TYPE_LABELS[s.gameType]} ·{" "}
-                          {formatBothSimScores(s)}
-                        </p>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+      <HomeSection label="Your season">
+        <div className="stagger grid grid-cols-2 gap-3">
+          <StatTile
+            href="/games?tab=standings"
+            label="Record"
+            value={record}
+            hint={
+              membership
+                ? `${membership.franchise.conference} #${conferenceRank || "—"}`
+                : "Awaiting team"
+            }
+          />
+          <StatTile
+            href="/coach/hot-seat"
+            label="Job"
+            value={formatJobStatus(jobStatus)}
+            hint={`${coachProfile?.contractYearsLeft ?? 3} yrs left`}
+          />
+          <StatTile
+            href="/coach/reputation"
+            label="Grade"
+            value={getReputationGrade(reputation.score)}
+            hint={`${reputation.score} · ${getReputationGradeLabel(getReputationGrade(reputation.score))}`}
+          />
+          <StatTile
+            href="/coach/xp"
+            label="XP"
+            value={String(seasonXp)}
+            hint={`Career ${xpTotal}`}
+          />
         </div>
-      </section>
+      </HomeSection>
+
+      {recentOnly.length > 0 ? (
+        <HomeSection label="Latest results">
+          <Group>
+            {recentOnly.map((game) => {
+              const sides = matchupSides(game, membership?.franchiseId);
+              return (
+                <GroupRow
+                  key={game.id}
+                  href={`/games/${game.id}`}
+                  icon={Trophy}
+                  title={`${sides.mine.abbreviation} ${sides.myScore}–${sides.theirScore} ${sides.theirs.abbreviation}`}
+                  subtitle={`Week ${game.week}`}
+                  trailing={
+                    sides.won ? (
+                      <Badge variant="approved">W</Badge>
+                    ) : sides.lost ? (
+                      <Badge variant="rejected">L</Badge>
+                    ) : null
+                  }
+                />
+              );
+            })}
+          </Group>
+        </HomeSection>
+      ) : null}
     </div>
   );
 }
 
-function MiniStat({
+function StatTile({
+  href,
   label,
   value,
   hint,
 }: {
+  href: string;
   label: string;
   value: string;
   hint: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)]/80 px-3 py-3 backdrop-blur-sm">
-      <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+    <Link
+      href={href}
+      className="rounded-[1.4rem] border border-[color-mix(in_srgb,var(--primary)_22%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_6%,var(--surface-raised))] px-4 py-4 shadow-[0_8px_28px_rgba(0,0,0,0.04)] transition-transform active:scale-[0.98]"
+    >
+      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--primary)]">
         {label}
       </p>
-      <p className="mt-1 font-[family-name:var(--font-display)] text-lg font-semibold uppercase tracking-wide">
+      <p className="mt-1.5 font-[family-name:var(--font-body)] text-[1.35rem] font-semibold leading-none tracking-tight">
         {value}
       </p>
-      <p className="text-xs text-[var(--muted-foreground)]">{hint}</p>
-    </div>
+      <p className="mt-1.5 text-[12px] text-[var(--muted-foreground)]">{hint}</p>
+    </Link>
   );
 }
 
-function StoryCard({
-  story,
+function WeekMatchup({
+  game,
+  myFranchiseId,
+  needsSim = false,
 }: {
-  story: Awaited<ReturnType<typeof getPublishedStories>>[number];
+  game: {
+    id: string;
+    status: string;
+    userScore: number;
+    opponentScore: number;
+    userTeamId: string;
+    opponentTeamId: string;
+    userTeam: { abbreviation: string; name: string };
+    opponentTeam: { abbreviation: string; name: string };
+  };
+  myFranchiseId: string;
+  needsSim?: boolean;
 }) {
-  return (
-    <article className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-4">
-      <div className="mb-2 flex flex-wrap gap-2">
-        <Badge variant="outline">{STORY_CATEGORY_LABELS[story.category]}</Badge>
-        {story.week ? <Badge variant="default">Week {story.week}</Badge> : null}
-      </div>
-      {story.eyebrow ? (
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--primary)]">
-          {story.eyebrow}
-        </p>
-      ) : null}
-      <h3 className="mt-1 font-[family-name:var(--font-display)] text-base font-semibold uppercase tracking-wide">
-        {story.title}
-      </h3>
-      <p className="mt-2 text-sm text-[var(--muted-foreground)]">{story.summary}</p>
-      <Link
-        href={`/storylines/${story.slug}`}
-        className="mt-3 inline-block text-sm font-medium text-[var(--primary)] hover:underline"
-      >
-        Read story
-      </Link>
-    </article>
-  );
-}
+  const sides = matchupSides(game, myFranchiseId);
+  const pending = game.status === "PENDING";
 
-function ProfilePill({
-  label,
-  value,
-  badgeVariant,
-}: {
-  label: string;
-  value: string;
-  badgeVariant?: "elite" | "stable" | "pressured" | "hotseat" | "outline";
-}) {
   return (
-    <div className="rounded-lg border border-[var(--border)] px-3 py-2">
-      <p className="text-xs text-[var(--muted-foreground)]">{label}</p>
-      {badgeVariant ? (
-        <div className="mt-1">
-          <Badge variant={badgeVariant}>{value}</Badge>
-        </div>
-      ) : (
-        <p className="text-sm font-medium">{value}</p>
+    <Link
+      href={`/games/${game.id}`}
+      className={cn(
+        "block overflow-hidden rounded-[1.6rem] border px-5 py-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)] transition-transform active:scale-[0.99]",
+        needsSim
+          ? "border-amber-400/40 bg-[color-mix(in_srgb,#f59e0b_12%,var(--surface-raised))]"
+          : pending
+            ? "border-[color-mix(in_srgb,var(--primary)_35%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_10%,var(--surface-raised))]"
+            : sides.won
+              ? "border-[color-mix(in_srgb,var(--primary)_40%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_12%,var(--surface-raised))]"
+              : sides.lost
+                ? "border-[color-mix(in_srgb,var(--team)_40%,var(--border))] bg-[color-mix(in_srgb,var(--team)_14%,var(--surface-raised))]"
+                : "border-[var(--border)] bg-[var(--surface-raised)]"
       )}
-    </div>
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[13px] font-medium text-[var(--muted-foreground)]">
+          {needsSim
+            ? "Rate your opponent"
+            : pending
+              ? "Waiting on approval"
+              : "Final"}
+        </p>
+        {needsSim ? (
+          <Badge variant="pending">Sim Score</Badge>
+        ) : pending ? (
+          <Badge variant="pending">Pending</Badge>
+        ) : sides.won ? (
+          <Badge variant="approved">Win</Badge>
+        ) : sides.lost ? (
+          <Badge variant="rejected">Loss</Badge>
+        ) : (
+          <Badge variant="outline">Tie</Badge>
+        )}
+      </div>
+      <div className="mt-5 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[2rem] font-semibold leading-none tracking-tight">
+            {sides.mine.abbreviation}
+          </p>
+          <p className="mt-2 text-[2.15rem] font-semibold leading-none tabular-nums tracking-tight">
+            {sides.myScore}
+          </p>
+          <p className="mt-1.5 truncate text-[13px] text-[var(--muted-foreground)]">
+            {sides.mine.name}
+          </p>
+        </div>
+        <p className="pt-2 text-[13px] font-medium text-[var(--muted-foreground)]">vs</p>
+        <div className="min-w-0 text-right">
+          <p className="text-[2rem] font-semibold leading-none tracking-tight">
+            {sides.theirs.abbreviation}
+          </p>
+          <p className="mt-2 text-[2.15rem] font-semibold leading-none tabular-nums tracking-tight">
+            {sides.theirScore}
+          </p>
+          <p className="mt-1.5 truncate text-[13px] text-[var(--muted-foreground)]">
+            {sides.theirs.name}
+          </p>
+        </div>
+      </div>
+    </Link>
   );
+}
+
+function matchupSides(
+  game: {
+    userScore: number;
+    opponentScore: number;
+    userTeamId: string;
+    opponentTeamId: string;
+    userTeam: { abbreviation: string; name: string };
+    opponentTeam: { abbreviation: string; name: string };
+  },
+  myFranchiseId?: string
+) {
+  const mineIsUserTeam = myFranchiseId === game.userTeamId;
+  const mine = mineIsUserTeam ? game.userTeam : game.opponentTeam;
+  const theirs = mineIsUserTeam ? game.opponentTeam : game.userTeam;
+  const myScore = mineIsUserTeam ? game.userScore : game.opponentScore;
+  const theirScore = mineIsUserTeam ? game.opponentScore : game.userScore;
+  return {
+    mine,
+    theirs,
+    myScore,
+    theirScore,
+    won: myScore > theirScore,
+    lost: myScore < theirScore,
+  };
 }

@@ -500,6 +500,52 @@ export async function getCoachPickLean(): Promise<CoachPickLean[]> {
     .sort((a, b) => b.pickRate - a.pickRate || b.pickedToWin - a.pickedToWin);
 }
 
+export async function getOpenPollsNeedingVote(userId: string) {
+  const polls = await prisma.storyPoll.findMany({
+    where: {
+      isOpen: true,
+      story: { isPublished: true },
+    },
+    include: {
+      story: { select: { slug: true, title: true, week: true } },
+      questions: { select: { id: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+  if (polls.length === 0) return [];
+
+  const questionIds = polls.flatMap((poll) => poll.questions.map((question) => question.id));
+  const votes = await prisma.storyPollVote.findMany({
+    where: { userId, questionId: { in: questionIds } },
+    select: { questionId: true },
+  });
+  const voted = new Set(votes.map((vote) => vote.questionId));
+
+  return polls
+    .map((poll) => {
+      const remaining = poll.questions.filter((question) => !voted.has(question.id)).length;
+      return {
+        id: poll.id,
+        href: `/storylines/${poll.story.slug}`,
+        title: poll.title,
+        remaining,
+        total: poll.questions.length,
+      };
+    })
+    .filter((poll) => poll.remaining > 0);
+}
+
+export async function safeGetOpenPollsNeedingVote(userId: string) {
+  try {
+    return await getOpenPollsNeedingVote(userId);
+  } catch (error) {
+    if (!isMissingEngagementTable(error)) {
+      console.error("getOpenPollsNeedingVote failed:", error);
+    }
+    return [];
+  }
+}
+
 export async function safeEnsureDefaultStoryPolls() {
   try {
     await ensureDefaultStoryPolls();
