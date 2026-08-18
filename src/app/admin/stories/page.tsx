@@ -56,7 +56,9 @@ export default async function AdminStoriesPage() {
         <p className="text-sm text-[var(--muted-foreground)]">
           Write the front page, games of the week, players of the week, and coaching
           storylines that make the dashboard feel alive. Primetime slates can get a
-          winner poll; every other article gets reactions and comments automatically.
+          winner poll; lock picks and call winners from the live article when coaches
+          have not submitted yet. Every other article gets reactions and comments
+          automatically.
         </p>
       </div>
 

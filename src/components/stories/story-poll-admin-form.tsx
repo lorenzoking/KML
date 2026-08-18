@@ -23,7 +23,8 @@ export function StoryPollAdminForm({
         <p className="text-sm font-semibold">{poll.title}</p>
         <p className="text-xs text-[var(--muted-foreground)]">
           {poll.questionCount} {poll.questionCount === 1 ? "matchup" : "matchups"} ·{" "}
-          {poll.isOpen ? "open" : "closed"}
+          {poll.isOpen ? "open" : "closed"}. You can also lock the poll and call
+          winners from the live article.
         </p>
         <form
           action={async () => {

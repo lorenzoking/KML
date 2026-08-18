@@ -329,5 +329,82 @@ export async function setStoryPollOpen(pollId: string, isOpen: boolean) {
   });
 
   revalidateStoryEngagement(poll.story.slug);
-  return { success: true };
+  const engagement = await getStoryEngagement(poll.story.id, commissioner.id);
+  return { success: true, isOpen: poll.isOpen, poll: engagement?.poll ?? null };
+}
+
+export async function declareStoryPollWinner(
+  questionId: string,
+  optionId: string | null
+) {
+  const commissioner = await requireCommissioner();
+
+  const question = await prisma.storyPollQuestion.findUnique({
+    where: { id: questionId },
+    include: {
+      options: true,
+      poll: {
+        include: {
+          story: {
+            select: { id: true, slug: true, seasonId: true, week: true },
+          },
+        },
+      },
+    },
+  });
+  if (!question) return { error: "That matchup is no longer on the board." };
+
+  if (optionId) {
+    const option = question.options.find((row) => row.id === optionId);
+    if (!option) return { error: "That side is not in this matchup." };
+  }
+
+  const franchiseIds = question.options
+    .map((option) => option.franchiseId)
+    .filter((id): id is string => Boolean(id));
+  const story = question.poll.story;
+
+  if (story.seasonId && franchiseIds.length >= 2) {
+    const results = await prisma.gameResult.findMany({
+      where: {
+        seasonId: story.seasonId,
+        isVoided: false,
+        ...(story.week ? { week: story.week } : {}),
+        homeTeamId: { in: franchiseIds },
+        awayTeamId: { in: franchiseIds },
+      },
+      select: {
+        homeTeamId: true,
+        awayTeamId: true,
+        winnerTeamId: true,
+      },
+    });
+    const official = results.find((row) => {
+      const teams = new Set([row.homeTeamId, row.awayTeamId]);
+      return franchiseIds.every((id) => teams.has(id)) && Boolean(row.winnerTeamId);
+    });
+    if (official) {
+      return {
+        error:
+          "An approved score already grades this matchup. File or void that result instead.",
+      };
+    }
+  }
+
+  await prisma.storyPollQuestion.update({
+    where: { id: questionId },
+    data: { declaredWinnerOptionId: optionId },
+  });
+
+  await writeAuditLog({
+    actorId: commissioner.id,
+    action: optionId ? "DECLARE_STORY_POLL_WINNER" : "CLEAR_STORY_POLL_WINNER",
+    entityType: "LeagueStory",
+    entityId: story.id,
+    metadata: { pollId: question.poll.id, questionId, optionId },
+  });
+
+  revalidateStoryEngagement(story.slug);
+  const engagement = await getStoryEngagement(story.id, commissioner.id);
+  return { success: true, poll: engagement?.poll ?? null };
 }

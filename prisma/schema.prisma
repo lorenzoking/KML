@@ -261,6 +261,10 @@ model GameSubmission {
   notes          String?
   /// Official KML Primetime window (desk slate or submitter-marked).
   isPrimetime    Boolean          @default(false)
+  /// Commissioner filed this result for the coaches. Still counts for standings
+  /// and Coaching Reputation, but does not award coach XP.
+  skipXp               Boolean @default(false)
+  filedByCommissioner  Boolean @default(false)
   status         SubmissionStatus @default(PENDING)
   reviewedById   String?
   reviewedAt     DateTime?
@@ -550,12 +554,17 @@ model StoryPollQuestion {
   pollId    String
   prompt    String
   sortOrder Int    @default(0)
+  /// Desk-called winner when coaches have not submitted an approved score yet.
+  /// An approved GameResult for this matchup always takes precedence.
+  declaredWinnerOptionId String?
 
-  poll    StoryPoll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
-  options StoryPollOption[]
-  votes   StoryPollVote[]
+  poll                 StoryPoll         @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  options              StoryPollOption[]
+  votes                StoryPollVote[]
+  declaredWinnerOption StoryPollOption?  @relation("QuestionDeclaredWinner", fields: [declaredWinnerOptionId], references: [id], onDelete: SetNull)
 
   @@index([pollId])
+  @@index([declaredWinnerOptionId])
 }
 
 model StoryPollOption {
@@ -567,10 +576,11 @@ model StoryPollOption {
   coachUserId   String?
   sortOrder     Int     @default(0)
 
-  question  StoryPollQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  franchise Franchise?        @relation(fields: [franchiseId], references: [id], onDelete: SetNull)
-  coach     User?             @relation("StoryPollOptionCoach", fields: [coachUserId], references: [id], onDelete: SetNull)
-  votes     StoryPollVote[]
+  question             StoryPollQuestion  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  franchise            Franchise?         @relation(fields: [franchiseId], references: [id], onDelete: SetNull)
+  coach                User?              @relation("StoryPollOptionCoach", fields: [coachUserId], references: [id], onDelete: SetNull)
+  votes                StoryPollVote[]
+  declaredForQuestions StoryPollQuestion[] @relation("QuestionDeclaredWinner")
 
   @@index([questionId])
   @@index([coachUserId])

@@ -13,9 +13,11 @@ import type { StoryEngagementView } from "@/lib/story-engagement";
 export function StoryEngagement({
   engagement,
   signedIn,
+  isCommissioner = false,
 }: {
   engagement: StoryEngagementView;
   signedIn: boolean;
+  isCommissioner?: boolean;
 }) {
   const signInHref = `/sign-in?next=/storylines/${engagement.slug}`;
 
@@ -25,6 +27,7 @@ export function StoryEngagement({
         poll={engagement.poll}
         signedIn={signedIn}
         signInHref={signInHref}
+        isCommissioner={isCommissioner}
       />
     );
   }

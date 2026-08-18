@@ -17,7 +17,7 @@ import {
 } from "@/components/stories/story-body";
 import { StoryLightboxImage } from "@/components/stories/story-lightbox-image";
 import { StoryEngagement } from "@/components/stories/story-engagement";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser, isCommissioner } from "@/lib/auth";
 import { getCoachStoryLinks } from "@/lib/coach/story-links";
 import { getActiveSeason } from "@/lib/league";
 import { buildShareMetadata } from "@/lib/site";
@@ -67,6 +67,7 @@ export default async function StorylineDetailPage({
   ]);
   if (!story) notFound();
   const cover = extractStoryCoverImage(story.body);
+  const commissionerUi = user ? await isCommissioner(user) : false;
   const engagement = await safeGetStoryEngagement(story.id, user?.id);
 
   return (
@@ -121,7 +122,11 @@ export default async function StorylineDetailPage({
       </Card>
 
       {engagement ? (
-        <StoryEngagement engagement={engagement} signedIn={Boolean(user?.isActive)} />
+        <StoryEngagement
+          engagement={engagement}
+          signedIn={Boolean(user?.isActive)}
+          isCommissioner={commissionerUi}
+        />
       ) : null}
     </div>
   );

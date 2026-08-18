@@ -18,17 +18,30 @@ export const STORY_REACTION_KEYS = [
   "clap",
 ] as const;
 
+export type PollCoachRecord = {
+  userId: string;
+  name: string;
+  franchiseAbbr: string | null;
+  correct: number;
+  wrong: number;
+  isMine: boolean;
+};
+
 export type StoryPollView = {
   id: string;
   title: string;
   isOpen: boolean;
   totalVoters: number;
+  gradedMatchups: number;
+  leaderboard: PollCoachRecord[];
   questions: Array<{
     id: string;
     prompt: string;
     myOptionId: string | null;
     totalVotes: number;
     finalScore: string | null;
+    resultSource: "approved" | "declared" | null;
+    declaredWinnerOptionId: string | null;
     options: Array<{
       id: string;
       label: string;
@@ -270,6 +283,17 @@ function optionResult(
   return matchup.winnerTeamId === franchiseId ? "won" : "lost";
 }
 
+function formatDeclaredWinner(
+  options: Array<{ id: string; franchiseAbbr: string | null; label: string }>,
+  declaredWinnerOptionId: string | null
+) {
+  if (!declaredWinnerOptionId) return null;
+  const winner = options.find((option) => option.id === declaredWinnerOptionId);
+  if (!winner) return null;
+  const label = winner.franchiseAbbr ?? winner.label;
+  return `${label} won (desk call)`;
+}
+
 function formatQuestionFinalScore(
   matchup: MatchupResult | null,
   options: Array<{ franchiseId: string | null; franchiseAbbr: string | null }>
@@ -293,6 +317,65 @@ function formatQuestionFinalScore(
   });
   if (parts.length !== 2 || parts.some((part) => !part)) return null;
   return `${parts[0]!.abbr} ${parts[0]!.score}–${parts[1]!.score} ${parts[1]!.abbr}`;
+}
+
+function buildPollLeaderboard(
+  questions: StoryPollView["questions"],
+  votes: Array<{
+    userId: string;
+    questionId: string;
+    optionId: string;
+    user: { name: string | null };
+  }>,
+  memberships: Array<{ userId: string; franchise: { abbreviation: string } }>,
+  viewerId?: string | null
+): PollCoachRecord[] {
+  const winnerByQuestion = new Map(
+    questions
+      .map((question) => {
+        const winner = question.options.find((option) => option.result === "won");
+        return winner ? ([question.id, winner.id] as const) : null;
+      })
+      .filter((row): row is readonly [string, string] => Boolean(row))
+  );
+  if (winnerByQuestion.size === 0) return [];
+
+  const teamByUser = new Map(
+    memberships.map((row) => [row.userId, row.franchise.abbreviation])
+  );
+  const byUser = new Map<
+    string,
+    { name: string; correct: number; wrong: number }
+  >();
+
+  for (const vote of votes) {
+    const winnerId = winnerByQuestion.get(vote.questionId);
+    if (!winnerId) continue;
+    const current = byUser.get(vote.userId) ?? {
+      name: vote.user.name?.trim() || "League coach",
+      correct: 0,
+      wrong: 0,
+    };
+    if (vote.optionId === winnerId) current.correct += 1;
+    else current.wrong += 1;
+    byUser.set(vote.userId, current);
+  }
+
+  return [...byUser.entries()]
+    .map(([id, row]) => ({
+      userId: id,
+      name: row.name,
+      franchiseAbbr: teamByUser.get(id) ?? null,
+      correct: row.correct,
+      wrong: row.wrong,
+      isMine: id === viewerId,
+    }))
+    .sort(
+      (a, b) =>
+        b.correct - a.correct ||
+        a.wrong - b.wrong ||
+        a.name.localeCompare(b.name)
+    );
 }
 
 export async function getStoryEngagement(
@@ -329,7 +412,7 @@ export async function getStoryEngagement(
       ),
     ];
 
-    const [voteCounts, myVotes, matchupResults] = await Promise.all([
+    const [voteCounts, myVotes, matchupResults, allVotes, memberships] = await Promise.all([
       prisma.storyPollVote.groupBy({
         by: ["questionId", "optionId"],
         where: { question: { pollId: pollRow.id } },
@@ -362,17 +445,75 @@ export async function getStoryEngagement(
             },
           })
         : Promise.resolve([]),
+      prisma.storyPollVote.findMany({
+        where: { question: { pollId: pollRow.id }, user: { deletedAt: null } },
+        select: {
+          userId: true,
+          questionId: true,
+          optionId: true,
+          user: { select: { name: true } },
+        },
+      }),
+      story.seasonId
+        ? prisma.leagueMembership.findMany({
+            where: { seasonId: story.seasonId, isActive: true },
+            select: {
+              userId: true,
+              franchise: { select: { abbreviation: true } },
+            },
+          })
+        : Promise.resolve([]),
     ]);
 
     const countMap = new Map(
       voteCounts.map((row) => [`${row.questionId}:${row.optionId}`, row._count._all])
     );
     const myMap = new Map(myVotes.map((row) => [row.questionId, row.optionId]));
-    const voterIds = await prisma.storyPollVote.findMany({
-      where: { question: { pollId: pollRow.id } },
-      distinct: ["userId"],
-      select: { userId: true },
+    const questions = pollRow.questions.map((question) => {
+      const optionVotes = question.options.map(
+        (option) => countMap.get(`${question.id}:${option.id}`) ?? 0
+      );
+      const leans = leanForOptions(optionVotes);
+      const totalVotes = optionVotes.reduce((sum, count) => sum + count, 0);
+      const matchup = findQuestionMatchup(
+        matchupResults,
+        question.options.map((option) => option.franchiseId)
+      );
+      const declaredWinnerOptionId = matchup
+        ? null
+        : question.declaredWinnerOptionId;
+      const resultSource: "approved" | "declared" | null = matchup?.winnerTeamId
+        ? "approved"
+        : declaredWinnerOptionId
+          ? "declared"
+          : null;
+      return {
+        id: question.id,
+        prompt: question.prompt,
+        myOptionId: myMap.get(question.id) ?? null,
+        totalVotes,
+        finalScore:
+          formatQuestionFinalScore(matchup, question.options) ??
+          formatDeclaredWinner(question.options, declaredWinnerOptionId),
+        resultSource,
+        declaredWinnerOptionId,
+        options: question.options.map((option, index) => ({
+          id: option.id,
+          label: option.label,
+          franchiseAbbr: option.franchiseAbbr,
+          votes: optionVotes[index] ?? 0,
+          lean: totalVotes > 0 ? leans[index] : null,
+          result:
+            optionResult(matchup, option.franchiseId) ??
+            (declaredWinnerOptionId
+              ? option.id === declaredWinnerOptionId
+                ? "won"
+                : "lost"
+              : null),
+        })),
+      };
     });
+    const leaderboard = buildPollLeaderboard(questions, allVotes, memberships, userId);
 
     return {
       storyId: story.id,
@@ -381,33 +522,12 @@ export async function getStoryEngagement(
         id: pollRow.id,
         title: pollRow.title,
         isOpen: pollRow.isOpen,
-        totalVoters: voterIds.length,
-        questions: pollRow.questions.map((question) => {
-          const optionVotes = question.options.map(
-            (option) => countMap.get(`${question.id}:${option.id}`) ?? 0
-          );
-          const leans = leanForOptions(optionVotes);
-          const totalVotes = optionVotes.reduce((sum, count) => sum + count, 0);
-          const matchup = findQuestionMatchup(
-            matchupResults,
-            question.options.map((option) => option.franchiseId)
-          );
-          return {
-            id: question.id,
-            prompt: question.prompt,
-            myOptionId: myMap.get(question.id) ?? null,
-            totalVotes,
-            finalScore: formatQuestionFinalScore(matchup, question.options),
-            options: question.options.map((option, index) => ({
-              id: option.id,
-              label: option.label,
-              franchiseAbbr: option.franchiseAbbr,
-              votes: optionVotes[index] ?? 0,
-              lean: totalVotes > 0 ? leans[index] : null,
-              result: optionResult(matchup, option.franchiseId),
-            })),
-          };
-        }),
+        totalVoters: new Set(allVotes.map((vote) => vote.userId)).size,
+        gradedMatchups: questions.filter((question) =>
+          question.options.some((option) => option.result === "won")
+        ).length,
+        leaderboard,
+        questions,
       },
       reactions: [],
       comments: [],

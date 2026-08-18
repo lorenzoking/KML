@@ -43,6 +43,31 @@ export const approvalSchema = z.object({
   decisionNote: z.string().max(500).optional(),
 });
 
+export const commissionerFileGameSchema = z
+  .object({
+    seasonNumber: z.coerce.number().int().min(1).max(50),
+    week: z.coerce.number().int().min(1).max(30),
+    gameType: z.enum([
+      "REGULAR_SEASON",
+      "PLAYOFF",
+      "SUPER_BOWL",
+      "PRESEASON",
+      "SIMULATED",
+      "OTHER",
+    ]),
+    userTeamId: z.string().min(1, "Pick the first team"),
+    opponentTeamId: z.string().min(1, "Pick the second team"),
+    userScore: z.coerce.number().int().min(0).max(200),
+    opponentScore: z.coerce.number().int().min(0).max(200),
+    opponentSimScore: z.coerce.number().int().min(1).max(5).default(3),
+    userTeamSimScore: z.coerce.number().int().min(1).max(5).optional(),
+    isPrimetime: z.coerce.boolean().default(false),
+    notes: z.string().max(500).optional(),
+  })
+  .refine((data) => data.userTeamId !== data.opponentTeamId, {
+    message: "Pick two different teams.",
+  });
+
 export const assignTeamSchema = z.object({
   userId: z.string().min(1),
   franchiseId: z.string().min(1).nullable(),

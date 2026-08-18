@@ -11,13 +11,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { reviewSubmission } from "@/actions/approvals";
+import { CommissionerFileGameForm } from "@/components/forms/commissioner-file-game-form";
 import { prisma } from "@/lib/prisma";
 import { GAME_TYPE_LABELS } from "@/lib/constants";
+import { getActiveSeason } from "@/lib/league";
 import { formatBothSimScores } from "@/lib/sim-score";
 import { format } from "date-fns";
 
 export default async function ApprovalsPage() {
-  const [pending, history] = await Promise.all([
+  const { settings } = await getActiveSeason();
+  const [pending, history, franchises] = await Promise.all([
     prisma.gameSubmission.findMany({
       where: { status: "PENDING" },
       include: {
@@ -39,6 +42,10 @@ export default async function ApprovalsPage() {
       orderBy: { reviewedAt: "desc" },
       take: 20,
     }),
+    prisma.franchise.findMany({
+      orderBy: { sortOrder: "asc" },
+      select: { id: true, name: true, abbreviation: true },
+    }),
   ]);
 
   return (
@@ -49,11 +56,29 @@ export default async function ApprovalsPage() {
         </h2>
         <p className="text-sm text-[var(--muted-foreground)]">
           Approve to create official results. Played games award XP; simulated
-          games update standings only (no coach XP). Noteworthy results also move
-          Coaching Reputation. Primetime is taken from the submitter checkbox or
-          the official Primetime poll slate. Reject keeps audit history.
+          games update standings only (no coach XP). If the desk has to file a
+          score for coaches, use the form below — reputation still applies, XP
+          does not. Primetime is taken from the checkbox or the official
+          Primetime poll slate.
         </p>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>File a result for coaches</CardTitle>
+          <CardDescription>
+            Posts immediately. Coaches do not earn XP. Coaching Reputation and
+            standings still count.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CommissionerFileGameForm
+            franchises={franchises}
+            currentSeason={settings.currentSeason}
+            currentWeek={settings.currentWeek}
+          />
+        </CardContent>
+      </Card>
 
       {pending.length === 0 ? (
         <EmptyState
@@ -73,7 +98,8 @@ export default async function ApprovalsPage() {
                   Season {s.season.number} · Week {s.week} ·{" "}
                   {GAME_TYPE_LABELS[s.gameType]}
                   {s.isPrimetime ? " · Primetime" : ""}
-                  {s.gameType === "SIMULATED" ? " · no XP" : ""} ·{" "}
+                  {s.skipXp || s.gameType === "SIMULATED" ? " · no XP" : ""}
+                  {s.filedByCommissioner ? " · desk filed" : ""} ·{" "}
                   {formatBothSimScores(s)} · submitted by{" "}
                   {s.submitter.name ?? s.submitter.email} ·{" "}
                   {format(s.createdAt, "MMM d, h:mm a")}
@@ -125,8 +151,8 @@ export default async function ApprovalsPage() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <SubmitButton name="decision" value="APPROVE">
-                      {s.gameType === "SIMULATED"
-                        ? "Approve (standings only)"
+                      {s.skipXp || s.gameType === "SIMULATED"
+                        ? "Approve (no XP)"
                         : "Approve"}
                     </SubmitButton>
                     <SubmitButton
@@ -166,6 +192,7 @@ export default async function ApprovalsPage() {
                     <p className="text-xs text-[var(--muted-foreground)]">
                       {formatBothSimScores(s)} ·{" "}
                       {s.reviewedBy?.name ?? "Commissioner"}
+                      {s.skipXp || s.filedByCommissioner ? " · no XP" : ""}
                       {s.decisionNote ? ` · ${s.decisionNote}` : ""}
                     </p>
                   </div>

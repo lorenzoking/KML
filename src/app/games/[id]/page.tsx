@@ -99,7 +99,8 @@ export default async function GameDetailPage({
           <CardDescription>
             {GAME_TYPE_LABELS[game.gameType]}
             {game.isPrimetime ? " · Primetime" : ""}
-            {game.gameType === "SIMULATED" ? " · no XP" : ""}
+            {game.skipXp || game.gameType === "SIMULATED" ? " · no XP" : ""}
+            {game.filedByCommissioner ? " · desk filed" : ""}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
@@ -110,6 +111,12 @@ export default async function GameDetailPage({
           <p className="text-[var(--muted-foreground)]">
             {formatBothSimScores(game)}
           </p>
+          {game.filedByCommissioner ? (
+            <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
+              Commissioner filed this result. It counts for standings and
+              Coaching Reputation. Coaches did not earn XP.
+            </p>
+          ) : null}
           {game.notes ? (
             <p className="text-[var(--muted-foreground)]">Notes: {game.notes}</p>
           ) : null}
