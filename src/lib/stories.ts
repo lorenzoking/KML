@@ -176,6 +176,117 @@ Compete. Conquer. Be legendary.`,
     sortOrder: -20,
   },
   {
+    slug: "season-1-week-2-morning-show",
+    category: StoryCategory.FEATURE,
+    title: "Maye’s a closer, CMC is that dude, and Bone wants an investigation",
+    eyebrow: "KML Morning Show · Week 2",
+    summary:
+      "Stephen A. stamps Drake Maye after the Super Bowl rematch. Shannon crowns CMC Offensive Player of the Week. Special guest Bone says the Titans cheated him — and the desk already has Week 2 Primetime loaded.",
+    body: `![KML Morning Show — Week 2](/stories/kml-morning-show-wk2.png)
+
+The KML Morning Show did not recap Week 1 quietly.
+
+**Stephen A.** came in hot on one side of the desk. **Shannon** came in louder on the other. And the special guest in the middle — **Coach Bone of the New York Jets** — brought a conspiracy board.
+
+Unfiltered. Unapologetic. Unmatched. The banner already said it: **big stage, big names, big moments.**
+
+## Stephen A.: the Patriots are for real
+
+The left side of the desk did not hedge.
+
+**“The Patriots and Drake Maye are for real! That game winner in the Super Bowl rematch? That’s a closer!”**
+
+Week 1 opened with the cleanest stage in the league: **Petey’s Seahawks** versus **Ren’s Patriots** — Morning Show chalk against a dark-horse elite user, Super Bowl brands, first snap of Season 1.
+
+New England survived it. **Drake Maye** delivered a game-winning touchdown drive with **30 seconds remaining**, and Stephen A. turned that into a label the rest of KML now has to live with.
+
+Not a lucky opener. A closer.
+
+That stamp hits even harder with [Sunday Night Football](/storylines/season-1-week-2-primetime) on deck: **Patriots vs Steelers**. Two top-five users. No excuses. If Maye does it again under the lights, the dark-horse toys stop looking like a sleeper and start looking like the favorite.
+
+## Shannon: CMC is that dude
+
+Shannon did not come to debate the box score.
+
+**“CMC is that dude! 290 total yards and 3 TDs! That’s Offensive Player of the Week!”**
+
+**Christian McCaffrey** ate a primetime night against the Rams — **290 scrimmage yards, three touchdowns**, and the Offensive Player of the Week stamp that goes with it. **Swipe’s 49ers** didn’t just beat Hollywood. They embarrassed the best roster in Madden 27 on the first Thursday of the season.
+
+Now San Francisco draws **Mease’s Dolphins** in Week 2 TNF. Roster talent versus user talent. Shannon’s argument is simple: when CMC looks like that, the 90 overall offense is the standard. Mease’s argument has been the same since draft night: stick skill can erase a 74 overall.
+
+Thursday night is where those two sentences collide.
+
+## Special guest: Bone says he was cheated
+
+Then the show handed the mic to **Coach Bone**.
+
+**“I was cheated, plain and simple! The Titans should’ve lost that game! Bad calls, questionable clock management… the league needs to look into this!”**
+
+That is not a polite recap. That is a Jets coach on the Morning Show telling the entire league that **Qon’s Titans** got away with one.
+
+Bad calls. Clock management. A demand for an investigation. The graphic put it in a green bubble for a reason — this is the controversy segment, and Bone did not blink.
+
+Whether the desk agrees is a different show. The storyline is already live: a Week 1 result Bone refuses to accept, a Titans team that will hear about it all week, and a Jets locker room that thinks the tape got stolen.
+
+Ticker version: **Bone wants the league to look into it.**
+
+## Week 1 recap: the tape the desk can’t ignore
+
+The center column was a heater reel.
+
+| Story | What happened | Why the desk is still yelling |
+| --- | --- | --- |
+| **CMC / 49ers** | 290 scrimmage yards, 3 TDs | Offensive Player of the Week — and a primetime statement over the Rams |
+| **Jaden Hicks / Chiefs** | 3 INTs, including a pick-six | Defensive Player of the Week — Trent’s Chiefs got a takeaway clinic |
+| **Drake Maye / Patriots** | Game-winning TD drive, 30 seconds left | Super Bowl rematch closer. Stephen A. already made it a nickname |
+| **Justin Herbert / Chargers** | 5 TDs in a comeback over the Raiders | Oli’s Chargers climbed out on Prime’s Raiders |
+| **Lions** | Demolished the Saints by 30+ | Curry’s 87 OVR looked like January. The ticker already asked the follow-up |
+
+That Lions number is the one the bottom of the screen would not let go:
+
+**Can the Lions do that again in Week 2?**
+
+Slap and the Saints were supposed to be a game-changer on a bubble roster. A 30-piece in the opener is how win-now clubs start writing the season in ink — or how they set a bar they have to clear every Sunday.
+
+## Around the league
+
+The right rail did not ease up either.
+
+- **Jets / Titans:** Bone is not moving on. He wants the league in the film room.
+- **Steelers:** Big Al’s 87 defense surrendered **40 points to Atlanta**. The Morning Show called Pittsburgh a sleeper in Week 1. Sunday night against Ren is the prove-it game.
+- **Seahawks:** Petey is coming off a heartbreaking Super Bowl rematch loss. The chalk just took a punch. Week 2 is where Seattle answers, or the “Seahawks in 5” talk gets quieter.
+- **Browns vs Buccaneers:** Two stingy defenses that allowed **zero touchdowns** in Week 1. Somebody’s shutdown tape is about to meet the other one.
+
+## Week 2 Primetime is already lit
+
+The left column of the graphic was the teaser. The full slate lives on the Primetime board.
+
+| Window | Matchup | Desk line |
+| --- | --- | --- |
+| TNF | 49ers vs Dolphins | Talent vs. skill. Who sets the standard? |
+| SNF | Patriots vs Steelers | Two top-5 users. No excuses. |
+| MNF | Rams vs Giants | Welcome to the hot seat. Another blowout puts the Rams coach on the brink. |
+
+Lock your winners on the [Week 2 Primetime lock-in](/storylines/season-1-week-2-primetime). The Morning Show just told you why those three games are the show.
+
+## Morning Show verdict
+
+**Ren and Drake Maye** are not a cute Week 1 story anymore. Stephen A. called him a closer. Sunday night is the cross-check.
+
+**Swipe and CMC** have the OPOW tape and the Thursday night lights again. If Miami spoils it, Mease becomes the loudest 74 overall in the league.
+
+**Bone** just made Jets–Titans personal in front of the whole desk. That doesn’t go back in the bottle.
+
+And **Curry’s Lions** dropped 30-plus on a game-changer. The ticker asked the only question that matters next: can they do that again?
+
+Stay locked in.
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: false,
+    sortOrder: -25,
+    week: 2,
+  },
+  {
     slug: "season-1-team-draft-complete",
     category: StoryCategory.DRAFT,
     title: "The draft is locked: every coach has a franchise",
@@ -381,8 +492,142 @@ Week 1 Primetime doesn’t settle the Lombardi. It does something meaner — it 
 Submit the scores. Stamp the Sim Scores. Let the desk argue.
 
 Compete. Conquer. Be legendary.`,
-    isFeatured: true,
+    isFeatured: false,
     sortOrder: -30,
+    week: 1,
+  },
+  {
+    slug: "season-1-week-2-primetime",
+    category: StoryCategory.GAME_OF_WEEK,
+    title: "KML Primetime Week 2: talent vs. skill — and the hot seat",
+    eyebrow: "Games of the week · Primetime slate",
+    summary:
+      "TNF is roster talent versus the best user in KML. SNF is two top-five coaches with no excuses. MNF puts the Rams back under the lights — one more blowout and the hot seat conversation starts.",
+    body: `![KML Primetime Week 2](/stories/wk2-primetimeparlay.png)
+
+**Big stage. Big names. Big moments. This is KML Primetime.**
+
+Week 1 put the theories on tape. Week 2 puts three windows back under the lights with meaner stakes: a Thursday opener about roster talent versus stick skill, a Sunday-night heavyweight between two of KML’s best, and a Monday-night job-security special the reputation system was built for.
+
+The board is locked. The desk is already arguing.
+
+## Thursday Night Football — 49ers vs Dolphins
+
+**The champ vs. the standard.**
+
+This is the perfect Thursday opener.
+
+**Swipe’s 49ers (85 OVR · 90 OFF)** are coming off a dominant primetime win over the Rams, with **Christian McCaffrey** putting up **290 scrimmage yards and three touchdowns** and walking away with Offensive Player of the Week. Now they get a less-talented Dolphins roster — **Mease’s Miami (74 OVR)**, the lowest-rated team in Madden 27.
+
+The catch: Mease is already **1–0** after beating Las Vegas, and the league has been calling him one of the best users in KML since draft night. Roster overalls told you San Francisco should cook. League history told you Mease can erase a ratings gap with the sticks.
+
+The question becomes: was San Francisco’s Week 1 dominance about the roster, or are they really a contender?
+
+Miami has the perfect opportunity to remind everyone that in KML, stick skill can wipe out a roster disadvantage.
+
+## Why this game matters
+
+- **Star power:** CMC just took over a primetime night and left with OPOW
+- **Elite user:** Mease on the lowest overall in the game, already 1–0
+- **Upset potential:** 90 OFF versus 74 OVR is supposed to be a mismatch. Thursday nights exist to ruin that sentence.
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **49ers** | Swipe | **Brock Purdy** | **Christian McCaffrey** — 290 scrimmage yards is the new baseline | **George Kittle** — the mismatch that beats zone and sells play-action |
+| **Dolphins** | Mease | **Tua Tagovailoa** | **Tyreek Hill** — take the top off and make 74 OVR look fast | **the user gap** — Mease’s sticks are the entire Miami thesis |
+
+If CMC gets going again, TNF becomes another San Francisco statement. If Mease turns a rebuild roster into a primetime steal, every “team merchant” argument in Discord gets a new exhibit.
+
+## Sunday Night Football — Patriots vs Steelers
+
+**Prove it.**
+
+This is the best pure matchup of the week.
+
+Two top-five users. Two relatively even teams. Two completely different emotions entering Week 2.
+
+**Ren’s Patriots (86 OVR · 87 OFF · 85 DEF)** just survived a dramatic Super Bowl rematch. **Drake Maye** delivered a game-winning TD drive with 30 seconds remaining. New England is 1–0 against Morning Show chalk and has a chance to start 2–0 against quality competition.
+
+**Big Al’s Steelers (81 OVR · 87 DEF)** enter angry.
+
+Pittsburgh surrendered 40 points to Atlanta in the opener — and a team expected to hang its hat on defense suddenly has something to prove. Another poor defensive showing, this time under the Sunday-night spotlight, would start raising legitimate questions about the sleeper tape the desk sold in Week 1.
+
+Meanwhile, New England has an opportunity to establish itself as an early championship favorite. No excuses. No ratings alibi. Just two of the names that actually scare the room.
+
+## Why this game matters
+
+- **Marquee football:** two top-five users, balanced enough rosters, primetime implications
+- **Patriots path:** beat Pittsburgh and the dark-horse toys start looking like the favorite
+- **Steelers path:** the 87 DEF has to look like the 87 DEF, or the sleeper talk gets quieter fast
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Patriots** | Ren | **Drake Maye** | **A.J. Brown** — the contested-catch WR1 who finished the rematch | **Christian Gonzalez** — erase a Steelers skill piece and force Big Al left |
+| **Steelers** | Big Al | **the Pittsburgh offense** | **T.J. Watt** — the 87 DEF identity in one jersey | **takeaways** — field position is how a last-pick defense was supposed to win |
+
+Can Maye and A.J. Brown keep stacking signature drives? Or does Watt and the front seven get the tape Big Al needed after Atlanta?
+
+## Monday Night Football — Rams vs Giants
+
+**The pressure is on.**
+
+This isn’t necessarily the best matchup.
+
+It’s the best storyline.
+
+**Jordan Stowe’s Rams (91 OVR)** were embarrassed by San Francisco in their Week 1 primetime appearance, and the consequences have already started. Their coaching grade fell **five points** after the blowout.
+
+Now they’re being put right back underneath the lights.
+
+Another primetime blowout could drop the Rams to a **75** coaching grade — Hot Seat territory heading into Week 3.
+
+Across the field is **Biz** and the **Giants (79 OVR)** — a coach who couldn’t care less about saving anyone’s job. He’s new to KML and already opened his tenure with a victory over Dallas.
+
+Beat the Rams on Monday night and suddenly the newcomer is **2–0** with a primetime win, and everyone in KML knows his name.
+
+For the Rams? Win, and Week 1 starts looking like a bad night. Get embarrassed again, and Week 3 begins with the league talking about your job.
+
+## Why this game matters
+
+Your league’s media and reputation system is built for games exactly like this. Primetime blowout losses stack. Coaching grades move. Hot Seat whispers become Hot Seat math.
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Rams** | Jordan Stowe | **Matthew Stafford** | **Puka Nacua** — the cover-2 breaker that turns 93 OVR offense into points | **Myles Garrett** — the league’s premier edge still looking for a statement |
+| **Giants** | Biz | **Jaxson Dart** | **Malik Nabers** — the explosive answer that already helped beat Dallas | **Abdul Carter** — Year 2 edge chaos next to Brian Burns |
+
+If Hollywood’s toys finally look like a 91, the throne gets its first clean win. If Dart, Nabers, and Carter steal another one, Biz isn’t a newcomer anymore — he’s a problem.
+
+## Primetime Week 2 cheat sheet
+
+| Window | Matchup | Coaches | Why it’s on the board |
+| --- | --- | --- | --- |
+| TNF | 49ers–Dolphins | Swipe vs Mease | Roster talent vs. user talent |
+| SNF | Patriots–Steelers | Ren vs Big Al | Two top-5 users. No excuses. |
+| MNF | Rams–Giants | Jordan Stowe vs Biz | Welcome to the hot seat |
+
+## Desk verdict
+
+Week 1 told you **Swipe can cook on the big stage**, **Ren can finish a rematch**, **Biz can beat the rating**, and **Jordan Stowe’s mountain is not automatic**.
+
+Week 2 asks the meaner follow-ups:
+
+- Can Mease erase 74 overall on Thursday night?
+- Can Big Al’s defense look like the sleeper the desk sold — or does Ren go 2–0 and grab the early favorite chair?
+- Can the Rams survive another primetime night, or does Monday Night Football become the first real Hot Seat episode of Season 1?
+
+Lock your picks. Submit the scores. Let the desk argue.
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: true,
+    sortOrder: -40,
+    week: 2,
   },
   {
     slug: "season-1-week-1-preview",
@@ -466,6 +711,7 @@ export async function ensureDefaultLeagueStories(seasonId?: string) {
         isFeatured: story.isFeatured,
         sortOrder: story.sortOrder,
         isPublished: true,
+        ...("week" in story ? { week: story.week } : {}),
         ...(seasonId ? { seasonId } : {}),
       },
       create: {
@@ -474,6 +720,14 @@ export async function ensureDefaultLeagueStories(seasonId?: string) {
         isPublished: true,
         publishedAt: new Date(),
       },
+    });
+  }
+
+  const featuredSlug = DEFAULT_STORIES.find((story) => story.isFeatured)?.slug;
+  if (featuredSlug) {
+    await prisma.leagueStory.updateMany({
+      where: { isFeatured: true, NOT: { slug: featuredSlug } },
+      data: { isFeatured: false },
     });
   }
 

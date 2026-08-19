@@ -140,6 +140,34 @@ const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
       },
     ],
   },
+  {
+    storySlug: "season-1-week-2-primetime",
+    key: "week-2-primetime",
+    title: "Week 2 Primetime lock-in",
+    questions: [
+      {
+        prompt: "Thursday Night Football — 49ers vs Dolphins",
+        options: [
+          { label: "Swipe · 49ers", franchiseAbbr: "SF" },
+          { label: "Mease · Dolphins", franchiseAbbr: "MIA" },
+        ],
+      },
+      {
+        prompt: "Sunday Night Football — Patriots vs Steelers",
+        options: [
+          { label: "Ren · Patriots", franchiseAbbr: "NE" },
+          { label: "Big Al · Steelers", franchiseAbbr: "PIT" },
+        ],
+      },
+      {
+        prompt: "Monday Night Football — Rams vs Giants",
+        options: [
+          { label: "Jordan Stowe · Rams", franchiseAbbr: "LAR" },
+          { label: "Biz · Giants", franchiseAbbr: "NYG" },
+        ],
+      },
+    ],
+  },
 ];
 
 function isMissingEngagementTable(error: unknown) {
