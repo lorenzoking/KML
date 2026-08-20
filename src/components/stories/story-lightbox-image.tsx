@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 export function StoryLightboxImage({
@@ -70,41 +71,44 @@ export function StoryLightboxImage({
         </span>
       </button>
 
-      {open ? (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={alt}
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 p-3 sm:p-6"
-          onClick={() => setOpen(false)}
-        >
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="absolute right-4 top-4 rounded-md border border-white/20 bg-black/60 px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80"
-          >
-            Close
-          </button>
-          <div
-            className="relative h-full w-full max-h-[92vh] max-w-[1400px]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <Image
-              src={src}
-              alt={alt}
-              fill
-              sizes="100vw"
-              className="object-contain"
-              priority
-            />
-          </div>
-          {caption ? (
-            <p className="absolute bottom-4 left-1/2 max-w-3xl -translate-x-1/2 px-3 text-center text-xs text-white/80">
-              {caption}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
+      {open
+        ? createPortal(
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label={alt}
+              className="fixed inset-0 z-[80] flex h-[100dvh] w-screen items-center justify-center overflow-hidden bg-black/90 p-3 sm:p-6"
+              onClick={() => setOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="absolute right-4 top-4 z-10 rounded-md border border-white/20 bg-black/60 px-3 py-1.5 text-sm font-medium text-white hover:bg-black/80"
+              >
+                Close
+              </button>
+              <div
+                className="relative h-full w-full max-h-[92dvh] max-w-[1400px]"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <Image
+                  src={src}
+                  alt={alt}
+                  fill
+                  sizes="100vw"
+                  className="object-contain"
+                  priority
+                />
+              </div>
+              {caption ? (
+                <p className="absolute bottom-4 left-1/2 max-w-3xl -translate-x-1/2 px-3 text-center text-xs text-white/80">
+                  {caption}
+                </p>
+              ) : null}
+            </div>,
+            document.body
+          )
+        : null}
     </>
   );
 }
