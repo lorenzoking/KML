@@ -1,18 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ClipboardCheck,
-  Flag,
-  ListOrdered,
-  Send,
-  Shield,
-  Shirt,
-  Star,
-  Trophy,
-  User,
-  UserRound,
-  Vote,
-} from "lucide-react";
+import { CalendarDays, ClipboardCheck, Flag, ListOrdered, Send, Shirt, Star, Trophy, User, UserRound, Vote } from "lucide-react";
 import { CoachAvatar } from "@/components/coach/coach-avatar";
 import { JobStatusBadge } from "@/components/coach/job-status-badge";
 import { Group, GroupRow, HomeSection, Shortcut } from "@/components/dashboard/ios";
@@ -40,6 +28,12 @@ import {
 import { myOutstandingSimScore } from "@/lib/sim-score";
 import { ensureDefaultLeagueStories, getPublishedStories } from "@/lib/stories";
 import { safeGetOpenPollsNeedingVote } from "@/lib/story-engagement";
+import {
+  byeWeekForAbbr,
+  safeEnsureSeasonSchedule,
+  safeGetMissingScheduledGames,
+  safeGetTeamScheduledGame,
+} from "@/lib/schedule";
 
 export default async function DashboardPage({
   searchParams,
@@ -52,6 +46,7 @@ export default async function DashboardPage({
   const params = await searchParams;
 
   await ensureDefaultLeagueStories(season.id);
+  await safeEnsureSeasonSchedule(season.id);
 
   const [
     membership,
@@ -77,7 +72,7 @@ export default async function DashboardPage({
       include: { opponentTeam: true, userTeam: true },
       orderBy: { createdAt: "desc" },
     }),
-    getPublishedStories({ take: 4 }),
+    getPublishedStories({ take: 10 }),
     prisma.user.findUnique({
       where: { id: user.id },
       include: { requestedFranchise: true },
@@ -101,7 +96,7 @@ export default async function DashboardPage({
     override: coachProfile?.hotSeatStatusOverride,
   });
 
-  const [weekGame, pendingCount, myLiveGames, recentApproved, openPolls, openVacancies] =
+  const [weekGame, pendingCount, myLiveGames, recentApproved, openPolls, openVacancies, scheduledThisWeek, missingScores] =
     await Promise.all([
     membership
       ? prisma.gameSubmission.findFirst({
@@ -155,6 +150,16 @@ export default async function DashboardPage({
           where: { seasonId: season.id, isOpen: true },
         })
       : Promise.resolve(0),
+    membership
+      ? safeGetTeamScheduledGame(
+          season.id,
+          settings.currentWeek,
+          membership.franchiseId
+        )
+      : Promise.resolve(null),
+    commissionerUi
+      ? safeGetMissingScheduledGames(season.id, 1, settings.currentWeek)
+      : Promise.resolve([]),
   ]);
 
   const featured =
@@ -162,6 +167,10 @@ export default async function DashboardPage({
     stories.find((s) => s.category === "FEATURE") ??
     stories[0];
   const featuredCover = featured ? extractStoryCoverImage(featured.body) : null;
+  const honorsStory = stories.find(
+    (story) => story.category === "PLAYER_OF_WEEK" && story.id !== featured?.id
+  );
+  const honorsCover = honorsStory ? extractStoryCoverImage(honorsStory.body) : null;
 
   const coachName = coachHonorific(user.name);
   const seasonXp =
@@ -272,6 +281,29 @@ export default async function DashboardPage({
     });
   }
 
+  const scheduledOpp = scheduledThisWeek
+    ? scheduledThisWeek.homeTeam.id === membership?.franchiseId
+      ? scheduledThisWeek.awayTeam
+      : scheduledThisWeek.homeTeam
+    : null;
+  const scheduledIsHome = scheduledThisWeek
+    ? scheduledThisWeek.homeTeam.id === membership?.franchiseId
+    : false;
+  const isByeWeek = Boolean(
+    membership &&
+      byeWeekForAbbr(membership.franchise.abbreviation) === settings.currentWeek
+  );
+
+  if (membership && scheduledOpp && !weekGame && !isByeWeek) {
+    toDos.push({
+      href: "/games?tab=week#submit-result",
+      icon: Send,
+      iconClassName: "bg-[var(--primary)] text-[var(--primary-foreground)]",
+      title: "Submit this week's score",
+      subtitle: `Week ${settings.currentWeek}: ${scheduledIsHome ? "vs" : "@"} ${scheduledOpp.abbreviation}`,
+    });
+  }
+
   for (const { game, outstanding } of outstandingSim) {
     const rated =
       outstanding.ratedTeamId === game.userTeamId ? game.userTeam : game.opponentTeam;
@@ -327,6 +359,16 @@ export default async function DashboardPage({
       iconClassName: "bg-[var(--primary)] text-[var(--primary-foreground)]",
       title: "Approvals waiting",
       subtitle: `${pendingCount} result${pendingCount === 1 ? "" : "s"} to review`,
+    });
+  }
+
+  if (commissionerUi && missingScores.length > 0) {
+    toDos.push({
+      href: "/admin/season",
+      icon: CalendarDays,
+      iconClassName: "bg-amber-500 text-white",
+      title: "Scores still missing",
+      subtitle: `${missingScores.length} scheduled game${missingScores.length === 1 ? "" : "s"} through week ${settings.currentWeek}`,
     });
   }
 
@@ -418,6 +460,47 @@ export default async function DashboardPage({
             myFranchiseId={membership.franchiseId}
             needsSim={outstandingSim.some((row) => row.game.id === weekGame.id)}
           />
+        ) : membership && isByeWeek ? (
+          <div className="rounded-[1.6rem] border border-[var(--border)] bg-[var(--surface-raised)] px-5 py-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
+            <p className="text-[17px] font-semibold">Bye week</p>
+            <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted-foreground)]">
+              {membership.franchise.abbreviation} is off this week on the 2026
+              NFL slate.
+            </p>
+            <Button asChild variant="outline" className="mt-4 h-12 w-full rounded-2xl">
+              <Link
+                href={`/games?tab=schedule&team=${membership.franchise.abbreviation}`}
+              >
+                Full schedule
+              </Link>
+            </Button>
+          </div>
+        ) : membership && scheduledOpp ? (
+          <div className="rounded-[1.6rem] border border-[color-mix(in_srgb,var(--primary)_30%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_8%,var(--surface-raised))] px-5 py-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
+            <p className="text-[13px] font-medium text-[var(--muted-foreground)]">
+              {scheduledIsHome ? "Home" : "Away"}
+              {scheduledThisWeek?.isPrimetime ? " · Primetime" : ""}
+            </p>
+            <p className="mt-2 text-[17px] font-semibold">
+              {scheduledIsHome ? "vs" : "@"} {scheduledOpp.abbreviation}
+            </p>
+            <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted-foreground)]">
+              {scheduledOpp.name}. Play it, then drop the score so the desk can
+              lock the week.
+            </p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <Button asChild className="h-12 rounded-2xl">
+                <Link href="/games?tab=week#submit-result">Submit result</Link>
+              </Button>
+              <Button asChild variant="outline" className="h-12 rounded-2xl">
+                <Link
+                  href={`/games?tab=schedule&team=${membership.franchise.abbreviation}`}
+                >
+                  Full schedule
+                </Link>
+              </Button>
+            </div>
+          </div>
         ) : membership ? (
           <div className="rounded-[1.6rem] border border-[color-mix(in_srgb,var(--primary)_30%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_8%,var(--surface-raised))] px-5 py-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
             <p className="text-[17px] font-semibold">Your game isn’t in yet</p>
@@ -442,12 +525,21 @@ export default async function DashboardPage({
       <nav className="stagger grid grid-cols-4 gap-1 px-1">
         <Shortcut href="/games?tab=week" label="Games" icon={Trophy} tone="gold" />
         <Shortcut
+          href={
+            membership
+              ? `/games?tab=schedule&team=${membership.franchise.abbreviation}`
+              : "/games?tab=schedule"
+          }
+          label="Schedule"
+          icon={CalendarDays}
+          tone="ink"
+        />
+        <Shortcut
           href="/games?tab=standings"
           label="Standings"
           icon={ListOrdered}
-          tone="ink"
+          tone="soft"
         />
-        <Shortcut href="/coach" label="Coach" icon={Shield} tone="soft" />
         {membership ? (
           <Shortcut
             href={`/coach/profiles/${user.id}`}
@@ -490,6 +582,40 @@ export default async function DashboardPage({
               </h2>
               <p className="line-clamp-2 text-[14px] leading-relaxed text-white/75">
                 {featured.summary}
+              </p>
+            </div>
+          </Link>
+        </HomeSection>
+      ) : null}
+
+      {honorsStory ? (
+        <HomeSection label="Honors desk">
+          <Link
+            href={`/storylines/${honorsStory.slug}`}
+            className="group flex overflow-hidden rounded-[1.6rem] border border-[color-mix(in_srgb,var(--primary)_45%,var(--border))] bg-[var(--surface-raised)] shadow-[0_10px_28px_rgba(212,175,55,0.12)] transition-transform active:scale-[0.99]"
+          >
+            {honorsCover ? (
+              <div className="relative min-h-[8.5rem] w-[38%] shrink-0 self-stretch bg-black sm:w-48">
+                <Image
+                  src={honorsCover.src}
+                  alt={honorsCover.alt}
+                  fill
+                  className="object-cover object-top transition duration-500 group-hover:scale-[1.03]"
+                  sizes="180px"
+                />
+              </div>
+            ) : (
+              <div className="w-[38%] shrink-0 bg-[linear-gradient(160deg,#1a1408,black)] sm:w-48" />
+            )}
+            <div className="min-w-0 flex-1 space-y-1.5 px-4 py-3.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--primary)]">
+                {honorsStory.eyebrow ?? "Players of the week"}
+              </p>
+              <h2 className="font-[family-name:var(--font-body)] text-[1.05rem] font-semibold leading-tight tracking-tight sm:text-[1.2rem]">
+                {honorsStory.title}
+              </h2>
+              <p className="line-clamp-2 text-[13px] leading-relaxed text-[var(--muted-foreground)]">
+                {honorsStory.summary}
               </p>
             </div>
           </Link>

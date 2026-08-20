@@ -11,6 +11,7 @@ import {
   PlayoffResult,
   ExpectationResult,
 } from "@prisma/client";
+import { NFL_2026_GAMES } from "../src/lib/nfl-schedule-2026";
 
 const prisma = new PrismaClient();
 
@@ -182,6 +183,23 @@ async function main() {
 
   const franchises = await prisma.franchise.findMany();
   const byAbbr = Object.fromEntries(franchises.map((f) => [f.abbreviation, f]));
+
+  await prisma.scheduledGame.createMany({
+    data: NFL_2026_GAMES.flatMap((game) => {
+      const home = byAbbr[game.home];
+      const away = byAbbr[game.away];
+      if (!home || !away) return [];
+      return [
+        {
+          seasonId: season.id,
+          week: game.week,
+          homeTeamId: home.id,
+          awayTeamId: away.id,
+          isPrimetime: Boolean(game.primetime),
+        },
+      ];
+    }),
+  });
 
   const teamIdentities = await Promise.all(
     [

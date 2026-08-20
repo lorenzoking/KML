@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 
 const tabs = [
   { id: "week", label: "Week results" },
+  { id: "schedule", label: "Schedule" },
   { id: "standings", label: "Standings" },
 ] as const;
 
@@ -10,7 +11,7 @@ export function GamesTabs({
   active,
   query,
 }: {
-  active: "week" | "standings";
+  active: "week" | "schedule" | "standings";
   query: Record<string, string | undefined>;
 }) {
   return (

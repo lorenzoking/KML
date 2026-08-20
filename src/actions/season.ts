@@ -16,6 +16,7 @@ import {
 } from "@/lib/validations";
 import { writeAuditLog } from "@/lib/audit";
 import { reverseAutomaticReputation } from "@/lib/coach/reputation-from-game";
+import { safeEnsureSeasonSchedule, safeGetMissingScheduledGames } from "@/lib/schedule";
 
 async function voidSubmissionInTx(
   tx: Prisma.TransactionClient,
@@ -293,6 +294,8 @@ export async function advanceToNextSeason(formData: FormData) {
     return nextSeason;
   });
 
+  await safeEnsureSeasonSchedule(result.id);
+
   await writeAuditLog({
     actorId: commissioner.id,
     action: "ADVANCE_SEASON",
@@ -322,4 +325,49 @@ function revalidateSeasonPaths() {
   revalidatePath("/standings");
   revalidatePath("/submissions");
   revalidatePath("/rules");
+}
+
+export async function advanceLeagueWeek() {
+  const commissioner = await requireCommissioner();
+  const { season, settings } = await getActiveSeason();
+
+  if (settings.currentWeek >= 30) {
+    return { error: "Already at week 30." };
+  }
+
+  const fromWeek = settings.currentWeek;
+  const missing = await safeGetMissingScheduledGames(
+    season.id,
+    fromWeek,
+    fromWeek
+  );
+
+  await prisma.leagueSetting.update({
+    where: { key: "default" },
+    data: { currentWeek: fromWeek + 1 },
+  });
+
+  await writeAuditLog({
+    actorId: commissioner.id,
+    action: "ADVANCE_WEEK",
+    entityType: "LeagueSetting",
+    entityId: "default",
+    metadata: {
+      fromWeek,
+      toWeek: fromWeek + 1,
+      missingCount: missing.length,
+      missing: missing.map(
+        (row) => `${row.away.abbreviation}@${row.home.abbreviation}`
+      ),
+    },
+  });
+
+  revalidateSeasonPaths();
+  revalidatePath("/admin/settings");
+  return {
+    success: true,
+    fromWeek,
+    toWeek: fromWeek + 1,
+    missingCount: missing.length,
+  };
 }

@@ -33,11 +33,16 @@ import {
   computeReputationScore,
   getReputationLabel,
 } from "@/lib/reputation";
-import { GAME_TYPE_LABELS } from "@/lib/constants";
-import { format } from "date-fns";
-import { ScrollToHash } from "@/components/games/scroll-to-hash";
 import { formatBothSimScores } from "@/lib/sim-score";
-import type { SubmissionStatus } from "@prisma/client";
+import { ScrollToHash } from "@/components/games/scroll-to-hash";
+import { WeekSlate } from "@/components/games/week-slate";
+import { TeamSchedule } from "@/components/games/team-schedule";
+import {
+  buildTeamSchedule,
+  buildWeekSlate,
+  NFL_REGULAR_SEASON_WEEKS,
+  safeEnsureSeasonSchedule,
+} from "@/lib/schedule";
 
 export default async function GamesPage({
   searchParams,
@@ -46,12 +51,18 @@ export default async function GamesPage({
     tab?: string;
     season?: string;
     week?: string;
+    team?: string;
     conference?: string;
     q?: string;
   }>;
 }) {
   const params = await searchParams;
-  const tab = params.tab === "standings" ? "standings" : "week";
+  const tab =
+    params.tab === "standings"
+      ? "standings"
+      : params.tab === "schedule"
+        ? "schedule"
+        : "week";
   const [user, active, seasons] = await Promise.all([
     getSessionUser(),
     getActiveSeason(),
@@ -65,6 +76,8 @@ export default async function GamesPage({
   const season =
     seasons.find((s) => s.number === selectedSeasonNumber) ?? activeSeason;
 
+  await safeEnsureSeasonSchedule(season.id);
+
   const selectedWeek = params.week
     ? Number(params.week)
     : season.id === activeSeason.id
@@ -75,13 +88,14 @@ export default async function GamesPage({
     ? getUserMembership(user.id, activeSeason.id)
     : Promise.resolve(null);
 
+  const franchisesPromise = prisma.franchise.findMany({
+    orderBy: { sortOrder: "asc" },
+    select: { id: true, name: true, abbreviation: true },
+  });
+
   const weekDataPromise =
     tab === "week"
       ? Promise.all([
-          prisma.franchise.findMany({
-            orderBy: { sortOrder: "asc" },
-            select: { id: true, name: true, abbreviation: true },
-          }),
           prisma.gameSubmission.findMany({
             where: {
               seasonId: season.id,
@@ -120,8 +134,43 @@ export default async function GamesPage({
                 take: 12,
               })
             : Promise.resolve([]),
+          prisma.scheduledGame.findMany({
+            where: { seasonId: season.id, week: selectedWeek },
+            include: {
+              homeTeam: { select: { id: true, name: true, abbreviation: true } },
+              awayTeam: { select: { id: true, name: true, abbreviation: true } },
+            },
+          }),
         ])
       : Promise.resolve([[], [], []] as const);
+
+  const scheduleDataPromise =
+    tab === "schedule"
+      ? Promise.all([
+          prisma.scheduledGame.findMany({
+            where: { seasonId: season.id },
+            include: {
+              homeTeam: { select: { id: true, name: true, abbreviation: true } },
+              awayTeam: { select: { id: true, name: true, abbreviation: true } },
+            },
+            orderBy: { week: "asc" },
+          }),
+          prisma.gameSubmission.findMany({
+            where: {
+              seasonId: season.id,
+              status: { in: ["PENDING", "APPROVED"] },
+            },
+            select: {
+              id: true,
+              status: true,
+              userTeamId: true,
+              opponentTeamId: true,
+              userScore: true,
+              opponentScore: true,
+            },
+          }),
+        ])
+      : Promise.resolve([[], []] as const);
 
   const standingsDataPromise =
     tab === "standings"
@@ -144,8 +193,19 @@ export default async function GamesPage({
         ])
       : Promise.resolve([[], []] as const);
 
-  const [membership, [franchises, weekGames, myHistory], [rawStandings, memberships]] =
-    await Promise.all([membershipPromise, weekDataPromise, standingsDataPromise]);
+  const [
+    membership,
+    franchises,
+    [weekGames, myHistory, scheduledWeek],
+    [teamScheduled, teamSubmissions],
+    [rawStandings, memberships],
+  ] = await Promise.all([
+    membershipPromise,
+    franchisesPromise,
+    weekDataPromise,
+    scheduleDataPromise,
+    standingsDataPromise,
+  ]);
 
   // Public viewers only see approved/voided history; coaches see games they're in.
   const myTeamId = membership?.franchiseId;
@@ -160,8 +220,54 @@ export default async function GamesPage({
     );
   });
 
-  const approvedWeekGames = visibleGames.filter((g) => g.status === "APPROVED");
-  const pendingWeekGames = visibleGames.filter((g) => g.status === "PENDING");
+  const weekSlate = buildWeekSlate(
+    [...scheduledWeek],
+    visibleGames.filter((game) => game.status === "PENDING" || game.status === "APPROVED")
+  );
+  const missingThisWeek = weekSlate.filter((row) => row.status === "missing").length;
+
+  const selectedTeamAbbr = (
+    params.team ||
+    membership?.franchise.abbreviation ||
+    franchises[0]?.abbreviation ||
+    "SEA"
+  ).toUpperCase();
+  const selectedTeam =
+    franchises.find((row) => row.abbreviation === selectedTeamAbbr) ??
+    franchises[0];
+  const teamScheduleRows = selectedTeam
+    ? buildTeamSchedule(
+        selectedTeam.id,
+        [...teamScheduled].filter(
+          (game) =>
+            game.homeTeamId === selectedTeam.id ||
+            game.awayTeamId === selectedTeam.id
+        ),
+        [...teamSubmissions]
+      )
+    : [];
+
+  const myScheduled =
+    membership && scheduledWeek.length > 0
+      ? scheduledWeek.find(
+          (game) =>
+            game.homeTeam.id === membership.franchiseId ||
+            game.awayTeam.id === membership.franchiseId
+        )
+      : null;
+  const scheduledOpponent = myScheduled
+    ? myScheduled.homeTeam.id === membership?.franchiseId
+      ? myScheduled.awayTeam
+      : myScheduled.homeTeam
+    : null;
+
+  const tabQuery = {
+    season: String(season.number),
+    week: String(selectedWeek),
+    team: selectedTeamAbbr,
+    conference: params.conference,
+    q: params.q,
+  };
 
   let standings = rawStandings;
   if (params.conference === "AFC" || params.conference === "NFC") {
@@ -195,13 +301,6 @@ export default async function GamesPage({
     })
   );
 
-  const tabQuery = {
-    season: String(season.number),
-    week: String(selectedWeek),
-    conference: params.conference,
-    q: params.q,
-  };
-
   const canSubmit =
     Boolean(user?.isActive) &&
     season.id === activeSeason.id &&
@@ -216,7 +315,7 @@ export default async function GamesPage({
             Games
           </h1>
           <p className="text-sm text-[var(--muted-foreground)]">
-            Weekly results, standings, and score submission in one place.
+            Weekly results, team schedules, and score submission in one place.
           </p>
         </div>
         {canSubmit ? (
@@ -261,6 +360,19 @@ export default async function GamesPage({
                     week === settings.currentWeek
                       ? " (current)"
                       : ""}
+                  </option>
+                ))}
+              </select>
+            ) : tab === "schedule" ? (
+              <select
+                name="team"
+                defaultValue={selectedTeamAbbr}
+                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-base shadow-sm sm:h-10 sm:w-auto sm:text-sm"
+              >
+                {franchises.map((franchise) => (
+                  <option key={franchise.id} value={franchise.abbreviation}>
+                    {franchise.abbreviation} · {franchise.name}
+                    {membership?.franchiseId === franchise.id ? " (you)" : ""}
                   </option>
                 ))}
               </select>
@@ -329,6 +441,18 @@ export default async function GamesPage({
                     currentSeason={settings.currentSeason}
                     currentWeek={settings.currentWeek}
                     userTeamName={membership.franchise.name}
+                    scheduledOpponent={scheduledOpponent}
+                    scheduledIsHome={
+                      myScheduled
+                        ? myScheduled.homeTeam.id === membership.franchiseId
+                        : undefined
+                    }
+                    scheduledPrimetime={myScheduled?.isPrimetime}
+                    isByeWeek={
+                      selectedWeek <= NFL_REGULAR_SEASON_WEEKS &&
+                      scheduledWeek.length > 0 &&
+                      !myScheduled
+                    }
                   />
                 )}
                 {!user ? (
@@ -382,65 +506,58 @@ export default async function GamesPage({
             <Card>
               <CardHeader>
                 <CardTitle>
-                  Week {selectedWeek} results · Season {season.number}
+                  Week {selectedWeek} slate · Season {season.number}
                 </CardTitle>
                 <CardDescription>
-                  Official scores appear after commissioner approval.
+                  {weekSlate.length > 0
+                    ? `${weekSlate.length} scheduled games · ${missingThisWeek} still need a score.`
+                    : "Official scores appear after commissioner approval."}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {approvedWeekGames.length === 0 && pendingWeekGames.length === 0 ? (
-                  <EmptyState
-                    title="No games posted for this week"
-                    description="Submit a result after you play, or check another week."
-                  />
-                ) : null}
-
-                {approvedWeekGames.length > 0 ? (
-                  <div className="space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
-                      Official results
-                    </p>
-                    <ul className="space-y-3">
-                      {approvedWeekGames.map((game) => (
-                        <li key={game.id}>
-                          <WeekGameLink
-                            game={game}
-                            myTeamId={myTeamId}
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {pendingWeekGames.length > 0 ? (
-                  <div className="space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
-                      Pending approval
-                    </p>
-                    <ul className="space-y-3">
-                      {pendingWeekGames.map((game) => (
-                        <li key={game.id}>
-                          <WeekGameLink
-                            game={game}
-                            myTeamId={myTeamId}
-                            pending
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                    {user?.role === "COMMISSIONER" ? (
+                {weekSlate.length > 0 ? (
+                  <>
+                    <WeekSlate rows={weekSlate} myTeamId={myTeamId} />
+                    {commissionerUi && missingThisWeek > 0 ? (
                       <Button asChild variant="outline" size="sm">
-                        <Link href="/admin/approvals">Review approvals</Link>
+                        <Link href="/admin/season">Missing results</Link>
                       </Button>
                     ) : null}
-                  </div>
-                ) : null}
+                  </>
+                ) : (
+                  <EmptyState
+                    title="No scheduled games this week"
+                    description="Playoff or extra games still show after a coach submits."
+                  />
+                )}
               </CardContent>
             </Card>
           </div>
         </div>
+      ) : tab === "schedule" ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {selectedTeam
+                ? `${selectedTeam.name} schedule`
+                : "Team schedule"}
+            </CardTitle>
+            <CardDescription>
+              2026 NFL regular season · 17 games + one bye. Open games still
+              need a submitted score.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {teamScheduleRows.length === 0 ? (
+              <EmptyState
+                title="Schedule not loaded"
+                description="The 2026 NFL slate will appear here after the database migration runs."
+              />
+            ) : (
+              <TeamSchedule rows={teamScheduleRows} />
+            )}
+          </CardContent>
+        </Card>
       ) : (
         <>
           {standings.every((s) => s.wins + s.losses + s.ties === 0) ? (
@@ -480,10 +597,15 @@ export default async function GamesPage({
                       <TableRow key={row.franchiseId}>
                         <TableCell>{idx + 1}</TableCell>
                         <TableCell>
-                          <div className="font-medium">{row.name}</div>
-                          <div className="text-xs text-[var(--muted-foreground)]">
-                            {row.conference} {row.division}
-                          </div>
+                          <Link
+                            href={`/games?tab=schedule&season=${season.number}&team=${row.abbreviation}`}
+                            className="hover:text-[var(--primary)]"
+                          >
+                            <div className="font-medium">{row.name}</div>
+                            <div className="text-xs text-[var(--muted-foreground)]">
+                              {row.conference} {row.division}
+                            </div>
+                          </Link>
                         </TableCell>
                         <TableCell>{coach?.name ?? "—"}</TableCell>
                         <TableCell>{row.wins}</TableCell>
@@ -521,62 +643,3 @@ export default async function GamesPage({
   );
 }
 
-function WeekGameLink({
-  game,
-  myTeamId,
-  pending = false,
-}: {
-  game: {
-    id: string;
-    status: SubmissionStatus;
-    userScore: number;
-    opponentScore: number;
-    opponentSimScore: number;
-    userTeamSimScore: number | null;
-    gameType: keyof typeof GAME_TYPE_LABELS;
-    reviewedAt: Date | null;
-    userTeam: { id: string; name: string; abbreviation: string };
-    opponentTeam: { id: string; name: string; abbreviation: string };
-    submitter: { name: string | null };
-  };
-  myTeamId?: string;
-  pending?: boolean;
-}) {
-  const needsMySim =
-    Boolean(myTeamId) &&
-    game.opponentTeam.id === myTeamId &&
-    game.userTeamSimScore == null;
-
-  return (
-    <Link
-      href={`/games/${game.id}`}
-      className={`block rounded-lg border px-4 py-3 transition-colors hover:bg-[var(--muted)] ${
-        pending
-          ? "border-dashed border-[var(--border)]"
-          : "border-[var(--border)]"
-      }`}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className={pending ? "font-medium" : "text-lg font-semibold tracking-wide"}>
-          {game.userTeam.abbreviation} {game.userScore}–{game.opponentScore}{" "}
-          {game.opponentTeam.abbreviation}
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          {needsMySim ? (
-            <Badge variant="outline">Submit Sim Score</Badge>
-          ) : null}
-          <StatusBadge status={game.status} />
-        </div>
-      </div>
-      <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-        {pending
-          ? "Waiting on commissioners"
-          : `${game.userTeam.name} vs ${game.opponentTeam.name}`}{" "}
-        · {GAME_TYPE_LABELS[game.gameType]}
-        {game.gameType === "SIMULATED" ? " · no XP" : ""} ·{" "}
-        {formatBothSimScores(game)} · {game.submitter.name?.trim() || "Unnamed coach"}
-        {!pending && game.reviewedAt ? ` · ${format(game.reviewedAt, "MMM d")}` : ""}
-      </p>
-    </Link>
-  );
-}

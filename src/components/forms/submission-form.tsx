@@ -19,11 +19,19 @@ export function SubmissionForm({
   currentSeason,
   currentWeek,
   userTeamName,
+  scheduledOpponent,
+  scheduledIsHome,
+  scheduledPrimetime,
+  isByeWeek,
 }: {
   franchises: FranchiseOption[];
   currentSeason: number;
   currentWeek: number;
   userTeamName: string;
+  scheduledOpponent?: { id: string; name: string; abbreviation: string } | null;
+  scheduledIsHome?: boolean;
+  scheduledPrimetime?: boolean;
+  isByeWeek?: boolean;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -44,6 +52,17 @@ export function SubmissionForm({
     >
       <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/40 px-3 py-2 text-sm">
         Your team: <strong>{userTeamName}</strong>
+        {isByeWeek ? (
+          <span className="mt-1 block text-xs text-[var(--muted-foreground)]">
+            Bye week on the 2026 NFL slate. You can still file a sim or extra
+            game if needed.
+          </span>
+        ) : scheduledOpponent ? (
+          <span className="mt-1 block text-xs text-[var(--muted-foreground)]">
+            This week: {scheduledIsHome ? "vs" : "@"} {scheduledOpponent.abbreviation}{" "}
+            {scheduledOpponent.name}
+          </span>
+        ) : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -87,7 +106,12 @@ export function SubmissionForm({
 
       <div className="space-y-2">
         <Label htmlFor="opponentTeamId">Opponent</Label>
-        <Select id="opponentTeamId" name="opponentTeamId" required defaultValue="">
+        <Select
+          id="opponentTeamId"
+          name="opponentTeamId"
+          required
+          defaultValue={scheduledOpponent?.id ?? ""}
+        >
           <option value="" disabled>
             Select opponent
           </option>
@@ -141,6 +165,7 @@ export function SubmissionForm({
             type="checkbox"
             name="isPrimetime"
             value="true"
+            defaultChecked={Boolean(scheduledPrimetime)}
             className="mt-1 h-4 w-4"
           />
           <span>

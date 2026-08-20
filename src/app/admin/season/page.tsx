@@ -23,16 +23,22 @@ import { prisma } from "@/lib/prisma";
 import { getActiveSeason, listSeasons } from "@/lib/league";
 import {
   advanceToNextSeason,
+  advanceLeagueWeek,
   resetCurrentSeasonGames,
   voidGame,
 } from "@/actions/season";
 import { format } from "date-fns";
+import {
+  safeEnsureSeasonSchedule,
+  safeGetMissingScheduledGames,
+} from "@/lib/schedule";
 
 export default async function AdminSeasonPage() {
   const { season, settings } = await getActiveSeason();
   const seasons = await listSeasons();
+  await safeEnsureSeasonSchedule(season.id);
 
-  const [approvedGames, pendingCount, voidedCount] = await Promise.all([
+  const [approvedGames, pendingCount, voidedCount, missingScores] = await Promise.all([
     prisma.gameSubmission.findMany({
       where: { seasonId: season.id, status: "APPROVED" },
       include: {
@@ -49,7 +55,13 @@ export default async function AdminSeasonPage() {
     prisma.gameResult.count({
       where: { seasonId: season.id, isVoided: true },
     }),
+    safeGetMissingScheduledGames(season.id, 1, settings.currentWeek),
   ]);
+
+  const overdue = missingScores.filter((row) => row.week < settings.currentWeek);
+  const currentMissing = missingScores.filter(
+    (row) => row.week === settings.currentWeek
+  );
 
   return (
     <div className="space-y-6">
@@ -92,6 +104,67 @@ export default async function AdminSeasonPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-[color-mix(in_srgb,var(--primary)_28%,var(--border))]">
+        <CardHeader>
+          <CardTitle>Scheduled games missing scores</CardTitle>
+          <CardDescription>
+            2026 NFL regular-season slate through week {settings.currentWeek}.
+            Advance even if games are still open — they stay on this list until
+            someone files a result.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <p className="rounded-xl border border-[var(--border)] px-3 py-2 text-sm">
+              <span className="block text-xs text-[var(--muted-foreground)]">
+                Week {settings.currentWeek} open
+              </span>
+              <span className="text-lg font-semibold">{currentMissing.length}</span>
+            </p>
+            <p className="rounded-xl border border-[var(--border)] px-3 py-2 text-sm">
+              <span className="block text-xs text-[var(--muted-foreground)]">
+                Prior weeks still open
+              </span>
+              <span className="text-lg font-semibold">{overdue.length}</span>
+            </p>
+            <form
+              action={async () => {
+                "use server";
+                await advanceLeagueWeek();
+              }}
+            >
+              <SubmitButton className="w-full">
+                Advance to week {settings.currentWeek + 1}
+              </SubmitButton>
+            </form>
+          </div>
+          {missingScores.length === 0 ? (
+            <EmptyState
+              title="Slate is current"
+              description="Every scheduled game through this week has a pending or approved score."
+            />
+          ) : (
+            <ul className="space-y-2">
+              {missingScores.map((row) => (
+                <li
+                  key={row.scheduledId}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+                >
+                  <span className="font-medium">
+                    W{row.week} · {row.away.abbreviation} @ {row.home.abbreviation}
+                  </span>
+                  <span className="text-xs text-[var(--muted-foreground)]">
+                    {row.away.name} at {row.home.name}
+                    {row.week < settings.currentWeek ? " · overdue" : ""}
+                    {row.isPrimetime ? " · Primetime" : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="border-amber-500/30">

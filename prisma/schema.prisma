@@ -175,6 +175,8 @@ model Franchise {
   carouselRequestedApplications CarouselApplication[] @relation("CarouselRequestedTeam")
   teamRequests                  User[]                @relation("UserRequestedFranchise")
   storyPollOptions              StoryPollOption[]
+  scheduledHome                 ScheduledGame[]       @relation("ScheduledHome")
+  scheduledAway                 ScheduledGame[]       @relation("ScheduledAway")
 }
 
 model Season {
@@ -195,6 +197,27 @@ model Season {
   carouselVacancies     CarouselVacancy[]
   carouselApplications  CarouselApplication[]
   stories               LeagueStory[]
+  scheduledGames        ScheduledGame[]
+}
+
+model ScheduledGame {
+  id          String   @id @default(cuid())
+  seasonId    String
+  week        Int
+  homeTeamId  String
+  awayTeamId  String
+  isPrimetime Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  season   Season    @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  homeTeam Franchise @relation("ScheduledHome", fields: [homeTeamId], references: [id])
+  awayTeam Franchise @relation("ScheduledAway", fields: [awayTeamId], references: [id])
+
+  @@unique([seasonId, week, homeTeamId])
+  @@unique([seasonId, week, awayTeamId])
+  @@index([seasonId, week])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
 }
 
 model LeagueMembership {
