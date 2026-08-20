@@ -2,14 +2,19 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/status-badge";
+import { CommissionerFileMissingGameForm } from "@/components/forms/commissioner-file-missing-game-form";
 import type { WeekSlateRow } from "@/lib/schedule";
 
 export function WeekSlate({
   rows,
   myTeamId,
+  isCommissioner = false,
+  seasonNumber,
 }: {
   rows: WeekSlateRow[];
   myTeamId?: string;
+  isCommissioner?: boolean;
+  seasonNumber?: number;
 }) {
   if (rows.length === 0) return null;
 
@@ -22,7 +27,13 @@ export function WeekSlate({
       {missing.length > 0 ? (
         <SlateGroup title="Not submitted" hint={`${missing.length} still open`}>
           {missing.map((row) => (
-            <SlateRow key={row.scheduledId} row={row} myTeamId={myTeamId} />
+            <SlateRow
+              key={row.scheduledId}
+              row={row}
+              myTeamId={myTeamId}
+              isCommissioner={isCommissioner}
+              seasonNumber={seasonNumber}
+            />
           ))}
         </SlateGroup>
       ) : null}
@@ -71,9 +82,13 @@ function SlateGroup({
 function SlateRow({
   row,
   myTeamId,
+  isCommissioner = false,
+  seasonNumber,
 }: {
   row: WeekSlateRow;
   myTeamId?: string;
+  isCommissioner?: boolean;
+  seasonNumber?: number;
 }) {
   const mine =
     myTeamId === row.home.id || myTeamId === row.away.id;
@@ -106,8 +121,21 @@ function SlateRow({
       </div>
       <p className="mt-1 text-xs text-[var(--muted-foreground)]">
         {row.away.name} at {row.home.name}
-        {row.status === "missing" ? " · waiting on a score" : ""}
+        {row.status === "missing" && !isCommissioner ? " · waiting on a score" : ""}
       </p>
+      {isCommissioner && row.status === "missing" && seasonNumber != null ? (
+        <div className="mt-3">
+          <CommissionerFileMissingGameForm
+            seasonNumber={seasonNumber}
+            week={row.week}
+            homeTeamId={row.home.id}
+            awayTeamId={row.away.id}
+            homeAbbr={row.home.abbreviation}
+            awayAbbr={row.away.abbreviation}
+            isPrimetime={row.isPrimetime}
+          />
+        </div>
+      ) : null}
     </div>
   );
 

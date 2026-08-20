@@ -374,6 +374,7 @@ export async function commissionerFileGame(formData: FormData) {
 function revalidateAll() {
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
+  revalidatePath("/admin/season");
   revalidatePath("/games", "layout");
   revalidatePath("/submissions");
   revalidatePath("/dashboard");

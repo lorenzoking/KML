@@ -517,7 +517,12 @@ export default async function GamesPage({
               <CardContent className="space-y-4">
                 {weekSlate.length > 0 ? (
                   <>
-                    <WeekSlate rows={weekSlate} myTeamId={myTeamId} />
+                    <WeekSlate
+                      rows={weekSlate}
+                      myTeamId={myTeamId}
+                      isCommissioner={commissionerUi}
+                      seasonNumber={season.number}
+                    />
                     {commissionerUi && missingThisWeek > 0 ? (
                       <Button asChild variant="outline" size="sm">
                         <Link href="/admin/season">Missing results</Link>

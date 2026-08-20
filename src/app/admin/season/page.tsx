@@ -32,6 +32,7 @@ import {
   safeEnsureSeasonSchedule,
   safeGetMissingScheduledGames,
 } from "@/lib/schedule";
+import { CommissionerFileMissingGameForm } from "@/components/forms/commissioner-file-missing-game-form";
 
 export default async function AdminSeasonPage() {
   const { season, settings } = await getActiveSeason();
@@ -111,7 +112,8 @@ export default async function AdminSeasonPage() {
           <CardDescription>
             2026 NFL regular-season slate through week {settings.currentWeek}.
             Advance even if games are still open — they stay on this list until
-            someone files a result.
+            someone files a result. File a missing score here; coaches do not
+            earn XP.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -145,20 +147,31 @@ export default async function AdminSeasonPage() {
               description="Every scheduled game through this week has a pending or approved score."
             />
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {missingScores.map((row) => (
                 <li
                   key={row.scheduledId}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--border)] px-3 py-2 text-sm"
+                  className="space-y-3 rounded-lg border border-[var(--border)] px-3 py-3 text-sm"
                 >
-                  <span className="font-medium">
-                    W{row.week} · {row.away.abbreviation} @ {row.home.abbreviation}
-                  </span>
-                  <span className="text-xs text-[var(--muted-foreground)]">
-                    {row.away.name} at {row.home.name}
-                    {row.week < settings.currentWeek ? " · overdue" : ""}
-                    {row.isPrimetime ? " · Primetime" : ""}
-                  </span>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium">
+                      W{row.week} · {row.away.abbreviation} @ {row.home.abbreviation}
+                    </span>
+                    <span className="text-xs text-[var(--muted-foreground)]">
+                      {row.away.name} at {row.home.name}
+                      {row.week < settings.currentWeek ? " · overdue" : ""}
+                      {row.isPrimetime ? " · Primetime" : ""}
+                    </span>
+                  </div>
+                  <CommissionerFileMissingGameForm
+                    seasonNumber={season.number}
+                    week={row.week}
+                    homeTeamId={row.home.id}
+                    awayTeamId={row.away.id}
+                    homeAbbr={row.home.abbreviation}
+                    awayAbbr={row.away.abbreviation}
+                    isPrimetime={row.isPrimetime}
+                  />
                 </li>
               ))}
             </ul>
