@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { extractStoryCoverImage } from "@/components/stories/story-body";
 import { getActiveSeason } from "@/lib/league";
 import { buildShareMetadata } from "@/lib/site";
+import { cn } from "@/lib/utils";
 import {
   ensureDefaultLeagueStories,
   getPublishedStories,
@@ -145,48 +146,67 @@ function StorylineCard({
   const cover = extractStoryCoverImage(story.body);
 
   return (
-    <Card className={highlight ? "overflow-hidden border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]" : "surface-hover overflow-hidden"}>
-      {cover && highlight ? (
-        <Link
-          href={`/storylines/${story.slug}`}
-          className="relative block aspect-[16/9] w-full border-b border-[var(--border)] bg-black"
-        >
-          <Image
-            src={cover.src}
-            alt={cover.alt}
-            fill
-            priority
-            className="object-cover object-top"
-            sizes="(max-width: 768px) 100vw, 960px"
-          />
-        </Link>
-      ) : null}
-      <CardHeader>
-        <div className="mb-1 flex flex-wrap gap-2">
-          <Badge variant="outline">{STORY_CATEGORY_LABELS[story.category]}</Badge>
-          {story.isFeatured ? <Badge variant="elite">Featured</Badge> : null}
-          {story.week ? <Badge variant="default">Week {story.week}</Badge> : null}
-        </div>
-        {story.eyebrow ? (
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--primary)]">
-            {story.eyebrow}
-          </p>
+    <Card
+      className={cn(
+        "overflow-hidden p-0",
+        highlight
+          ? "border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]"
+          : "surface-hover"
+      )}
+    >
+      <Link
+        href={`/storylines/${story.slug}`}
+        className="group block h-full cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
+      >
+        {cover ? (
+          <div
+            className={cn(
+              "relative w-full border-b border-[var(--border)] bg-black",
+              highlight ? "aspect-[16/9]" : "aspect-[16/10]"
+            )}
+          >
+            <Image
+              src={cover.src}
+              alt={cover.alt}
+              fill
+              priority={highlight}
+              className="object-cover object-top"
+              sizes={
+                highlight
+                  ? "(max-width: 768px) 100vw, 960px"
+                  : "(max-width: 768px) 100vw, 480px"
+              }
+            />
+          </div>
         ) : null}
-        <CardTitle className={highlight ? "text-2xl" : "text-lg"}>
-          <Link href={`/storylines/${story.slug}`} className="hover:text-[var(--primary)]">
+        <CardHeader>
+          <div className="mb-1 flex flex-wrap gap-2">
+            <Badge variant="outline">{STORY_CATEGORY_LABELS[story.category]}</Badge>
+            {story.isFeatured ? <Badge variant="elite">Featured</Badge> : null}
+            {story.week ? <Badge variant="default">Week {story.week}</Badge> : null}
+          </div>
+          {story.eyebrow ? (
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--primary)]">
+              {story.eyebrow}
+            </p>
+          ) : null}
+          <CardTitle
+            className={cn(
+              highlight ? "text-2xl" : "text-lg",
+              "transition-colors group-hover:text-[var(--primary)]"
+            )}
+          >
             {story.title}
-          </Link>
-        </CardTitle>
-        <CardDescription>{story.summary}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex items-center justify-between gap-3">
-        <p className="text-xs text-[var(--muted-foreground)]">
-          {format(story.publishedAt, "MMM d, yyyy")}
-        </p>
-        <Button asChild size="sm" variant="outline">
-          <Link href={`/storylines/${story.slug}`}>Read</Link>
-        </Button>
-      </CardContent>
+          </CardTitle>
+          <CardDescription>{story.summary}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-between gap-3">
+          <p className="text-xs text-[var(--muted-foreground)]">
+            {format(story.publishedAt, "MMM d, yyyy")}
+          </p>
+          <span className="text-xs font-semibold text-[var(--primary)]">Read →</span>
+        </CardContent>
+      </Link>
     </Card>
   );
 }
