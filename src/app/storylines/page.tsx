@@ -58,6 +58,15 @@ export default async function StorylinesPage({
 
   const featured = stories.filter((s) => s.isFeatured);
   const rest = stories.filter((s) => !s.isFeatured);
+  const honors = (activeFilter.key === "all" ? rest : stories).filter(
+    (story) => story.category === "PLAYER_OF_WEEK"
+  );
+  const feed =
+    activeFilter.key === "all"
+      ? rest.filter((story) => story.category !== "PLAYER_OF_WEEK")
+      : activeFilter.key === "PLAYER_OF_WEEK"
+        ? []
+        : stories;
 
   return (
     <div className="space-y-6">
@@ -107,7 +116,7 @@ export default async function StorylinesPage({
         />
       ) : (
         <div className="space-y-6">
-          {featured.length > 0 ? (
+          {featured.length > 0 && activeFilter.key === "all" ? (
             <section className="space-y-3">
               <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
                 Front page
@@ -120,16 +129,32 @@ export default async function StorylinesPage({
             </section>
           ) : null}
 
-          <section className="space-y-3">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
-              {activeFilter.key === "all" ? "All posts" : activeFilter.label}
-            </h2>
-            <div className="stagger grid gap-4 md:grid-cols-2">
-              {(activeFilter.key === "all" ? rest : stories).map((story) => (
-                <StorylineCard key={story.id} story={story} />
-              ))}
-            </div>
-          </section>
+          {honors.length > 0 &&
+          (activeFilter.key === "all" || activeFilter.key === "PLAYER_OF_WEEK") ? (
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--primary)]">
+                Honors desk
+              </h2>
+              <div className="grid gap-4">
+                {honors.map((story) => (
+                  <StorylineCard key={story.id} story={story} emphasis />
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {feed.length > 0 ? (
+            <section className="space-y-3">
+              <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+                {activeFilter.key === "all" ? "All posts" : activeFilter.label}
+              </h2>
+              <div className="stagger grid gap-4 md:grid-cols-2">
+                {feed.map((story) => (
+                  <StorylineCard key={story.id} story={story} />
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
       )}
     </div>
@@ -139,9 +164,11 @@ export default async function StorylinesPage({
 function StorylineCard({
   story,
   highlight = false,
+  emphasis = false,
 }: {
   story: Awaited<ReturnType<typeof getPublishedStories>>[number];
   highlight?: boolean;
+  emphasis?: boolean;
 }) {
   const cover = extractStoryCoverImage(story.body);
 
@@ -151,7 +178,9 @@ function StorylineCard({
         "overflow-hidden p-0",
         highlight
           ? "border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]"
-          : "surface-hover"
+          : emphasis
+            ? "border-[color-mix(in_srgb,var(--primary)_42%,var(--border))] shadow-[0_12px_32px_rgba(212,175,55,0.14)]"
+            : "surface-hover"
       )}
     >
       <Link
@@ -183,6 +212,7 @@ function StorylineCard({
           <div className="mb-1 flex flex-wrap gap-2">
             <Badge variant="outline">{STORY_CATEGORY_LABELS[story.category]}</Badge>
             {story.isFeatured ? <Badge variant="elite">Featured</Badge> : null}
+            {emphasis ? <Badge variant="elite">Honors</Badge> : null}
             {story.week ? <Badge variant="default">Week {story.week}</Badge> : null}
           </div>
           {story.eyebrow ? (

@@ -649,21 +649,99 @@ Submit your scores promptly. The story only feels alive when the results are off
     sortOrder: 10,
   },
   {
-    slug: "season-1-players-of-the-week-placeholder",
+    slug: "season-1-week-1-players-of-the-week",
     category: StoryCategory.PLAYER_OF_WEEK,
-    title: "Players of the Week desk opens with Season 1",
-    eyebrow: "Honors desk",
+    title: "Week 1 Players of the Week: CMC ate, Hicks hunted",
+    eyebrow: "Honors desk · Week 1",
     summary:
-      "Each week we’ll crown the standouts who changed games — and give the league a reason to argue (in a good way).",
-    body: `The Players of the Week board is live.
+      "Christian McCaffrey dropped 290 scrimmage yards and three scores on the Rams. Jaden Hicks turned three interceptions and a pick-six into Defensive Player of the Week. Week 1 set the standard.",
+    body: `![KML Week 1 Players of the Week](/stories/wk1-potw.png)
 
-## How it works
+**Week 1 set the standard. Who’s next?**
 
-- Commissioners spotlight offensive, defensive, and coaching standouts
-- Nominations can come from Discord after your game
-- Great leagues remember great weeks — this is where those names live`,
+The honors desk is open. The first stamps of Season 1 are not close.
+
+**Christian McCaffrey** took over a primetime night against the league’s best roster and walked out with Offensive Player of the Week. **Jaden Hicks** turned Kansas City’s defense into points and walked out with Defensive Player of the Week.
+
+Everybody else on the board had a heater. Those two owned the week.
+
+## Offensive Player of the Week — Christian McCaffrey
+
+**49ers · RB · Swipe**
+
+| Rush | Rec | Totals |
+| --- | --- | --- |
+| 14 carries, **187 yards**, 2 TD | 4 catches, **103 yards**, 1 TD | **290 scrimmage yards**, **3 TD** |
+
+That is not a good opener. That is a statement.
+
+San Francisco got the favored division-rival **Rams** on Thursday night — **Jordan Stowe’s 91 overall** throne, Hollywood’s toys, the best team in Madden 27. McCaffrey treated it like a track meet. One hundred eighty-seven on the ground. A hundred more through the air. Three scores. A dominating win that already showed up on the coaching-grade board.
+
+The Morning Show called him that dude. The graphic made it official.
+
+If Week 2 TNF against Miami is about roster talent versus stick skill, CMC just told the league what the talent looks like when it gets rolling.
+
+## Defensive Player of the Week — Jaden Hicks
+
+**Chiefs · SS · Trent · #21**
+
+| Tackles | Takeaways | Splash |
+| --- | --- | --- |
+| **12** | **3 INT** | **1 pick-six** |
+
+Game changer in all phases. Turned defense into points.
+
+**Trent’s Chiefs** opened the season on the road in Denver and Hicks made the tape personal. Twelve tackles. Three interceptions. A pick-six. That is not complementary football. That is a safety hunting, and a **Defensive Player of the Week** stamp that writes itself.
+
+The rest of the league can talk 90 overall offenses. Kansas City just showed you what happens when the other side of the ball starts scoring too.
+
+## Other notable performances
+
+The board under the two winners was stacked. Week 1 did not hide.
+
+### Offense
+
+| Player | Team | Line | Why he’s on the board |
+| --- | --- | --- | --- |
+| **Patrick Mahomes** | Chiefs | 17/27, 223 yards, 2 TD | Dominating win in Denver to open the season |
+| **Kenneth Walker III** | Chiefs | 21 car, 236 yards, 2 TD | Led the charge in KC’s statement win on the road |
+| **David Njoku** | Chargers | 7 rec, 188 yards, 1 TD | Historic day with the ball |
+| **Michael Pittman Jr.** | Steelers | 10 rec, 158 yards, 1 TD | Reliable target all day in the win |
+| **Evan Engram** | Broncos | 7 rec, 137 yards | Steady, consistent playmaker |
+| **Kenyon Sadiq (R)** | Jets | 6 rec, 129 yards, 1 TD | Strong rookie debut — impact from snap one |
+| **Jahmyr Gibbs** | Lions | 20 car, 198 yards, 1 TD | Explosive day on the ground in a 30-piece |
+| **Bijan Robinson** | Falcons | 19 car, 205 yards, 1 TD | Elite from start to finish |
+| **Theo Johnson** | Giants | 7 rec, 133 yards, 1 TD | Biz’s new-look Giants already have a mismatch |
+| **George Pickens** | Cowboys | 8 rec, 188 yards, 1 TD | Big-time threat making big-time plays |
+| **Justin Herbert** | Chargers | 15/21, 298 yards, 5 TD, 3 INT | Led a comeback win after going down two scores |
+| **Drake Maye** | Patriots | 24/40, 342 yards, 2 TD, 2 INT | Game-winning drive with 30 seconds left in the Super Bowl rematch |
+
+### Defense
+
+| Player | Team | Line | Why he’s on the board |
+| --- | --- | --- | --- |
+| **Jaden Hicks** | Chiefs | 12 tackles, 3 INT, 1 pick-six | The DPOW tape. Game changer in all phases |
+| **DeMarcus Lawrence** | Seahawks | 2 sacks, 1 INT | Disruptive all day long |
+| **Chop Robinson** | Dolphins | 5 TFL, 1 sack | Relentless in the backfield — Mease’s 74 OVR still has teeth |
+
+Herbert throwing five touchdowns while trailing by two is how you steal a week. Maye walking a Super Bowl rematch off with 30 seconds left is how you get Stephen A. to call you a closer. Gibbs going for almost 200 in a Lions demolition is how a win-now club starts writing January in Week 1.
+
+None of them beat 290 and three scores. None of them beat three picks and a pick-six.
+
+## Desk verdict
+
+**Swipe and CMC** own the first Offensive Player of the Week of KML Reborn. The Rams were supposed to be the mountain. McCaffrey ran through it.
+
+**Trent and Hicks** own the first Defensive Player of the Week. Twelve tackles, three interceptions, a score. That is the kind of tape that makes a 90-offense club look complete.
+
+The rest of the board is the warning: **Maye, Herbert, Gibbs, Bijan, Walker, Chop, Lawrence** all left fingerprints on Week 1. The standard is already high.
+
+Week 2 doesn’t get to ease in. The honors desk will be watching.
+
+Compete. Conquer. Be legendary.`,
     isFeatured: false,
-    sortOrder: 20,
+    sortOrder: -22,
+    week: 1,
   },
   {
     slug: "season-1-coaching-storylines",
@@ -730,6 +808,11 @@ export async function ensureDefaultLeagueStories(seasonId?: string) {
       data: { isFeatured: false },
     });
   }
+
+  await prisma.leagueStory.updateMany({
+    where: { slug: "season-1-players-of-the-week-placeholder" },
+    data: { isPublished: false, isFeatured: false },
+  });
 
   await safeEnsureDefaultStoryPolls();
 }
