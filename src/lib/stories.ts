@@ -519,6 +519,8 @@ This is the perfect Thursday opener.
 
 **Swipe’s 49ers (85 OVR · 90 OFF)** are coming off a dominant primetime win over the Rams, with **Christian McCaffrey** putting up **290 scrimmage yards and three touchdowns** and walking away with Offensive Player of the Week. Now they get a less-talented Dolphins roster — **Mease’s Miami (74 OVR)**, the lowest-rated team in Madden 27.
 
+This is not last year’s Dolphins. **Tua is gone. Tyreek is gone.** The August 2026 tape is **Malik Willis** at quarterback and **De’Von Achane** as the one true star on a rebuild.
+
 The catch: Mease is already **1–0** after beating Las Vegas, and the league has been calling him one of the best users in KML since draft night. Roster overalls told you San Francisco should cook. League history told you Mease can erase a ratings gap with the sticks.
 
 The question becomes: was San Francisco’s Week 1 dominance about the roster, or are they really a contender?
@@ -536,7 +538,7 @@ Miami has the perfect opportunity to remind everyone that in KML, stick skill ca
 | Side | Coach | QB to watch | Primary X-factor | Secondary juice |
 | --- | --- | --- | --- | --- |
 | **49ers** | Swipe | **Brock Purdy** | **Christian McCaffrey** — 290 scrimmage yards is the new baseline | **George Kittle** — the mismatch that beats zone and sells play-action |
-| **Dolphins** | Mease | **Tua Tagovailoa** | **Tyreek Hill** — take the top off and make 74 OVR look fast | **the user gap** — Mease’s sticks are the entire Miami thesis |
+| **Dolphins** | Mease | **Malik Willis** | **De’Von Achane** — 88 OVR, the one star on a 74 overall rebuild | **Chop Robinson** — the edge who already hit the Week 1 honors board |
 
 If CMC gets going again, TNF becomes another San Francisco statement. If Mease turns a rebuild roster into a primetime steal, every “team merchant” argument in Discord gets a new exhibit.
 
@@ -567,9 +569,9 @@ Meanwhile, New England has an opportunity to establish itself as an early champi
 | Side | Coach | QB to watch | Primary X-factor | Secondary juice |
 | --- | --- | --- | --- | --- |
 | **Patriots** | Ren | **Drake Maye** | **A.J. Brown** — the contested-catch WR1 who finished the rematch | **Christian Gonzalez** — erase a Steelers skill piece and force Big Al left |
-| **Steelers** | Big Al | **the Pittsburgh offense** | **T.J. Watt** — the 87 DEF identity in one jersey | **takeaways** — field position is how a last-pick defense was supposed to win |
+| **Steelers** | Big Al | **Aaron Rodgers** | **T.J. Watt** — the 87 DEF identity in one jersey | **DK Metcalf** — the vertical answer when Pittsburgh has to score |
 
-Can Maye and A.J. Brown keep stacking signature drives? Or does Watt and the front seven get the tape Big Al needed after Atlanta?
+Can Maye and A.J. Brown keep stacking signature drives? Or do Watt, Metcalf, and the front seven get the tape Big Al needed after Atlanta?
 
 ## Monday Night Football — Rams vs Giants
 
