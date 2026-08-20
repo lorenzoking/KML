@@ -1,4 +1,4 @@
-import type { Prisma, ReputationCategory } from "@prisma/client";
+import type { Prisma, ReputationCategory } from "@/generated/prisma/client";
 import { SEASON_1_DRAFT_GRADES } from "@/lib/draft-grades";
 
 export type ReputationEvent = {

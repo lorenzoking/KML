@@ -1,4 +1,4 @@
-import { IdentityStatus, IdentityType } from "@prisma/client";
+import { IdentityStatus, IdentityType } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   TEAM_IDENTITY_RULES,

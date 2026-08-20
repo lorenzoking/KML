@@ -1,4 +1,4 @@
-import { HotSeatStatus } from "@prisma/client";
+import { HotSeatStatus } from "@/generated/prisma/client";
 
 type BuyoutInput = {
   coachRepScore: number;

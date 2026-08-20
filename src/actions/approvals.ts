@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { SubmissionStatus, type GameType } from "@prisma/client";
+import { SubmissionStatus, type GameType } from "@/generated/prisma/client";
 import { requireCommissioner } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason, getLeagueSettings } from "@/lib/league";

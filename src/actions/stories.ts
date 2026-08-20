@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { StoryCategory } from "@prisma/client";
+import { StoryCategory } from "@/generated/prisma/client";
 import { requireCommissioner } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason } from "@/lib/league";

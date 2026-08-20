@@ -1,4 +1,4 @@
-import type { HotSeatStatus } from "@prisma/client";
+import type { HotSeatStatus } from "@/generated/prisma/client";
 import { AT_RISK_JOB_STATUSES, formatJobStatus } from "@/lib/coach/job-security";
 import { getReputationGrade, getReputationGradeLabel } from "@/lib/coach/grades";
 

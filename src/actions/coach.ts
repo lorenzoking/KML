@@ -5,7 +5,7 @@ import {
   CarouselApplicationStatus,
   CarouselMoveType,
   IdentityType,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
 import { isCommissioner, requireCommissioner, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason, getUserMembership } from "@/lib/league";

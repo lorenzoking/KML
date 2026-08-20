@@ -7,7 +7,7 @@ import {
   type GmReputationStatus,
 } from "@/lib/reputation";
 import { getReputationGrade, type ReputationGrade } from "@/lib/coach/grades";
-import { HotSeatStatus } from "@prisma/client";
+import { HotSeatStatus } from "@/generated/prisma/client";
 import {
   getJobSecurityScore,
   getJobSecurityStatus,

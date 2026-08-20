@@ -1,4 +1,4 @@
-import { StoryCategory } from "@prisma/client";
+import { StoryCategory } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { buildDraftGradesArticleBody } from "@/lib/draft-grades";
 import { safeEnsureDefaultStoryPolls } from "@/lib/story-engagement";

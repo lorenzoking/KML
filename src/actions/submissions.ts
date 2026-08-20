@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { SubmissionStatus } from "@prisma/client";
+import { SubmissionStatus } from "@/generated/prisma/client";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason, getUserMembership } from "@/lib/league";

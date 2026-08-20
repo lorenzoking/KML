@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { STATUS_LABELS } from "@/lib/constants";
-import type { SubmissionStatus } from "@prisma/client";
+import type { SubmissionStatus } from "@/generated/prisma/client";
 import {
   reputationBadgeVariant,
   type ReputationLabel,

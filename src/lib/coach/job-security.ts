@@ -1,4 +1,4 @@
-import { HotSeatStatus } from "@prisma/client";
+import { HotSeatStatus } from "@/generated/prisma/client";
 
 export type JobSecurityInput = {
   coachRepScore: number;

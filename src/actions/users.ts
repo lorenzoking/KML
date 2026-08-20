@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import { Role } from "@prisma/client";
+import { Role } from "@/generated/prisma/client";
 import { requireCommissioner, requireUser, syncUserFromAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason, getUserMembership } from "@/lib/league";

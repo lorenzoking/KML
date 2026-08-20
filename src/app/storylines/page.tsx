@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { format } from "date-fns";
-import type { StoryCategory } from "@prisma/client";
+import type { StoryCategory } from "@/generated/prisma/client";
 import {
   Card,
   CardContent,

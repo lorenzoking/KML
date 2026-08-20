@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { User } from "@prisma/client";
+import type { User } from "@/generated/prisma/client";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { ViewModeToggle } from "@/components/layout/view-mode-toggle";

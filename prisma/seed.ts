@@ -1,5 +1,4 @@
 import {
-  PrismaClient,
   Role,
   GameType,
   SubmissionStatus,
@@ -10,10 +9,9 @@ import {
   CarouselApplicationStatus,
   PlayoffResult,
   ExpectationResult,
-} from "@prisma/client";
+} from "@/generated/prisma/client";
+import { prisma } from "../src/lib/prisma";
 import { NFL_2026_GAMES } from "../src/lib/nfl-schedule-2026";
-
-const prisma = new PrismaClient();
 
 const NFL_TEAMS = [
   { name: "Arizona Cardinals", abbreviation: "ARI", city: "Arizona", conference: "NFC", division: "West", primaryColor: "#97233F", sortOrder: 1 },

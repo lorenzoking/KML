@@ -4,7 +4,7 @@ import {
   reviewCarouselApplication,
   setCarouselOpen,
 } from "@/actions/coach";
-import { CarouselMoveType } from "@prisma/client";
+import { CarouselMoveType } from "@/generated/prisma/client";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
