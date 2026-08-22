@@ -167,9 +167,9 @@ export default async function DashboardPage({
     stories.find((s) => s.category === "FEATURE") ??
     stories[0];
   const featuredCover = featured ? extractStoryCoverImage(featured.body) : null;
-  const honorsStory = stories.find(
-    (story) => story.category === "PLAYER_OF_WEEK" && story.id !== featured?.id
-  );
+  const honorsStory = stories
+    .filter((story) => story.category === "PLAYER_OF_WEEK" && story.id !== featured?.id)
+    .sort((a, b) => (b.week ?? -1) - (a.week ?? -1))[0];
   const honorsCover = honorsStory ? extractStoryCoverImage(honorsStory.body) : null;
 
   const coachName = coachHonorific(user.name);

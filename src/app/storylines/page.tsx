@@ -58,9 +58,9 @@ export default async function StorylinesPage({
 
   const featured = stories.filter((s) => s.isFeatured);
   const rest = stories.filter((s) => !s.isFeatured);
-  const honors = (activeFilter.key === "all" ? rest : stories).filter(
-    (story) => story.category === "PLAYER_OF_WEEK"
-  );
+  const honors = (activeFilter.key === "all" ? rest : stories)
+    .filter((story) => story.category === "PLAYER_OF_WEEK")
+    .sort((a, b) => (b.week ?? -1) - (a.week ?? -1));
   const feed =
     activeFilter.key === "all"
       ? rest.filter((story) => story.category !== "PLAYER_OF_WEEK")

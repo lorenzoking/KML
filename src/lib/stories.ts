@@ -12,6 +12,18 @@ export const STORY_CATEGORY_LABELS: Record<StoryCategory, string> = {
   LEAGUE: "League desk",
 };
 
+/** League-wire art, grouped by week under /public/stories. */
+const STORY_ASSETS = {
+  firstChampion: "/stories/features/morning-show-first-champion.png",
+  tradeRumors: "/stories/features/trade-rumors.png",
+  week1Primetime: "/stories/wk1/primetime.png",
+  week1Potw: "/stories/wk1/potw.png",
+  week2Primetime: "/stories/wk2/primetime.png",
+  week2MorningShow: "/stories/wk2/morning-show.png",
+  week2Potw: "/stories/wk2/potw.png",
+  week3Primetime: "/stories/wk3/primetime.png",
+} as const;
+
 const DEFAULT_STORIES = [
   {
     slug: "season-1-first-champion-speculation",
@@ -20,7 +32,7 @@ const DEFAULT_STORIES = [
     eyebrow: "KML Morning Show · Madden 27",
     summary:
       "The panel is hot, the board is locked, and the first Super Bowl of the Madden 27 cycle is already being argued. Here’s the desk’s favorite, sleeper, and the names that actually move games.",
-    body: `![KML Morning Show — Who’s going to be the first champion of KML Reborn?](/stories/kml-morning-show-first-champion.png)
+    body: `![KML Morning Show — Who’s going to be the first champion of KML Reborn?](${STORY_ASSETS.firstChampion})
 
 The KML Morning Show opened Season 1 with the only question that matters: **who lifts the first Lombardi of the Madden 27 cycle?**
 
@@ -106,7 +118,7 @@ Compete. Conquer. Be legendary.`,
     eyebrow: "KML Morning Show · Trade desk",
     summary:
       "Garrett Wilson, Brian Branch, and Calvin Ridley hit the trade block while Coach Swipa eyes Joey Bosa — and Panthers ownership just flipped to Nick.",
-    body: `![KML Morning Show — Rumors heating up around the league](/stories/trade-rumors-kml.png)
+    body: `![KML Morning Show — Rumors heating up around the league](${STORY_ASSETS.tradeRumors})
 
 The KML Morning Show didn’t ease into the week. **Mad Dog, Stephen A., and Shannon** slammed the desk with one banner across the board: **rumors are heating up around the league.**
 
@@ -182,7 +194,7 @@ Compete. Conquer. Be legendary.`,
     eyebrow: "KML Morning Show · Week 2",
     summary:
       "Stephen A. stamps Drake Maye after the Super Bowl rematch. Shannon crowns CMC Offensive Player of the Week. Special guest Bone says the Titans cheated him — and the desk already has Week 2 Primetime loaded.",
-    body: `![KML Morning Show — Week 2](/stories/kml-morning-show-wk2.png)
+    body: `![KML Morning Show — Week 2](${STORY_ASSETS.week2MorningShow})
 
 The KML Morning Show did not recap Week 1 quietly.
 
@@ -401,7 +413,7 @@ Welcome to the Kings Madden League.`,
     eyebrow: "Games of the week · Season opener",
     summary:
       "Seahawks–Patriots kicks off KML as a Super Bowl rematch — Morning Show chalk vs Ren’s dark-horse Patriots — plus MNF, TNF, and SNF heaters.",
-    body: `![KML Primetime Week 1](/stories/wk1-gotw.png)
+    body: `![KML Primetime Week 1](${STORY_ASSETS.week1Primetime})
 
 **Big games. Big stage. This is KML.**
 
@@ -503,7 +515,7 @@ Compete. Conquer. Be legendary.`,
     eyebrow: "Games of the week · Primetime slate",
     summary:
       "TNF is roster talent versus the best user in KML. SNF is two top-five coaches with no excuses. MNF puts the Rams back under the lights — one more blowout and the hot seat conversation starts.",
-    body: `![KML Primetime Week 2](/stories/wk2-primetimeparlay.png)
+    body: `![KML Primetime Week 2](${STORY_ASSETS.week2Primetime})
 
 **Big stage. Big names. Big moments. This is KML Primetime.**
 
@@ -627,9 +639,144 @@ Week 2 asks the meaner follow-ups:
 Lock your picks. Submit the scores. Let the desk argue.
 
 Compete. Conquer. Be legendary.`,
-    isFeatured: true,
+    isFeatured: false,
     sortOrder: -40,
     week: 2,
+  },
+  {
+    slug: "season-1-week-3-primetime",
+    category: StoryCategory.GAME_OF_WEEK,
+    title: "KML Primetime Week 3: somebody’s 0 has to go",
+    eyebrow: "Games of the week · Primetime slate",
+    summary:
+      "Thursday is 2–0 vs 2–0. Sunday is new blood in Dallas. Monday is Oli vs Pryor, both 2–0 — plus Mease-Trent, a 5x champ at 0–2, and Slap staring down 0–3.",
+    body: `![KML Primetime Week 3](${STORY_ASSETS.week3Primetime})
+
+**Every team. Primetime. Every season.**
+
+Week 2 is in the books. Week 3 does not ease anyone in. The board is stacked: two undefeated clubs on Thursday, two new coaches under the Sunday-night lights, and a Monday 2–0 vs 2–0 signature-win hunt between newcomers who already have the league’s attention.
+
+All 32 teams get their primetime moment. This week, the lights are unforgiving.
+
+## Thursday Night Football — Bears vs Eagles
+
+**Somebody’s 0 has to go.**
+
+Both clubs are **2–0**. Both just cooked on defense. Combined, they forced **nine interceptions** in their last games. One of those zeroes is about to die on Thursday night.
+
+**Jaylen Stowe’s Bears (83 OVR · 85 OFF · 82 DEF)** are riding cover-athlete juice. **Caleb Williams** is a 90 overall quarterback who can break a sack and throw on the run with the best of them. **Rome Odunze** and **Colston Loveland** give Chicago answers after the first read. **Jaylon Johnson** is a 90 overall corner who can erase a WR1 and make Lefty’s 88 offense work for it.
+
+**Lefty’s Eagles (88 OVR · 88 OFF · 87 DEF)** are still the most complete two-way club in the draft that isn’t Hollywood. This is not last year’s Eagles either — **A.J. Brown is in New England now.** The August 2026 tape is **Jalen Hurts**, **Saquon Barkley (92)**, and **DeVonta Smith (92)**, with **Lane Johnson** still a 97 overall mauler up front.
+
+Lefty is new to the KML primetime stage. He hasn’t had his moment under these lights yet. Thursday is the invitation.
+
+## Why this game matters
+
+- **Unbeaten vs unbeaten:** the first real 2–0 measuring stick of Season 1
+- **Defense is the tape:** nine combined picks last week is not a coincidence
+- **Lefty’s first primetime:** an 88 overall roster does not get a quiet Thursday
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Bears** | Jaylen Stowe | **Caleb Williams** | **Rome Odunze** — the volume WR who makes 85 OFF travel | **Jaylon Johnson** — 90 CB who can take DeVonta out of the script |
+| **Eagles** | Lefty | **Jalen Hurts** | **Saquon Barkley** — 92 OVR, still the downhill answer | **DeVonta Smith** — 92 OVR WR1 now that A.J. Brown is gone |
+
+If Williams and the takeaway defense hold serve, Chicago stays perfect and the cover-athlete story gets louder. If Hurts, Saquon, and Smith finally look like an 88 on primetime, Lefty gets the first big-stage stamp of his KML tenure.
+
+## Sunday Night Football — Ravens vs Cowboys
+
+**The new blood game.**
+
+Two new KML coaches. Two high-powered rosters. Sunday night is where the league finds out if the new names are real.
+
+**Quise’s Ravens (87 OVR · 90 OFF · 87 DEF)** are **2–0** after a 34–16 win in New Orleans. **Lamar Jackson** is still the fastest signal-caller in Madden 27. **Derrick Henry (93)** and **Mark Andrews (90)** is a nightmare trio if Dallas cannot tackle in space. **Zay Flowers** and **Kyle Hamilton** keep both sides of the ball dangerous.
+
+**Javon’s Cowboys (83 OVR · 87 OFF)** are 1–1 and adapting fast. The graphic already said it: Week 2, Dallas allowed **one touchdown**. That is how you go from “new coach on a star roster” to “future contender” in seven days. **Dak Prescott (91)** and **CeeDee Lamb (93)** are still the engine. The question is whether Javon’s Week 2 defensive tape travels against Lamar.
+
+Are we watching future contenders emerge — or a Sunday-night reality check?
+
+## Why this game matters
+
+- **New blood, old toys:** both coaches are new; the rosters are not
+- **Javon’s adaptation:** one TD allowed in Week 2 is a statement, not a footnote
+- **Ravens path:** stay 3–0 and Baltimore starts looking like January
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Ravens** | Quise | **Lamar Jackson** | **Derrick Henry** — 93 OVR King, still a top-ten back | **Mark Andrews** — the red-zone mismatch that beats Cover 2 |
+| **Cowboys** | Javon | **Dak Prescott** | **CeeDee Lamb** — 93 OVR gravity that opens the entire tree | **the Week 2 defense** — one TD allowed has to hold up against Lamar |
+
+If Henry and Lamar get downhill, SNF becomes another Ravens showcase. If Javon’s defense looks like Week 2 again, Dallas is not a 1–1 story anymore — they’re in the contender conversation.
+
+## Monday Night Football — Chargers vs Bills
+
+**Who’s ready to become a star?**
+
+Two newcomers. One Monday night. One signature win.
+
+**Oli’s Chargers (82 OVR · 85 OFF)** are **2–0** after dropping **66** on Las Vegas. Hampton just took AFC Offensive Player of the Week. **Justin Herbert** is a 90 overall field general with 96 throw power. **Ladd McConkey** is the 92-speed separator. **Derwin James** and **Khalil Mack** give a 79 defense enough juice to steal a possession game.
+
+**Pryor’s Bills (85 OVR · 91 OFF)** are **2–0** after taking the **Lions to the wire and winning 32–29**. That is not a soft Week 2. That is a 99 overall **Josh Allen** and a 94 overall **James Cook** hanging with a win-now Lions club and finishing the job. **Khalil Shakir** and **DJ Moore** (yes — Moore is in Buffalo on the August 2026 roster) give Allen answers after Cook.
+
+Monday night, one of them gets the win that makes the league say their name first.
+
+## Why this game matters
+
+- **Star-making window:** both coaches have impressed; only one leaves  with the signature tape
+- **Oli’s 2–0:** 66 points on Vegas, then a primetime date with another unbeaten
+- **Pryor’s statement:** a 3-point win over Detroit is the tape he takes into Monday night
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Chargers** | Oli | **Justin Herbert** | **Ladd McConkey** — the separator who makes 85 OFF look faster | **Derwin James / Khalil Mack** — the takeaway pair that keeps 2–0 honest |
+| **Bills** | Pryor | **Josh Allen** | **James Cook** — 94 OVR, a top-five back in Madden 27 | **DJ Moore / Khalil Shakir** — the 2026 Buffalo answers after Cook |
+
+If Herbert and McConkey keep stacking, Oli goes 3–0 and the Chargers stop being a surprise. If Allen and Cook stack the Lions win into a Monday night statement, Pryor gets the star turn.
+
+## More Week 3 matchups
+
+The primetime windows are the show. The rest of the board is not quiet.
+
+| Matchup | Records | Coaches | Why the desk is watching |
+| --- | --- | --- | --- |
+| **Dolphins vs Chiefs** | 2–0 vs 2–0 | Mease vs Trent | Mease just took down the 49ers on primetime with Malik Willis and De’Von Achane. Trent’s Chiefs (90 OFF, Mahomes, Kelce, Kenneth Walker) are the crown check. |
+| **Bengals vs Steelers** | 1–1 vs 0–2 | Dawson vs Big Al | Big Al’s first 0–2 start in a KML career — 5x champion, one of the greatest ever. Dawson talked big all offseason. This is the get-it-going game vs a struggling legend. |
+| **Texans vs Colts** | 0–2 vs 0–2 | Watermann vs Quon | Divisional 0–2 bloodbath. Watermann wants back on track. Indianapolis cannot let the season slip in Week 3. |
+| **Falcons vs Packers** | 1–1 vs 2–0 | Gotti vs Chance | Chance is 2–0 and thinks he’s the best in the league. Gotti’s explosive offense — **Drake London (92)** and **Bijan Robinson (95)** — wants to prove it on a big stage. |
+| **Saints vs Raiders** | 0–2 vs 0–2 | Slap vs Da Truth | Slap is one of the best ever. Detroit by 30, then 16–34 in Baltimore. Going 0–3 to a non-sim Raiders club is how you spark a generational crash-out in the chat. |
+
+## Primetime Week 3 cheat sheet
+
+| Window | Matchup | Coaches | Why it’s on the board |
+| --- | --- | --- | --- |
+| TNF | Bears–Eagles | Jaylen Stowe vs Lefty | 2–0 vs 2–0. Somebody’s 0 has to go. |
+| SNF | Ravens–Cowboys | Quise vs Javon | New blood. Two high-powered rosters. |
+| MNF | Chargers–Bills | Oli vs Pryor | 2–0 vs 2–0. Who’s ready to become a star? |
+
+## Desk verdict
+
+Week 2 told you **Mease can beat the rating on primetime**, and that undefeated clubs are starting to stack.
+
+Week 3 asks the loud ones:
+
+- Can Jaylen Stowe’s Bears take an 88 overall Eagles club’s undefeated record on Thursday — or does Lefty get his first primetime stamp?
+- Is Javon’s one-TD Week 2 defense real, or does Lamar and Henry make Sunday night look like old blood?
+- Does Oli stay perfect, or does Josh Allen stack the Lions win into a Monday night star turn?
+
+Lock your picks. Submit the scores. Let the desk argue.
+
+One league. All eyes. Every week.
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: true,
+    sortOrder: -50,
+    week: 3,
   },
   {
     slug: "season-1-week-1-preview",
@@ -657,7 +804,7 @@ Submit your scores promptly. The story only feels alive when the results are off
     eyebrow: "Honors desk · Week 1",
     summary:
       "Christian McCaffrey dropped 290 scrimmage yards and three scores on the Rams. Jaden Hicks turned three interceptions and a pick-six into Defensive Player of the Week. Week 1 set the standard.",
-    body: `![KML Week 1 Players of the Week](/stories/wk1-potw.png)
+    body: `![KML Week 1 Players of the Week](${STORY_ASSETS.week1Potw})
 
 **Week 1 set the standard. Who’s next?**
 
@@ -744,6 +891,109 @@ Compete. Conquer. Be legendary.`,
     isFeatured: false,
     sortOrder: -22,
     week: 1,
+  },
+  {
+    slug: "season-1-week-2-players-of-the-week",
+    category: StoryCategory.PLAYER_OF_WEEK,
+    title: "Week 2 Players of the Week: Hampton the animal, Love the surgeon, four scores in Philly",
+    eyebrow: "Honors desk · Week 2",
+    summary:
+      "Omarion Hampton ran for 208 and three scores at 10.9 a pop. Jordan Love went 19-of-24 for 305 and four touchdowns. Riq Woolen and Quinyon Mitchell each returned two picks for six. Week 2 raised the standard.",
+    body: `![KML Week 2 Players of the Week](${STORY_ASSETS.week2Potw})
+
+**Elite performances. Game changers. KML legends.**
+
+Week 1 belonged to CMC and Hicks. Week 2 did not copy that script. It raised it.
+
+**Omarion Hampton** turned **Oli’s Chargers** into a track meet in a **66–41** demolition of Las Vegas and walked out with AFC Offensive Player of the Week. **Jordan Love** carved the Jets for **Chance’s 2–0 Packers** and took NFC Offensive Player of the Week. Then **Lefty’s Eagles** put two corners on the same stamp: **Riq Woolen** and **Quinyon Mitchell** each scored twice off interceptions.
+
+Everybody else on the board had a heater. Those four owned the week.
+
+## AFC Offensive Player of the Week — Omarion Hampton
+
+**Chargers · RB · Oli · #28**
+
+| Carries | Yards | TDs | YPC |
+| --- | --- | --- | --- |
+| **19** | **208** | **3** | **10.9** |
+
+10.9 yards per carry. An absolute animal.
+
+That is not a complementary run game. That is a back ending drives by himself. Hampton did not need 30 touches. He needed 19, and he turned them into 208 and three scores in a 66–41 win over the Raiders.
+
+Oli’s Chargers already had the Herbert juice. Now they have a Week 2 stamp that says the ground game can steal a Sunday on its own — and they take a 2–0 record into Monday night primetime.
+
+## NFC Offensive Player of the Week — Jordan Love
+
+**Packers · QB · Chance · #10**
+
+| Comp/Att | Pass yards | TDs | Rating |
+| --- | --- | --- | --- |
+| **19/24** | **305** | **4** | **158.3** |
+
+Perfect precision. Perfect performance.
+
+Chance has been telling the league he’s the best in it. Love just handed him the tape. Nineteen of twenty-four. Four touchdowns. A 158.3 passer rating against the Jets in a game Green Bay never let get close.
+
+That is not volume. That is a surgeon. If Week 3 against Gotti is the “prove it” game, Love already put the receipt on the honors desk.
+
+## Co-Defensive Players of the Week — Riq Woolen & Quinyon Mitchell
+
+**Eagles · CB · Lefty**
+
+| Player | INTs | Pick-sixes |
+| --- | --- | --- |
+| **Riq Woolen · #3** | **2** | **2** |
+| **Quinyon Mitchell · #27** | **2** | **2** |
+
+Two picks. Two touchdowns. Twice.
+
+Lefty’s 87 defense did not just take the ball away from Tennessee. It scored with it. Four interceptions returned for touchdowns between two corners in the same game — Woolen unstoppable, Mitchell clutch twice. Philadelphia dropped **61** on the Titans. The secondary wrote the headline.
+
+This is not last year’s Eagles tape, and it is not an A.J. Brown story. The August 2026 club is Hurts, Saquon, DeVonta Smith — and a pair of corners who just became the first co-Defensive Players of the Week of KML Reborn.
+
+## Other Week 2 standouts
+
+The board under the winners was stacked. The graphic did not hide.
+
+### Offense
+
+| Player | Team | Line | Why he’s on the board |
+| --- | --- | --- | --- |
+| **Chuba Hubbard** | Panthers · Nick | 13 car, **202 yards**, 2 TD | **15.5 YPC** in the win over Atlanta |
+| **Justin Herbert** | Chargers · Oli | **361 yards**, 3 TD, 132.7 rating | Elite arm talent in the same 66–41 Raiders demolition |
+| **James Cook** | Bills · Pryor | 24 car, **137 yards**, 3 TD | Power, speed, touchdowns in a 32–29 win over Detroit |
+| **Brian Thomas Jr.** | Jaguars · Dimez | 9 rec, **190 yards**, 1 TD | Unguardable. The one that kept Jacksonville on the ticker |
+| **Patrick Mahomes** | Chiefs · Trent | 221 yards, 2 TD, 121.8 rating | Mahomes magic in a 31–28 hold over Indianapolis |
+
+### Defense
+
+| Player | Team | Line | Why he’s on the board |
+| --- | --- | --- | --- |
+| **Kobie Turner** | Rams · Jordan Stowe | **3.5 sacks**, 5 TFL | Wrecking backfields in the 44–7 Giants demolition |
+| **Kyler Gordon** | Bears · Jaylen Stowe | 6 tackles, 3 TFL, **2 sacks**, 1 INT | All-around dominance in Chicago’s 41–13 win |
+| **Jaelan Phillips** | Panthers · Nick | **2 sacks**, 1 INT | Making plays everywhere next to Hubbard’s heater |
+
+Hubbard going 202 on 13 carries is how a new Carolina era gets loud. Cook stacking three scores in a one-score Lions game is how Pryor stays 2–0. Herbert throwing for 361 next to a 208-yard back is how Oli’s offense stops being a surprise. Turner’s 3.5 sacks are how Hollywood answers a bad Week 1. Gordon’s sack-and-pick tape is how Jaylen Stowe’s Bears stay perfect heading into Thursday night.
+
+None of them beat 10.9 yards a carry. None of them beat a 158.3 rating. None of them beat four pick-sixes in one secondary.
+
+## Desk verdict
+
+**Oli and Hampton** own the AFC offensive stamp. Two hundred eight yards. Three scores. 10.9 a pop. The Chargers are not sneaking up on anybody.
+
+**Chance and Love** own the NFC offensive stamp. Nineteen of twenty-four. Four touchdowns. The Packers’ 2–0 start now has a signature quarterback night.
+
+**Lefty, Woolen, and Mitchell** own the defensive stamp together. Two corners. Four pick-sixes. A 61-point night. That is how an 88 overall club reminds the league the other side of the ball can end a game by itself.
+
+The rest of the board is the warning: **Hubbard, Herbert, Cook, Thomas, Mahomes, Turner, Gordon, Phillips** all left fingerprints on Week 2. The standard is already higher than Week 1.
+
+Week 2 is official. All sixteen are in the book. Week 3 primetime is already on the board.
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: false,
+    sortOrder: -36,
+    week: 2,
   },
   {
     slug: "season-1-coaching-storylines",

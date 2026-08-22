@@ -168,6 +168,34 @@ const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
       },
     ],
   },
+  {
+    storySlug: "season-1-week-3-primetime",
+    key: "week-3-primetime",
+    title: "Week 3 Primetime lock-in",
+    questions: [
+      {
+        prompt: "Thursday Night Football — Bears vs Eagles",
+        options: [
+          { label: "Jaylen Stowe · Bears", franchiseAbbr: "CHI" },
+          { label: "Lefty · Eagles", franchiseAbbr: "PHI" },
+        ],
+      },
+      {
+        prompt: "Sunday Night Football — Ravens vs Cowboys",
+        options: [
+          { label: "Quise · Ravens", franchiseAbbr: "BAL" },
+          { label: "Javon · Cowboys", franchiseAbbr: "DAL" },
+        ],
+      },
+      {
+        prompt: "Monday Night Football — Chargers vs Bills",
+        options: [
+          { label: "Oli · Chargers", franchiseAbbr: "LAC" },
+          { label: "Pryor · Bills", franchiseAbbr: "BUF" },
+        ],
+      },
+    ],
+  },
 ];
 
 function isMissingEngagementTable(error: unknown) {
