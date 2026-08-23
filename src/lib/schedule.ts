@@ -60,15 +60,11 @@ function isMissingScheduleTable(error: unknown) {
   return code === "P2021" || code === "P2022";
 }
 
-export async function ensureSeasonSchedule(seasonId: string) {
-  const existing = await prisma.scheduledGame.count({ where: { seasonId } });
-  if (existing === NFL_2026_GAMES.length) return;
-
-  const franchises = await prisma.franchise.findMany({
-    select: { id: true, abbreviation: true },
-  });
-  const byAbbr = new Map(franchises.map((row) => [row.abbreviation, row.id]));
-  const rows = NFL_2026_GAMES.map((game) => {
+function scheduleRowsFromNfl(
+  seasonId: string,
+  byAbbr: Map<string, string>
+) {
+  return NFL_2026_GAMES.map((game) => {
     const homeTeamId = byAbbr.get(game.home);
     const awayTeamId = byAbbr.get(game.away);
     if (!homeTeamId || !awayTeamId) return null;
@@ -80,11 +76,55 @@ export async function ensureSeasonSchedule(seasonId: string) {
       isPrimetime: Boolean(game.primetime),
     };
   }).filter((row): row is NonNullable<typeof row> => Boolean(row));
+}
+
+async function syncScheduledPrimetime(
+  seasonId: string,
+  rows: Array<{
+    week: number;
+    homeTeamId: string;
+    awayTeamId: string;
+    isPrimetime: boolean;
+  }>
+) {
+  await prisma.scheduledGame.updateMany({
+    where: { seasonId, isPrimetime: true },
+    data: { isPrimetime: false },
+  });
+  await Promise.all(
+    rows
+      .filter((row) => row.isPrimetime)
+      .map((row) =>
+        prisma.scheduledGame.updateMany({
+          where: {
+            seasonId,
+            week: row.week,
+            homeTeamId: row.homeTeamId,
+            awayTeamId: row.awayTeamId,
+          },
+          data: { isPrimetime: true },
+        })
+      )
+  );
+}
+
+export async function ensureSeasonSchedule(seasonId: string) {
+  const existing = await prisma.scheduledGame.count({ where: { seasonId } });
+  const franchises = await prisma.franchise.findMany({
+    select: { id: true, abbreviation: true },
+  });
+  const byAbbr = new Map(franchises.map((row) => [row.abbreviation, row.id]));
+  const rows = scheduleRowsFromNfl(seasonId, byAbbr);
 
   if (rows.length !== NFL_2026_GAMES.length) {
     console.error(
       "ensureSeasonSchedule: franchise abbreviations did not cover the full NFL slate"
     );
+    return;
+  }
+
+  if (existing === NFL_2026_GAMES.length) {
+    await syncScheduledPrimetime(seasonId, rows);
     return;
   }
 

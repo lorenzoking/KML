@@ -576,6 +576,9 @@ export default async function DashboardPage({
             <div className="absolute inset-x-0 bottom-0 space-y-2 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
                 {featured.eyebrow ?? "Front page"}
+                {openPolls.some((poll) => poll.href === `/storylines/${featured.slug}`)
+                  ? " · Lock-in open"
+                  : ""}
               </p>
               <h2 className="font-[family-name:var(--font-body)] text-[1.45rem] font-semibold leading-tight tracking-tight text-white sm:text-[1.7rem]">
                 {featured.title}

@@ -81,6 +81,14 @@ export default async function StorylineDetailPage({
         </Button>
       </div>
 
+      {engagement?.poll ? (
+        <StoryEngagement
+          engagement={engagement}
+          signedIn={Boolean(user?.isActive)}
+          isCommissioner={commissionerUi}
+        />
+      ) : null}
+
       <Card className="overflow-hidden border-[color-mix(in_srgb,var(--primary)_28%,var(--border))]">
         {cover ? (
           <div className="relative aspect-[3/2] w-full border-b border-[var(--border)] bg-black sm:aspect-[16/10]">
@@ -121,7 +129,7 @@ export default async function StorylineDetailPage({
         </CardContent>
       </Card>
 
-      {engagement ? (
+      {engagement && !engagement.poll ? (
         <StoryEngagement
           engagement={engagement}
           signedIn={Boolean(user?.isActive)}

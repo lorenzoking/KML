@@ -212,6 +212,9 @@ function StorylineCard({
           <div className="mb-1 flex flex-wrap gap-2">
             <Badge variant="outline">{STORY_CATEGORY_LABELS[story.category]}</Badge>
             {story.isFeatured ? <Badge variant="elite">Featured</Badge> : null}
+            {story.isFeatured && story.category === "GAME_OF_WEEK" ? (
+              <Badge variant="elite">Lock-in</Badge>
+            ) : null}
             {emphasis ? <Badge variant="elite">Honors</Badge> : null}
             {story.week ? <Badge variant="default">Week {story.week}</Badge> : null}
           </div>

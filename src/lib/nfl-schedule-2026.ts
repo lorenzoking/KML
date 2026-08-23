@@ -7,7 +7,7 @@ export type NflScheduleGame = {
   primetime?: boolean;
 };
 
-/** 2026 NFL regular-season slate (272 games). Home/away follow the NFL schedule. */
+/** 2026 NFL regular-season slate (272 games). Home/away follow the NFL schedule. `primetime` is the KML desk window, not the NFL TV window. */
 export const NFL_2026_GAMES: NflScheduleGame[] = [
   { week: 1, home: "CAR", away: "CHI" },
   { week: 1, home: "CIN", away: "TB" },
@@ -41,13 +41,13 @@ export const NFL_2026_GAMES: NflScheduleGame[] = [
   { week: 2, home: "SF", away: "MIA" },
   { week: 2, home: "TB", away: "CLE" },
   { week: 2, home: "TEN", away: "PHI" },
-  { week: 3, home: "BUF", away: "LAC" },
+  { week: 3, home: "BUF", away: "LAC", primetime: true },
   { week: 3, home: "CHI", away: "PHI", primetime: true },
   { week: 3, home: "CLE", away: "CAR" },
-  { week: 3, home: "DAL", away: "BAL" },
+  { week: 3, home: "DAL", away: "BAL", primetime: true },
   { week: 3, home: "DEN", away: "LAR" },
   { week: 3, home: "DET", away: "NYJ" },
-  { week: 3, home: "GB", away: "ATL", primetime: true },
+  { week: 3, home: "GB", away: "ATL" },
   { week: 3, home: "IND", away: "HOU" },
   { week: 3, home: "JAX", away: "NE" },
   { week: 3, home: "MIA", away: "KC" },
