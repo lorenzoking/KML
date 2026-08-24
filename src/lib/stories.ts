@@ -22,6 +22,8 @@ const STORY_ASSETS = {
   week2MorningShow: "/stories/wk2/morning-show.png",
   week2Potw: "/stories/wk2/potw.png",
   week3Primetime: "/stories/wk3/primetime.png",
+  week3Potw: "/stories/wk3/potw.png",
+  week4Primetime: "/stories/wk4/primetime.png",
 } as const;
 
 const DEFAULT_STORIES = [
@@ -774,9 +776,137 @@ Lock your picks. Submit the scores. Let the desk argue.
 One league. All eyes. Every week.
 
 Compete. Conquer. Be legendary.`,
-    isFeatured: true,
+    isFeatured: false,
     sortOrder: -50,
     week: 3,
+  },
+  {
+    slug: "season-1-week-4-primetime",
+    category: StoryCategory.GAME_OF_WEEK,
+    title: "KML Primetime Week 4: chips on both shoulders",
+    eyebrow: "Games of the week · Primetime slate",
+    summary:
+      "Thursday is a 3–0 Bucs club vs Chance’s Packers. Sunday is Oli’s unbeaten Chargers vs Petey. Monday is Jordan Stowe vs Lefty — plus Curry-Nick and a Swipe-Puddin get-right game.",
+    body: `![KML Primetime Week 4](${STORY_ASSETS.week4Primetime})
+
+**Compete. Grind. Reign.**
+
+Week 4 does not ease anyone in. Thursday is a ring-versus-skill night in Tampa. Sunday is the new threat against Morning Show chalk. Monday is two chips on two of the loudest rosters in Madden 27.
+
+All 32 teams get their primetime moment. This week, the lights are unforgiving.
+
+## Thursday Night Football — Packers vs Buccaneers
+
+**The ring is the difference.**
+
+An all-time great franchise with championship pedigree versus a skill match that’s still chasing the first ring.
+
+**Chance’s Packers (81 OVR · 82 OFF · 82 DEF)** are **2–1** and coming off Jordan Love’s Week 2 surgeon tape — 19-of-24, 305 yards, four touchdowns, a 158.3 rating. Love is still the NFC Offensive Player of the Week until somebody knocks him off. Tampa is the first real 3–0 measuring stick of that story.
+
+**Dre’s Buccaneers (80 OVR · 83 OFF)** are **3–0**. Bucky Irving just ran for 162 and three scores. The graphic already said it: championship DNA on one sideline, a coach still hunting the first KML ring on the other.
+
+Thursday night, somebody’s zero or somebody’s chase takes a hit.
+
+## Why this game matters
+
+- **3–0 vs 2–1:** Tampa has not blinked. Green Bay has to prove the Love stamp travels
+- **The ring gap:** pedigree versus a skill match still chasing January
+- **TNF stage:** the first primetime night of Week 4 is not a soft opener
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Packers** | Chance | **Jordan Love** | **Love’s Week 2 tape** — 158.3 rating has to show up against 3–0 | **the 82 DEF** — Chance’s club is built to hang in a possession game |
+| **Buccaneers** | Dre | **Baker Mayfield** | **Bucky Irving** — 162 yards and 3 TD is the new baseline | **3–0 juice** — Tampa has not given the league a reason to doubt them |
+
+If Love looks like Week 2 again, Chance steals a 3–0 scalp on Thursday and the “best in the league” talk gets louder. If Irving and Tampa’s start hold serve, Dre stays perfect and the ring conversation stays in Florida.
+
+## Sunday Night Football — Chargers vs Seahawks
+
+**The new threat meets his biggest test.**
+
+**Oli’s Chargers (82 OVR · 85 OFF)** are unbeaten and already look explosive. Hampton took AFC Offensive Player of the Week. **Justin Herbert** is a 90 overall field general with 96 throw power. **Ladd McConkey** is the 92-speed separator. **Derwin James** and **Khalil Mack** give a 79 defense enough juice to steal a possession game.
+
+**Petey’s Seahawks (84 OVR · 83 OFF · 82 DEF)** are **2–1** and still the Morning Show’s chalk. **Sam Darnold** is the Super Bowl quarterback. The graphic already said it: Seattle’s defense has allowed **one touchdown in their last two games**. That is how chalk answers a slow start — by erasing offenses.
+
+Sunday night is whether Oli’s explosion is real against a coach the desk already picked to hoist the first Lombardi.
+
+## Why this game matters
+
+- **New threat vs chalk:** Oli has the heater; Petey has the reputation
+- **The 1-TD defense:** Seattle’s last two games are a dare to Herbert
+- **Unbeaten on the road:** the Chargers’ first real primetime test against Morning Show chalk
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Chargers** | Oli | **Justin Herbert** | **Omarion Hampton** — 208 and 3 TD is still the AFC stamp | **Ladd McConkey** — the separator who makes 85 OFF look faster |
+| **Seahawks** | Petey | **Sam Darnold** | **the 1-TD defense** — Witherspoon and the front have to hold up | **Jaxon Smith-Njigba** — the volume WR who forces coverages to break |
+
+If Hampton and Herbert keep stacking, Oli goes into the contender conversation for real. If Petey’s defense looks like the last two weeks, the chalk takes a primetime bite out of the new threat.
+
+## Monday Night Football — Rams vs Eagles
+
+**Chips on both shoulders.**
+
+**Lefty is rolling at 3–0** after taking down the undefeated Bears on Thursday night. **DeVonta Smith** just dropped 142 yards and two scores on 35.5 yards per catch. This is not last year’s Eagles — **A.J. Brown is in New England** — and it has not mattered. Hurts, Saquon (92), DeVonta (92), and an 87 defense that already scored four pick-sixes in Week 2.
+
+**Jordan Stowe’s Rams (91 OVR · 93 OFF · 88 DEF)** are **2–1** and coming off **back-to-back dominant wins** after the Week 1 primetime loss to San Francisco. Stafford threw four scores without a pick. Puka Nacua had three touchdowns. Hollywood’s mountain is back on the Monday night stage against the other 88.
+
+Something has to give.
+
+## Why this game matters
+
+- **3–0 vs the best roster:** Lefty’s start against Jordan Stowe’s 91 overall
+- **The Week 1 scar:** Hollywood has answered with two demolitions. This is the measuring stick
+- **Two chips:** both coaches have something to prove under the lights
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Rams** | Jordan Stowe | **Matthew Stafford** | **Puka Nacua** — three TDs last week, still the cover-2 breaker | **Myles Garrett** — the league’s premier edge has to wreck Hurts |
+| **Eagles** | Lefty | **Jalen Hurts** | **DeVonta Smith** — 35.5 YPR is a different WR1 without A.J. Brown | **Saquon Barkley** — 92 OVR, still the downhill answer |
+
+If Stafford and Puka look like last week, the 91 overall roster reminds the league who owns the mountain. If Hurts, Saquon, and Smith knock off Hollywood on Monday night, Lefty’s 3–0 stop looking like a hot start and start looking like January.
+
+## More Week 4 matchups
+
+The primetime windows are the show. The rest of the board is not quiet.
+
+| Matchup | Records | Coaches | Why the desk is watching |
+| --- | --- | --- | --- |
+| **Lions vs Panthers** | Lions rolling | Curry vs Nick | Curry is looking for the next statement win. Can Nick’s Panthers make noise and hand him his first scare of the month? |
+| **Broncos vs 49ers** | 0–3 vs get-right | Puddin vs Swipe | Both looking to get back on track. Puddin is 0–3 after Hollywood dropped 35 in Denver. Swipe needs the get-right win after Miami spoiled the primetime hangover. |
+
+## Primetime Week 4 cheat sheet
+
+| Window | Matchup | Coaches | Why it’s on the board |
+| --- | --- | --- | --- |
+| TNF | Packers–Buccaneers | Chance vs Dre | The ring is the difference. 2–1 vs 3–0. |
+| SNF | Chargers–Seahawks | Oli vs Petey | The new threat meets his biggest test. |
+| MNF | Rams–Eagles | Jordan Stowe vs Lefty | Chips on both shoulders. Something has to give. |
+
+## Desk verdict
+
+Week 3 told you **Lefty can win a 2–0 fight**, **Rodgers can drop six**, and **Sneed can erase a night**.
+
+Week 4 asks the loud ones:
+
+- Can Chance’s Packers knock off a 3–0 Bucs club on Thursday — or does Dre’s start stay perfect?
+- Is Oli’s explosion real against Petey’s 1-TD defense, or does the chalk take Sunday night?
+- Do the Rams’ back-to-back demolitions hold up against Lefty’s 3–0, or does Monday night belong to the other 88?
+
+Lock your picks. Submit the scores. Let the desk argue.
+
+One league. All eyes. Every week.
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: true,
+    sortOrder: -60,
+    week: 4,
   },
   {
     slug: "season-1-week-1-preview",
@@ -994,6 +1124,93 @@ Compete. Conquer. Be legendary.`,
     isFeatured: false,
     sortOrder: -36,
     week: 2,
+  },
+  {
+    slug: "season-1-week-3-players-of-the-week",
+    category: StoryCategory.PLAYER_OF_WEEK,
+    title: "Week 3 Players of the Week: Rodgers dropped six, Sneed erased the night",
+    eyebrow: "Honors desk · Week 3",
+    summary:
+      "Aaron Rodgers threw for 389 yards and six touchdowns in Pittsburgh’s first win. L’Jarius Sneed picked off three passes and allowed zero scores. Week 3 belonged to a 5x champ’s quarterback and Trent’s cover corner.",
+    body: `![KML Week 3 Players of the Week](${STORY_ASSETS.week3Potw})
+
+**Compete. Grind. Reign.**
+
+Week 2 belonged to Hampton, Love, and two Eagles corners. Week 3 did not copy that script. It handed the stamps to a legend and a shutdown corner.
+
+**Aaron Rodgers** turned **Big Al’s Steelers** into a track meet in Cincinnati — 389 yards, **six touchdowns**, and Pittsburgh’s first win of Season 1. **L’Jarius Sneed** turned **Trent’s Chiefs** into a no-fly zone against Miami: **three interceptions, zero touchdowns allowed**.
+
+Everybody else on the board had a heater. Those two owned the week.
+
+## Offensive Player of the Week — Aaron Rodgers
+
+**Steelers · QB · Big Al · #8**
+
+| Pass yards | TDs | INTs | Rating |
+| --- | --- | --- | --- |
+| **389** | **6** | 2 | **108.2** |
+
+That is not a get-right game. That is a statement.
+
+Big Al opened 0–2 for the first time in a KML career. Then Rodgers dropped six on the Bengals in a **48–25** win and the 5x champ got off the schneid. Three hundred eighty-nine yards. Six scores. A 108.2 rating. The honors desk did not need a second look.
+
+The league can talk 90-offense clubs all it wants. Pittsburgh just showed you what happens when the quarterback who has done this before gets hot.
+
+## Defensive Player of the Week — L’Jarius Sneed
+
+**Chiefs · CB · Trent · #38**
+
+| INTs | TDs allowed | The tape |
+| --- | --- | --- |
+| **3** | **0** | Erased the night |
+
+Three picks. Zero scores allowed. Game over.
+
+**Trent’s Chiefs** are **3–0**. They just dropped **30–6** on Mease’s Dolphins, and Sneed was the reason Miami never found the end zone. Three interceptions. A shutdown night. That is not complementary football. That is a corner hunting, and a Defensive Player of the Week stamp that writes itself.
+
+Week 1 it was Hicks. Week 3 it is Sneed. Kansas City’s secondary is collecting honors.
+
+## Other Week 3 standouts
+
+The board under the two winners was stacked. The graphic did not hide.
+
+### Offense
+
+| Player | Team | Line | Why he’s on the board |
+| --- | --- | --- | --- |
+| **Jeremiyah Love** | Cardinals · Dooders | 16 car, **179 yards**, 3 TD, 11.2 YPC | Four broken tackles. Zero fumbles. A 78 OVR club’s heater |
+| **Bucky Irving** | Buccaneers · Dre | 16 car, **162 yards**, 3 TD, 10.1 YPC | Tampa stays 3–0 on the ground |
+| **Puka Nacua** | Rams · Jordan Stowe | 9 rec, **123 yards**, **3 TD** | Hollywood’s answer after Week 1 — three scores in the 35–7 Broncos demolition |
+| **Justin Jefferson** | Vikings · Fitz | 11 rec, **152 yards**, 2 TD | Unguardable even in a 0–3 start |
+| **DeVonta Smith** | Eagles · Lefty | 4 rec, **142 yards**, 2 TD, **35.5 YPR** | The WR1 now that A.J. Brown is in New England. 3–0 stamp over the Bears |
+| **Matthew Stafford** | Rams · Jordan Stowe | **242 yards**, **4 TD**, 0 INT, 137.2 rating | Back-to-back dominant wins after the Week 1 primetime loss |
+
+### Defense
+
+| Player | Team | Line | Why he’s on the board |
+| --- | --- | --- | --- |
+| **Trevin Wallace** | Panthers · Nick | **2 INT**, **1 pick-six**, 3 tackles | Scoring on defense. Carolina’s splash play of the week |
+| **Devonte Wyatt** | Packers · Chance | **3 sacks**, 3 TFL | Wrecking the pocket next to Love’s heater |
+| **Walter Nolen III** | Cardinals · Dooders | **3 sacks**, 2 TFL, 4 tackles | Interior havoc on a 78 OVR club that still made the honors board |
+
+Love going 179 on 16 carries is how Dooders stays dangerous on a bubble roster. Irving stacking three scores is how Dre stays perfect. Puka and Stafford turning Denver into a 35–7 tape is how the 91 overall mountain answers a bad opener. Smith’s 35.5 yards per catch is how Lefty’s 3–0 got its skill-position stamp. Jefferson doing this on 0–3 is a warning.
+
+None of them beat six touchdowns. None of them beat three picks and a shutout.
+
+## Desk verdict
+
+**Big Al and Rodgers** own the offensive stamp. Three hundred eighty-nine yards. Six scores. Pittsburgh’s first win. That is how a 5x champ gets off 0–2.
+
+**Trent and Sneed** own the defensive stamp. Three interceptions. Zero touchdowns allowed. The Chiefs are 3–0 and the secondary is writing the season.
+
+The rest of the board is the warning: **Love, Irving, Puka, Jefferson, Smith, Stafford, Wallace, Wyatt, Nolen** all left fingerprints on Week 3. The standard is already higher than Week 2.
+
+Week 4 primetime is loaded. The honors desk will be watching.
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: false,
+    sortOrder: -46,
+    week: 3,
   },
   {
     slug: "season-1-coaching-storylines",

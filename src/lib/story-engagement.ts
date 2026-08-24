@@ -196,6 +196,34 @@ const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
       },
     ],
   },
+  {
+    storySlug: "season-1-week-4-primetime",
+    key: "week-4-primetime",
+    title: "Week 4 Primetime lock-in",
+    questions: [
+      {
+        prompt: "Thursday Night Football — Packers vs Buccaneers",
+        options: [
+          { label: "Chance · Packers", franchiseAbbr: "GB" },
+          { label: "Dre · Buccaneers", franchiseAbbr: "TB" },
+        ],
+      },
+      {
+        prompt: "Sunday Night Football — Chargers vs Seahawks",
+        options: [
+          { label: "Oli · Chargers", franchiseAbbr: "LAC" },
+          { label: "Petey · Seahawks", franchiseAbbr: "SEA" },
+        ],
+      },
+      {
+        prompt: "Monday Night Football — Rams vs Eagles",
+        options: [
+          { label: "Jordan Stowe · Rams", franchiseAbbr: "LAR" },
+          { label: "Lefty · Eagles", franchiseAbbr: "PHI" },
+        ],
+      },
+    ],
+  },
 ];
 
 function isMissingEngagementTable(error: unknown) {
