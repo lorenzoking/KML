@@ -16,6 +16,7 @@ import { prisma } from "@/lib/prisma";
 import { GAME_TYPE_LABELS } from "@/lib/constants";
 import { getActiveSeason } from "@/lib/league";
 import { formatBothSimScores } from "@/lib/sim-score";
+import { formatMatchupScore, hasFinalScores } from "@/lib/game-score";
 import { format } from "date-fns";
 
 export default async function ApprovalsPage() {
@@ -56,7 +57,9 @@ export default async function ApprovalsPage() {
         </h2>
         <p className="text-sm text-[var(--muted-foreground)]">
           Approve to create official results. Played games award XP; simulated
-          games update standings only (no coach XP). If the desk has to file a
+          games update standings only (no coach XP). Force wins award game-played
+          XP to the available coach only — the CPU score can wait until after
+          the week advances. If the desk has to file a
           score for coaches, use the form below — reputation still applies, XP
           does not. Primetime is taken from the checkbox or the official
           Primetime poll slate.
@@ -91,23 +94,36 @@ export default async function ApprovalsPage() {
             <Card key={s.id}>
               <CardHeader>
                 <CardTitle>
-                  {s.userTeam.name} {s.userScore}–{s.opponentScore}{" "}
-                  {s.opponentTeam.name}
+                  {formatMatchupScore(s)}
                 </CardTitle>
                 <CardDescription>
                   Season {s.season.number} · Week {s.week} ·{" "}
                   {GAME_TYPE_LABELS[s.gameType]}
+                  {s.isForceWin ? " · Force win" : ""}
                   {s.isPrimetime ? " · Primetime" : ""}
-                  {s.skipXp || s.gameType === "SIMULATED" ? " · no XP" : ""}
-                  {s.filedByCommissioner ? " · desk filed" : ""} ·{" "}
-                  {formatBothSimScores(s)} · submitted by{" "}
+                  {s.isForceWin
+                    ? " · play XP only"
+                    : s.skipXp || s.gameType === "SIMULATED"
+                      ? " · no XP"
+                      : ""}
+                  {s.filedByCommissioner ? " · desk filed" : ""}
+                  {s.isForceWin ? "" : ` · ${formatBothSimScores(s)}`} · submitted by{" "}
                   {s.submitter.name ?? s.submitter.email} ·{" "}
                   {format(s.createdAt, "MMM d, h:mm a")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {s.opponentSimScore <= 2 ||
-                (s.userTeamSimScore != null && s.userTeamSimScore <= 2) ? (
+                {s.isForceWin ? (
+                  <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
+                    Force win claim. Approving awards game-played XP to{" "}
+                    {s.userTeam.abbreviation} only
+                    {hasFinalScores(s)
+                      ? ". The simulated score will count in standings, not for a win bonus."
+                      : ". The simulated score can be posted after the week advances."}
+                  </p>
+                ) : s.opponentSimScore != null &&
+                (s.opponentSimScore <= 2 ||
+                (s.userTeamSimScore != null && s.userTeamSimScore <= 2)) ? (
                   <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
                     Low Sim Score
                     {s.opponentSimScore <= 2
@@ -151,9 +167,11 @@ export default async function ApprovalsPage() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <SubmitButton name="decision" value="APPROVE">
-                      {s.skipXp || s.gameType === "SIMULATED"
-                        ? "Approve (no XP)"
-                        : "Approve"}
+                      {s.isForceWin
+                        ? "Approve force win (play XP)"
+                        : s.skipXp || s.gameType === "SIMULATED"
+                          ? "Approve (no XP)"
+                          : "Approve"}
                     </SubmitButton>
                     <SubmitButton
                       name="decision"
@@ -186,13 +204,16 @@ export default async function ApprovalsPage() {
                 >
                   <div>
                     <p className="font-medium">
-                      {s.userTeam.abbreviation} {s.userScore}–{s.opponentScore}{" "}
-                      {s.opponentTeam.abbreviation}
+                      {formatMatchupScore(s)}
                     </p>
                     <p className="text-xs text-[var(--muted-foreground)]">
-                      {formatBothSimScores(s)} ·{" "}
+                      {s.isForceWin ? "Force win · " : `${formatBothSimScores(s)} · `}
                       {s.reviewedBy?.name ?? "Commissioner"}
-                      {s.skipXp || s.filedByCommissioner ? " · no XP" : ""}
+                      {s.isForceWin
+                        ? " · play XP only"
+                        : s.skipXp || s.filedByCommissioner
+                          ? " · no XP"
+                          : ""}
                       {s.decisionNote ? ` · ${s.decisionNote}` : ""}
                     </p>
                   </div>

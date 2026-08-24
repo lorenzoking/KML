@@ -35,6 +35,7 @@ export function SubmissionForm({
 }) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [forceWin, setForceWin] = useState(false);
   const [pending, startTransition] = useTransition();
 
   return (
@@ -46,7 +47,14 @@ export function SubmissionForm({
         startTransition(async () => {
           const result = await submitGameResult(formData);
           if (result?.error) setError(result.error);
-          else setSuccess("Submission saved as pending.");
+          else {
+            setSuccess(
+              forceWin
+                ? "Force win submitted. You’ll get game-played XP after approval. Add the simulated score after the week advances."
+                : "Submission saved as pending."
+            );
+            setForceWin(false);
+          }
         });
       }}
     >
@@ -99,8 +107,8 @@ export function SubmissionForm({
           <option value="OTHER">Other</option>
         </Select>
         <p className="text-xs text-[var(--muted-foreground)]">
-          Choose <strong>Simulated</strong> for CPU sims. They still count in
-          standings after approval, but do not award coach XP.
+          Choose <strong>Simulated</strong> for CPU sims you actually ran. Force
+          wins use the checkbox below instead.
         </p>
       </div>
 
@@ -123,41 +131,67 @@ export function SubmissionForm({
         </Select>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="userScore">Your score</Label>
-          <Input id="userScore" name="userScore" type="number" min={0} required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="opponentScore">Opponent score</Label>
-          <Input
-            id="opponentScore"
-            name="opponentScore"
-            type="number"
-            min={0}
-            required
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 px-3 py-3">
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            name="isForceWin"
+            value="true"
+            checked={forceWin}
+            onChange={(event) => setForceWin(event.target.checked)}
+            className="mt-1 h-4 w-4"
           />
-        </div>
+          <span>
+            <span className="font-semibold">I received a force win</span>
+            <span className="mt-0.5 block text-xs text-[var(--muted-foreground)]">
+              Use this when the opponent could not play and awarded you the game.
+              The simulated score is posted after the week advances. You get
+              game-played XP for being available — not win-bonus XP, and not XP
+              from the CPU score.
+            </span>
+          </span>
+        </label>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="opponentSimScore">Opponent&apos;s Sim Score (1–5)</Label>
-        <Select id="opponentSimScore" name="opponentSimScore" required defaultValue="">
-          <option value="" disabled>
-            Select opponent&apos;s Sim Score
-          </option>
-          <option value="5">5 — Elite sim</option>
-          <option value="4">4 — Strong sim</option>
-          <option value="3">3 — Acceptable</option>
-          <option value="2">2 — Poor (counts toward Bad Sim for them)</option>
-          <option value="1">1 — Very poor (counts toward Bad Sim for them)</option>
-        </Select>
-        <p className="text-xs text-[var(--muted-foreground)]">
-          Enter the Madden Sim Score for your opponent&apos;s play — not your own. Scores of
-          2 or lower feed KML Bad Sim Reputation rules for that coach. They will submit a
-          Sim Score for you by opening this game after it&apos;s posted.
-        </p>
-      </div>
+      {forceWin ? null : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="userScore">Your score</Label>
+              <Input id="userScore" name="userScore" type="number" min={0} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="opponentScore">Opponent score</Label>
+              <Input
+                id="opponentScore"
+                name="opponentScore"
+                type="number"
+                min={0}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="opponentSimScore">Opponent&apos;s Sim Score (1–5)</Label>
+            <Select id="opponentSimScore" name="opponentSimScore" required defaultValue="">
+              <option value="" disabled>
+                Select opponent&apos;s Sim Score
+              </option>
+              <option value="5">5 — Elite sim</option>
+              <option value="4">4 — Strong sim</option>
+              <option value="3">3 — Acceptable</option>
+              <option value="2">2 — Poor (counts toward Bad Sim for them)</option>
+              <option value="1">1 — Very poor (counts toward Bad Sim for them)</option>
+            </Select>
+            <p className="text-xs text-[var(--muted-foreground)]">
+              Enter the Madden Sim Score for your opponent&apos;s play — not your own. Scores of
+              2 or lower feed KML Bad Sim Reputation rules for that coach. They will submit a
+              Sim Score for you by opening this game after it&apos;s posted.
+            </p>
+          </div>
+        </>
+      )}
 
       <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 px-3 py-3">
         <label className="flex items-start gap-3 text-sm">
@@ -179,8 +213,17 @@ export function SubmissionForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea id="notes" name="notes" placeholder="Optional context for commissioners" />
+        <Label htmlFor="notes">Notes{forceWin ? " (required)" : ""}</Label>
+        <Textarea
+          id="notes"
+          name="notes"
+          required={forceWin}
+          placeholder={
+            forceWin
+              ? "Who couldn’t play, and how the force win was agreed"
+              : "Optional context for commissioners"
+          }
+        />
       </div>
 
       {error ? (
@@ -195,7 +238,7 @@ export function SubmissionForm({
       ) : null}
 
       <SubmitButton disabled={pending} pendingText="Submitting...">
-        Submit for approval
+        {forceWin ? "Submit force win" : "Submit for approval"}
       </SubmitButton>
     </form>
   );

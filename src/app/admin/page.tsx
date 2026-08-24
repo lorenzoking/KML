@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
+import { formatMatchupScore } from "@/lib/game-score";
 import { EmptyState } from "@/components/ui/empty-state";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason } from "@/lib/league";
@@ -115,8 +116,7 @@ export default async function AdminPage() {
                     className="flex items-center justify-between gap-2 text-sm"
                   >
                     <span>
-                      {s.userTeam.abbreviation} {s.userScore}–{s.opponentScore}{" "}
-                      {s.opponentTeam.abbreviation}
+                      {formatMatchupScore(s)}
                       <span className="text-[var(--muted-foreground)]">
                         {" "}
                         · {s.submitter.name}

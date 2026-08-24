@@ -274,10 +274,13 @@ model GameSubmission {
   submitterId    String
   userTeamId     String
   opponentTeamId String
-  userScore      Int
-  opponentScore  Int
-  /// Madden/KML realism rating for the opponent's play (1–5), reported by the submitter. Scores ≤2 feed Bad Sim rules for that opponent.
-  opponentSimScore Int
+  /// Null on a force win until the CPU sim score is posted after the week advances.
+  userScore      Int?
+  opponentScore  Int?
+  /// Madden/KML realism rating for the opponent's play (1–5), reported by the submitter. Scores ≤2 feed Bad Sim rules for that opponent. Null on force wins — nobody played.
+  opponentSimScore Int?
+  /// Submitter was available and received a force win because the opponent could not play.
+  isForceWin     Boolean          @default(false)
   /// Sim Score the opponent coach gave the submitting team (1–5). Null until that coach submits.
   userTeamSimScore Int?
   notes          String?
@@ -322,6 +325,7 @@ model GameResult {
   /// Sim Score the away/opponent coach gave the home/submitting team.
   userTeamSimScore Int?
   winnerTeamId String?
+  isForceWin   Boolean   @default(false)
   isPrimetime  Boolean   @default(false)
   isVoided     Boolean   @default(false)
   voidedAt     DateTime?

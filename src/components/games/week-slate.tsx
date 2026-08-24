@@ -105,10 +105,13 @@ function SlateRow({
           {row.away.abbreviation} @ {row.home.abbreviation}
           {row.homeScore != null && row.awayScore != null
             ? ` · ${row.away.abbreviation} ${row.awayScore}–${row.homeScore} ${row.home.abbreviation}`
-            : ""}
+            : row.isForceWin
+              ? " · force win (score pending)"
+              : ""}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           {row.isPrimetime ? <Badge variant="elite">Primetime</Badge> : null}
+          {row.isForceWin ? <Badge variant="outline">Force win</Badge> : null}
           {mine ? <Badge variant="outline">You</Badge> : null}
           {row.status === "approved" ? (
             <StatusBadge status="APPROVED" />

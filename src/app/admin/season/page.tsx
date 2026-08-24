@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { StatusBadge } from "@/components/status-badge";
+import { formatMatchupScore } from "@/lib/game-score";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -312,9 +313,7 @@ export default async function AdminSeasonPage() {
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <p className="font-medium">
-                        Week {game.week}: {game.userTeam.abbreviation}{" "}
-                        {game.userScore}–{game.opponentScore}{" "}
-                        {game.opponentTeam.abbreviation}
+                        Week {game.week}: {formatMatchupScore(game)}
                       </p>
                       <p className="text-xs text-[var(--muted-foreground)]">
                         Submitted by {game.submitter.name ?? game.submitter.email}

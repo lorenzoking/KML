@@ -31,6 +31,7 @@ import { assignUserToTeam } from "@/actions/teams";
 import { addXpAdjustment, addReputationAdjustment } from "@/actions/adjustments";
 import { formatRecord } from "@/lib/utils";
 import { GAME_TYPE_LABELS } from "@/lib/constants";
+import { formatMatchupScore } from "@/lib/game-score";
 import { format } from "date-fns";
 
 export default async function AdminUserDetailPage({
@@ -389,8 +390,7 @@ export default async function AdminUserDetailPage({
                   >
                     <div>
                       <p className="font-medium">
-                        S{s.season.number} W{s.week}: {s.userTeam.abbreviation}{" "}
-                        {s.userScore}–{s.opponentScore} {s.opponentTeam.abbreviation}
+                        S{s.season.number} W{s.week}: {formatMatchupScore(s)}
                       </p>
                       <p className="text-xs text-[var(--muted-foreground)]">
                         {GAME_TYPE_LABELS[s.gameType]} ·{" "}

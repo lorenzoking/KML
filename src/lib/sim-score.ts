@@ -9,7 +9,7 @@ export const SIM_SCORE_OPTIONS = [
 export type SimScoreSides = {
   userTeamId: string;
   opponentTeamId: string;
-  opponentSimScore: number;
+  opponentSimScore: number | null;
   userTeamSimScore: number | null;
 };
 
@@ -54,9 +54,11 @@ export function formatTeamSimScore(
 export function formatBothSimScores(game: {
   userTeam: { abbreviation: string };
   opponentTeam: { abbreviation: string };
-  opponentSimScore: number;
+  opponentSimScore: number | null;
   userTeamSimScore: number | null;
+  isForceWin?: boolean;
 }) {
+  if (game.isForceWin) return "No Sim Score — force win";
   return [
     formatTeamSimScore(game.userTeam.abbreviation, game.userTeamSimScore),
     formatTeamSimScore(game.opponentTeam.abbreviation, game.opponentSimScore),

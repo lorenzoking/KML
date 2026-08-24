@@ -26,6 +26,7 @@ import {
   coachHonorific,
 } from "@/lib/coach/dashboard-pulse";
 import { myOutstandingSimScore } from "@/lib/sim-score";
+import { formatMatchupScore, hasFinalScores } from "@/lib/game-score";
 import { ensureDefaultLeagueStories, getPublishedStories } from "@/lib/stories";
 import { safeGetOpenPollsNeedingVote } from "@/lib/story-engagement";
 import {
@@ -199,7 +200,11 @@ export default async function DashboardPage({
         }))
         .filter(
           (row): row is typeof row & { outstanding: NonNullable<typeof row.outstanding> } =>
-            Boolean(row.outstanding && !row.outstanding.alreadySubmitted)
+            Boolean(
+              !row.game.isForceWin &&
+                row.outstanding &&
+                !row.outstanding.alreadySubmitted
+            )
         )
         .sort((a, b) => {
           const aNow = a.game.week === settings.currentWeek ? 0 : 1;
@@ -294,6 +299,20 @@ export default async function DashboardPage({
       byeWeekForAbbr(membership.franchise.abbreviation) === settings.currentWeek
   );
 
+  if (membership && weekGame?.isForceWin && !hasFinalScores(weekGame)) {
+    toDos.push({
+      href: `/games/${weekGame.id}`,
+      icon: Send,
+      iconClassName: "bg-[var(--primary)] text-[var(--primary-foreground)]",
+      title: "Post the simulated score",
+      subtitle: `Week ${weekGame.week} force win vs ${
+        weekGame.userTeamId === membership.franchiseId
+          ? weekGame.opponentTeam.abbreviation
+          : weekGame.userTeam.abbreviation
+      } — after the week advances`,
+    });
+  }
+
   if (membership && scheduledOpp && !weekGame && !isByeWeek) {
     toDos.push({
       href: "/games?tab=week#submit-result",
@@ -315,7 +334,7 @@ export default async function DashboardPage({
       title: thisWeek
         ? "Submit opponent Sim Score"
         : "Sim Score needed",
-      subtitle: `Week ${game.week}: rate ${rated.abbreviation} · ${game.userTeam.abbreviation} ${game.userScore}–${game.opponentScore} ${game.opponentTeam.abbreviation}`,
+      subtitle: `Week ${game.week}: rate ${rated.abbreviation} · ${formatMatchupScore(game)}`,
     });
   }
 
@@ -347,8 +366,8 @@ export default async function DashboardPage({
       href: `/games/${game.id}`,
       icon: ClipboardCheck,
       iconClassName: "bg-[#1a1a1a] text-[var(--primary)] dark:bg-[#2a2a2a]",
-      title: "Result pending approval",
-      subtitle: `W${game.week}: ${game.userTeam.abbreviation} ${game.userScore}–${game.opponentScore} ${game.opponentTeam.abbreviation}`,
+      title: game.isForceWin ? "Force win pending approval" : "Result pending approval",
+      subtitle: `W${game.week}: ${formatMatchupScore(game)}`,
     });
   }
 
@@ -722,10 +741,11 @@ function WeekMatchup({
   game: {
     id: string;
     status: string;
-    userScore: number;
-    opponentScore: number;
+    userScore: number | null;
+    opponentScore: number | null;
     userTeamId: string;
     opponentTeamId: string;
+    isForceWin?: boolean;
     userTeam: { abbreviation: string; name: string };
     opponentTeam: { abbreviation: string; name: string };
   };
@@ -734,6 +754,8 @@ function WeekMatchup({
 }) {
   const sides = matchupSides(game, myFranchiseId);
   const pending = game.status === "PENDING";
+  const forceWin = Boolean(game.isForceWin);
+  const scored = hasFinalScores(game);
 
   return (
     <Link
@@ -744,23 +766,31 @@ function WeekMatchup({
           ? "border-amber-400/40 bg-[color-mix(in_srgb,#f59e0b_12%,var(--surface-raised))]"
           : pending
             ? "border-[color-mix(in_srgb,var(--primary)_35%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_10%,var(--surface-raised))]"
-            : sides.won
-              ? "border-[color-mix(in_srgb,var(--primary)_40%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_12%,var(--surface-raised))]"
-              : sides.lost
-                ? "border-[color-mix(in_srgb,var(--team)_40%,var(--border))] bg-[color-mix(in_srgb,var(--team)_14%,var(--surface-raised))]"
-                : "border-[var(--border)] bg-[var(--surface-raised)]"
+            : forceWin
+              ? "border-[color-mix(in_srgb,var(--primary)_35%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_10%,var(--surface-raised))]"
+              : sides.won
+                ? "border-[color-mix(in_srgb,var(--primary)_40%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_12%,var(--surface-raised))]"
+                : sides.lost
+                  ? "border-[color-mix(in_srgb,var(--team)_40%,var(--border))] bg-[color-mix(in_srgb,var(--team)_14%,var(--surface-raised))]"
+                  : "border-[var(--border)] bg-[var(--surface-raised)]"
       )}
     >
       <div className="flex items-center justify-between gap-3">
         <p className="text-[13px] font-medium text-[var(--muted-foreground)]">
           {needsSim
             ? "Rate your opponent"
-            : pending
-              ? "Waiting on approval"
-              : "Final"}
+            : forceWin && !scored
+              ? "Force win · score pending"
+              : forceWin
+                ? "Force win"
+                : pending
+                  ? "Waiting on approval"
+                  : "Final"}
         </p>
         {needsSim ? (
           <Badge variant="pending">Sim Score</Badge>
+        ) : forceWin ? (
+          <Badge variant="outline">Force win</Badge>
         ) : pending ? (
           <Badge variant="pending">Pending</Badge>
         ) : sides.won ? (
@@ -802,8 +832,8 @@ function WeekMatchup({
 
 function matchupSides(
   game: {
-    userScore: number;
-    opponentScore: number;
+    userScore: number | null;
+    opponentScore: number | null;
     userTeamId: string;
     opponentTeamId: string;
     userTeam: { abbreviation: string; name: string };
@@ -819,9 +849,9 @@ function matchupSides(
   return {
     mine,
     theirs,
-    myScore,
-    theirScore,
-    won: myScore > theirScore,
-    lost: myScore < theirScore,
+    myScore: myScore ?? "—",
+    theirScore: theirScore ?? "—",
+    won: myScore != null && theirScore != null && myScore > theirScore,
+    lost: myScore != null && theirScore != null && myScore < theirScore,
   };
 }

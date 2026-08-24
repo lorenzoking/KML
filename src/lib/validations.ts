@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+const optionalScore = z.preprocess(
+  (value) => (value === "" || value == null ? undefined : value),
+  z.coerce.number().int().min(0).max(200).optional()
+);
+
+const optionalSimScore = z.preprocess(
+  (value) => (value === "" || value == null ? undefined : value),
+  z.coerce.number().int().min(1).max(5).optional()
+);
+
 export const gameSubmissionSchema = z
   .object({
     seasonNumber: z.coerce.number().int().min(1).max(50),
@@ -13,19 +23,68 @@ export const gameSubmissionSchema = z
       "OTHER",
     ]),
     opponentTeamId: z.string().min(1, "Opponent is required"),
-    userScore: z.coerce.number().int().min(0).max(200),
-    opponentScore: z.coerce.number().int().min(0).max(200),
-      opponentSimScore: z
-        .coerce
-        .number()
-        .int()
-        .min(1, "Opponent Sim Score must be 1–5")
-        .max(5, "Opponent Sim Score must be 1–5"),
+    userScore: optionalScore,
+    opponentScore: optionalScore,
+    opponentSimScore: optionalSimScore,
+    isForceWin: z.coerce.boolean().default(false),
     isPrimetime: z.coerce.boolean().default(false),
     notes: z.string().max(500).optional(),
   })
-  .refine((data) => data.userScore !== data.opponentScore || true, {
-    message: "Scores recorded",
+  .superRefine((data, ctx) => {
+    if (data.isForceWin) {
+      if (!data.notes?.trim()) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Add a note explaining why the opponent could not play.",
+          path: ["notes"],
+        });
+      }
+      if (
+        data.userScore != null &&
+        data.opponentScore != null &&
+        data.userScore <= data.opponentScore
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: "A force win must show you ahead of the opponent.",
+          path: ["userScore"],
+        });
+      }
+      return;
+    }
+
+    if (data.userScore == null) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Your score is required.",
+        path: ["userScore"],
+      });
+    }
+    if (data.opponentScore == null) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Opponent score is required.",
+        path: ["opponentScore"],
+      });
+    }
+    if (data.opponentSimScore == null) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Opponent Sim Score must be 1–5",
+        path: ["opponentSimScore"],
+      });
+    }
+  });
+
+export const forceWinScoreSchema = z
+  .object({
+    submissionId: z.string().min(1),
+    userScore: z.coerce.number().int().min(0).max(200),
+    opponentScore: z.coerce.number().int().min(0).max(200),
+  })
+  .refine((data) => data.userScore > data.opponentScore, {
+    message: "A force win must show the available coach ahead of the opponent.",
+    path: ["userScore"],
   });
 
 export const simScoreSubmissionSchema = z.object({

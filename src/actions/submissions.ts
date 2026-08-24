@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { SubmissionStatus } from "@/generated/prisma/client";
-import { requireUser } from "@/lib/auth";
+import { requireUser, isCommissioner } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
-import { gameSubmissionSchema, simScoreSubmissionSchema } from "@/lib/validations";
+import { gameSubmissionSchema, simScoreSubmissionSchema, forceWinScoreSchema } from "@/lib/validations";
 import { writeAuditLog } from "@/lib/audit";
 
 export async function submitGameResult(formData: FormData) {
@@ -22,9 +22,10 @@ export async function submitGameResult(formData: FormData) {
     week: formData.get("week") ?? settings.currentWeek,
     gameType: formData.get("gameType"),
     opponentTeamId: formData.get("opponentTeamId"),
-    userScore: formData.get("userScore"),
-    opponentScore: formData.get("opponentScore"),
-    opponentSimScore: formData.get("opponentSimScore"),
+    userScore: formData.get("userScore") || undefined,
+    opponentScore: formData.get("opponentScore") || undefined,
+    opponentSimScore: formData.get("opponentSimScore") || undefined,
+    isForceWin: formData.get("isForceWin") === "true",
     isPrimetime: formData.get("isPrimetime") === "true",
     notes: formData.get("notes") || undefined,
   });
@@ -82,9 +83,10 @@ export async function submitGameResult(formData: FormData) {
       submitterId: user.id,
       userTeamId: membership.franchiseId,
       opponentTeamId: data.opponentTeamId,
-      userScore: data.userScore,
-      opponentScore: data.opponentScore,
-      opponentSimScore: data.opponentSimScore,
+      userScore: data.userScore ?? null,
+      opponentScore: data.opponentScore ?? null,
+      opponentSimScore: data.isForceWin ? null : (data.opponentSimScore ?? null),
+      isForceWin: data.isForceWin,
       isPrimetime: data.isPrimetime,
       notes: data.notes,
       status: SubmissionStatus.PENDING,
@@ -98,9 +100,10 @@ export async function submitGameResult(formData: FormData) {
     entityId: submission.id,
     metadata: {
       week: data.week,
-      userScore: data.userScore,
-      opponentScore: data.opponentScore,
-      opponentSimScore: data.opponentSimScore,
+      userScore: data.userScore ?? null,
+      opponentScore: data.opponentScore ?? null,
+      opponentSimScore: data.isForceWin ? null : (data.opponentSimScore ?? null),
+      isForceWin: data.isForceWin,
       isPrimetime: data.isPrimetime,
     },
   });
@@ -163,6 +166,10 @@ export async function submitGameSimScore(formData: FormData) {
     };
   }
 
+  if (submission.isForceWin) {
+    return { error: "Force wins do not use Sim Scores. The CPU sim score can be posted after the week advances." };
+  }
+
   if (submission.userTeamSimScore != null) {
     return { error: "You already submitted a Sim Score for this opponent." };
   }
@@ -197,6 +204,108 @@ export async function submitGameSimScore(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/admin");
   revalidatePath("/admin/approvals");
+
+  return { success: true };
+}
+
+export async function submitForceWinScore(formData: FormData) {
+  const user = await requireUser();
+  const { season } = await getActiveSeason();
+  const membership = await getUserMembership(user.id, season.id);
+  const commissioner = await isCommissioner(user);
+
+  const parsed = forceWinScoreSchema.safeParse({
+    submissionId: formData.get("submissionId"),
+    userScore: formData.get("userScore"),
+    opponentScore: formData.get("opponentScore"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid simulated score" };
+  }
+
+  const submission = await prisma.gameSubmission.findUnique({
+    where: { id: parsed.data.submissionId },
+    include: { result: { select: { id: true } } },
+  });
+
+  if (!submission) return { error: "Game not found." };
+  if (!submission.isForceWin) {
+    return { error: "Only force wins can add a simulated score this way." };
+  }
+  if (
+    submission.status !== SubmissionStatus.PENDING &&
+    submission.status !== SubmissionStatus.APPROVED
+  ) {
+    return { error: "This force win is no longer open." };
+  }
+
+  const isRecipient = membership?.franchiseId === submission.userTeamId;
+  if (!commissioner && !isRecipient && submission.submitterId !== user.id) {
+    return {
+      error: "Only the available coach or a commissioner can post the simulated score.",
+    };
+  }
+
+  const { userScore, opponentScore } = parsed.data;
+  const winnerTeamId = submission.userTeamId;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.gameSubmission.update({
+      where: { id: submission.id },
+      data: { userScore, opponentScore },
+    });
+
+    if (submission.result) {
+      await tx.gameResult.update({
+        where: { id: submission.result.id },
+        data: {
+          homeScore: userScore,
+          awayScore: opponentScore,
+          winnerTeamId,
+          isForceWin: true,
+        },
+      });
+      return;
+    }
+
+    if (submission.status === SubmissionStatus.APPROVED) {
+      await tx.gameResult.create({
+        data: {
+          submissionId: submission.id,
+          seasonId: submission.seasonId,
+          week: submission.week,
+          gameType: submission.gameType,
+          homeTeamId: submission.userTeamId,
+          awayTeamId: submission.opponentTeamId,
+          homeScore: userScore,
+          awayScore: opponentScore,
+          opponentSimScore: null,
+          userTeamSimScore: null,
+          winnerTeamId,
+          isForceWin: true,
+          isPrimetime: submission.isPrimetime,
+        },
+      });
+    }
+  });
+
+  await writeAuditLog({
+    actorId: user.id,
+    action: "SUBMIT_FORCE_WIN_SCORE",
+    entityType: "GameSubmission",
+    entityId: submission.id,
+    metadata: { userScore, opponentScore },
+  });
+
+  revalidatePath("/games");
+  revalidatePath(`/games/${submission.id}`);
+  revalidatePath("/submissions");
+  revalidatePath("/standings");
+  revalidatePath("/dashboard");
+  revalidatePath("/admin");
+  revalidatePath("/admin/approvals");
+  revalidatePath("/admin/season");
 
   return { success: true };
 }

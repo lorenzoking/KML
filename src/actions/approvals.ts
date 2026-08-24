@@ -11,6 +11,7 @@ import {
 } from "@/lib/validations";
 import { writeAuditLog } from "@/lib/audit";
 import { awardsCoachXp, xpFromApprovedGame } from "@/lib/xp";
+import { hasFinalScores } from "@/lib/game-score";
 import {
   applyReputationForApprovedGame,
   detectPrimetimeMatchup,
@@ -24,10 +25,11 @@ type ReviewableSubmission = {
   submitterId: string;
   userTeamId: string;
   opponentTeamId: string;
-  userScore: number;
-  opponentScore: number;
-  opponentSimScore: number;
+  userScore: number | null;
+  opponentScore: number | null;
+  opponentSimScore: number | null;
   userTeamSimScore: number | null;
+  isForceWin: boolean;
   isPrimetime: boolean;
   skipXp: boolean;
   userTeam: { id: string; name: string; abbreviation: string };
@@ -40,13 +42,16 @@ async function approvePendingSubmission(
   decisionNote: string
 ) {
   const settings = await getLeagueSettings();
-  const won = submission.userScore > submission.opponentScore;
-  const lost = submission.userScore < submission.opponentScore;
-  const winnerTeamId = won
+  const scored = hasFinalScores(submission);
+  const won = scored && submission.userScore! > submission.opponentScore!;
+  const lost = scored && submission.userScore! < submission.opponentScore!;
+  const winnerTeamId = submission.isForceWin
     ? submission.userTeamId
-    : lost
-      ? submission.opponentTeamId
-      : null;
+    : won
+      ? submission.userTeamId
+      : lost
+        ? submission.opponentTeamId
+        : null;
   const markedPrimetime = submission.isPrimetime;
   let isPrimetime = markedPrimetime;
   const grantXp = awardsCoachXp(submission.gameType, submission.skipXp);
@@ -72,22 +77,25 @@ async function approvePendingSubmission(
       },
     });
 
-    await tx.gameResult.create({
-      data: {
-        submissionId: submission.id,
-        seasonId: submission.seasonId,
-        week: submission.week,
-        gameType: submission.gameType,
-        homeTeamId: submission.userTeamId,
-        awayTeamId: submission.opponentTeamId,
-        homeScore: submission.userScore,
-        awayScore: submission.opponentScore,
-        opponentSimScore: submission.opponentSimScore,
-        userTeamSimScore: submission.userTeamSimScore,
-        winnerTeamId,
-        isPrimetime,
-      },
-    });
+    if (scored) {
+      await tx.gameResult.create({
+        data: {
+          submissionId: submission.id,
+          seasonId: submission.seasonId,
+          week: submission.week,
+          gameType: submission.gameType,
+          homeTeamId: submission.userTeamId,
+          awayTeamId: submission.opponentTeamId,
+          homeScore: submission.userScore!,
+          awayScore: submission.opponentScore!,
+          opponentSimScore: submission.opponentSimScore,
+          userTeamSimScore: submission.userTeamSimScore,
+          winnerTeamId,
+          isForceWin: submission.isForceWin,
+          isPrimetime,
+        },
+      });
+    }
 
     if (grantXp) {
       const xpEntries = xpFromApprovedGame({
@@ -95,6 +103,7 @@ async function approvePendingSubmission(
         xpWinBonus: settings.xpWinBonus,
         won,
         gameType: submission.gameType,
+        isForceWin: submission.isForceWin,
       });
 
       for (const entry of xpEntries) {
@@ -112,13 +121,15 @@ async function approvePendingSubmission(
         });
       }
 
-      const opponentMembership = await tx.leagueMembership.findFirst({
-        where: {
-          franchiseId: submission.opponentTeamId,
-          seasonId: submission.seasonId,
-          isActive: true,
-        },
-      });
+      const opponentMembership = submission.isForceWin
+        ? null
+        : await tx.leagueMembership.findFirst({
+            where: {
+              franchiseId: submission.opponentTeamId,
+              seasonId: submission.seasonId,
+              isActive: true,
+            },
+          });
 
       if (opponentMembership) {
         const oppXp = xpFromApprovedGame({
@@ -144,28 +155,30 @@ async function approvePendingSubmission(
       }
     }
 
-    await applyReputationForApprovedGame(tx, {
-      submissionId: submission.id,
-      seasonId: submission.seasonId,
-      week: submission.week,
-      gameType: submission.gameType,
-      userTeam: {
-        id: submission.userTeam.id,
-        name: submission.userTeam.name,
-        abbreviation: submission.userTeam.abbreviation,
-      },
-      opponentTeam: {
-        id: submission.opponentTeam.id,
-        name: submission.opponentTeam.name,
-        abbreviation: submission.opponentTeam.abbreviation,
-      },
-      userScore: submission.userScore,
-      opponentScore: submission.opponentScore,
-      winnerTeamId,
-      submitterId: submission.submitterId,
-      isPrimetime,
-      createdById: commissionerId,
-    });
+    if (scored && !submission.isForceWin) {
+      await applyReputationForApprovedGame(tx, {
+        submissionId: submission.id,
+        seasonId: submission.seasonId,
+        week: submission.week,
+        gameType: submission.gameType,
+        userTeam: {
+          id: submission.userTeam.id,
+          name: submission.userTeam.name,
+          abbreviation: submission.userTeam.abbreviation,
+        },
+        opponentTeam: {
+          id: submission.opponentTeam.id,
+          name: submission.opponentTeam.name,
+          abbreviation: submission.opponentTeam.abbreviation,
+        },
+        userScore: submission.userScore!,
+        opponentScore: submission.opponentScore!,
+        winnerTeamId,
+        submitterId: submission.submitterId,
+        isPrimetime,
+        createdById: commissionerId,
+      });
+    }
   });
 
   return { winnerTeamId, isPrimetime, grantXp };
@@ -243,6 +256,7 @@ export async function reviewSubmission(formData: FormData) {
       gameType: submission.gameType,
       awardsXp: grantXp,
       skipXp: submission.skipXp,
+      isForceWin: submission.isForceWin,
       isPrimetime,
     },
   });

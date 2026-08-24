@@ -34,6 +34,7 @@ import {
   getReputationLabel,
 } from "@/lib/reputation";
 import { formatBothSimScores } from "@/lib/sim-score";
+import { formatMatchupScore } from "@/lib/game-score";
 import { ScrollToHash } from "@/components/games/scroll-to-hash";
 import { WeekSlate } from "@/components/games/week-slate";
 import { TeamSchedule } from "@/components/games/team-schedule";
@@ -167,6 +168,7 @@ export default async function GamesPage({
               opponentTeamId: true,
               userScore: true,
               opponentScore: true,
+              isForceWin: true,
             },
           }),
         ])
@@ -412,14 +414,15 @@ export default async function GamesPage({
               <CardHeader>
                 <CardTitle>Submit result</CardTitle>
                 <CardDescription>
-                  Season {settings.currentSeason} · Week {settings.currentWeek}
+                  Season {settings.currentSeason} · Week {settings.currentWeek}. If
+                  your opponent could not play, mark a force win instead of a score.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {!user ? (
                   <EmptyState
                     title="Sign in to submit"
-                    description="Coaches submit scores after their game. Commissioners approve before they count."
+                    description="Coaches submit scores after their game, or a force win if the opponent could not play. Commissioners approve before they count."
                   />
                 ) : !user.isActive ? (
                   <EmptyState title="Account inactive" />
@@ -484,8 +487,7 @@ export default async function GamesPage({
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-medium">
                                 S{s.season.number} W{s.week}:{" "}
-                                {s.userTeam.abbreviation} {s.userScore}–
-                                {s.opponentScore} {s.opponentTeam.abbreviation}
+                                {formatMatchupScore(s)}
                               </span>
                               <StatusBadge status={s.status} />
                             </div>

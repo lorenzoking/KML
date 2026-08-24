@@ -5,10 +5,11 @@ import { getReputationGrade, getReputationGradeLabel } from "@/lib/coach/grades"
 type PulseGame = {
   status: string;
   week: number;
-  userScore: number;
-  opponentScore: number;
+  userScore: number | null;
+  opponentScore: number | null;
   userTeamId: string;
   opponentTeamId: string;
+  isForceWin?: boolean;
   userTeam: { abbreviation: string; name: string };
   opponentTeam: { abbreviation: string; name: string };
 };
@@ -111,31 +112,48 @@ function buildHeadline(
       ? input.weekGame.opponentScore
       : input.weekGame.userScore;
     const opponent = mineIsUser ? input.weekGame.opponentTeam : input.weekGame.userTeam;
-    const margin = Math.abs(myScore - theirScore);
     const them = theTeam(opponent.name);
 
-    if (input.weekGame.status === "APPROVED") {
-      if (myScore > theirScore) {
-        if (margin >= 14) {
-          return `Good to see you. That Week ${week} game was a statement — you took down ${them} ${myScore}–${theirScore}.`;
-        }
-        return `Good to see you. Week ${week} is in the books: you beat ${them} ${myScore}–${theirScore}.`;
+    if (input.weekGame.isForceWin) {
+      if (input.weekGame.status === "PENDING") {
+        return `I saw your Week ${week} force win claim against ${them}. I’m waiting for the desk to make it official.`;
       }
-      if (myScore < theirScore) {
-        if (margin >= 14) {
-          return hasLedger
-            ? `Hey. That one against ${them} got away from you, ${myScore}–${theirScore}.`
-            : `Hey. That one against ${them} got away from you, ${myScore}–${theirScore}. You’re still a ${grade} though — ${gradeLabel.toLowerCase()}.`;
-        }
-        return hasLedger
-          ? `Hey. Tough one this week — ${them} got you ${theirScore}–${myScore}.`
-          : `Hey. Tough one this week — ${them} got you ${theirScore}–${myScore}. You’re still a ${grade} (${gradeLabel.toLowerCase()}).`;
+      if (myScore == null || theirScore == null) {
+        return `Week ${week} is a force win against ${them}. Post the simulated score after the league advances — you’ll already get game-played XP.`;
       }
-      return `Hey. Week ${week} ended even with ${them}, ${myScore}–${theirScore}. Split it and move on.`;
+      return `Week ${week} was a force win against ${them}. The sim score is in (${myScore}–${theirScore}) for standings only.`;
     }
 
-    if (input.weekGame.status === "PENDING") {
-      return `I saw your Week ${week} score come in against ${them} (${myScore}–${theirScore}). I’m just waiting for the desk to make it official.`;
+    if (myScore == null || theirScore == null) {
+      if (input.weekGame.status === "PENDING") {
+        return `I saw your Week ${week} submission against ${them}. I’m just waiting for the desk to make it official.`;
+      }
+    } else {
+      const margin = Math.abs(myScore - theirScore);
+
+      if (input.weekGame.status === "APPROVED") {
+        if (myScore > theirScore) {
+          if (margin >= 14) {
+            return `Good to see you. That Week ${week} game was a statement — you took down ${them} ${myScore}–${theirScore}.`;
+          }
+          return `Good to see you. Week ${week} is in the books: you beat ${them} ${myScore}–${theirScore}.`;
+        }
+        if (myScore < theirScore) {
+          if (margin >= 14) {
+            return hasLedger
+              ? `Hey. That one against ${them} got away from you, ${myScore}–${theirScore}.`
+              : `Hey. That one against ${them} got away from you, ${myScore}–${theirScore}. You’re still a ${grade} though — ${gradeLabel.toLowerCase()}.`;
+          }
+          return hasLedger
+            ? `Hey. Tough one this week — ${them} got you ${theirScore}–${myScore}.`
+            : `Hey. Tough one this week — ${them} got you ${theirScore}–${myScore}. You’re still a ${grade} (${gradeLabel.toLowerCase()}).`;
+        }
+        return `Hey. Week ${week} ended even with ${them}, ${myScore}–${theirScore}. Split it and move on.`;
+      }
+
+      if (input.weekGame.status === "PENDING") {
+        return `I saw your Week ${week} score come in against ${them} (${myScore}–${theirScore}). I’m just waiting for the desk to make it official.`;
+      }
     }
   }
 

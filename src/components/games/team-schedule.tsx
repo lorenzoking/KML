@@ -54,8 +54,11 @@ export function TeamSchedule({ rows }: { rows: TeamScheduleRow[] }) {
                         : "outline"
                   }
                 >
+                  {row.isForceWin ? "FW " : ""}
                   {result} {row.myScore}–{row.oppScore}
                 </Badge>
+              ) : row.isForceWin ? (
+                <Badge variant="pending">Force win</Badge>
               ) : row.status === "pending" ? (
                 <Badge variant="pending">Pending</Badge>
               ) : (

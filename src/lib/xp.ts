@@ -14,9 +14,16 @@ export function xpFromApprovedGame(params: {
   xpWinBonus: number;
   won: boolean;
   gameType?: string;
+  isForceWin?: boolean;
 }) {
   if (params.gameType && !awardsCoachXp(params.gameType)) {
     return [];
+  }
+
+  // Force wins are CPU sims. The available coach still gets game-played XP
+  // for showing up; the simulated score does not award a win bonus.
+  if (params.isForceWin) {
+    return [{ amount: params.xpGamePlayed, reason: "Force win — available to play" }];
   }
 
   const entries: { amount: number; reason: string }[] = [

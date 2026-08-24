@@ -135,6 +135,15 @@ export const GAMEPLAY_RULE_SECTIONS: GameplayRuleSection[] = [
     ],
   },
   {
+    id: "coverages",
+    title: "Coverages",
+    summary: "Effective immediately.",
+    items: [
+      "No Cover 0 on 1st-and-10",
+      "No Cover 2 Man, Pounder, or Roll Ring unless it is a high-leverage passing situation: 2nd-and-10 or longer, 3rd-and-7 or longer, or a two-minute drill",
+    ],
+  },
+  {
     id: "defensive-personnel",
     title: "Defensive personnel",
     items: [

@@ -18,8 +18,9 @@ type SubmissionLike = {
   status: string;
   userTeamId: string;
   opponentTeamId: string;
-  userScore: number;
-  opponentScore: number;
+  userScore: number | null;
+  opponentScore: number | null;
+  isForceWin?: boolean;
 };
 
 export type SlateStatus = "approved" | "pending" | "missing";
@@ -34,6 +35,7 @@ export type WeekSlateRow = {
   submissionId: string | null;
   homeScore: number | null;
   awayScore: number | null;
+  isForceWin: boolean;
 };
 
 export type TeamScheduleRow =
@@ -52,6 +54,7 @@ export type TeamScheduleRow =
       submissionId: string | null;
       myScore: number | null;
       oppScore: number | null;
+      isForceWin: boolean;
     };
 
 function isMissingScheduleTable(error: unknown) {
@@ -205,6 +208,7 @@ export function buildWeekSlate(
         submissionId: submission?.id ?? null,
         homeScore: scores.homeScore,
         awayScore: scores.awayScore,
+        isForceWin: Boolean(submission?.isForceWin),
       };
     })
     .sort((a, b) => {
@@ -263,6 +267,7 @@ export function buildTeamSchedule(
       submissionId: submission?.id ?? null,
       myScore,
       oppScore,
+      isForceWin: Boolean(submission?.isForceWin),
     });
   }
   return rows;
@@ -332,6 +337,7 @@ export async function getMissingScheduledGames(
         opponentTeamId: true,
         userScore: true,
         opponentScore: true,
+        isForceWin: true,
       },
     }),
   ]);
