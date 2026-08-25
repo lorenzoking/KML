@@ -34,10 +34,11 @@ export default async function AdminContractsPage() {
         <CardHeader>
           <CardTitle>Penalty & Madden caps</CardTitle>
           <CardDescription>
-            Overpay ratio = as-signed APY ÷ market-value APY. Length 7+ is an automatic
-            minor flag even when APY looks fine. Penalty deals always cut years and pack
-            more total money into that shorter term — they tried to buy long, cheap
-            control, so they get short, expensive control.
+            Overpay ratio = as-signed APY ÷ market-value APY. A 7+ year Madden
+            placeholder is a reminder to edit Length down, not an automatic
+            penalty. Penalty deals keep almost the same length and add a small
+            APY bump — the game bug that forces long offers is not treated as
+            abuse.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -73,7 +74,7 @@ export default async function AdminContractsPage() {
               />
               <Num
                 name="longContractYears"
-                label="Long-deal flag (yrs)"
+                label="Placeholder length flag (yrs)"
                 defaultValue={desk.rules.longContractYears}
               />
               <Num
@@ -96,13 +97,13 @@ export default async function AdminContractsPage() {
               />
               <Num
                 name="moderateMarketMultiplier"
-                label="Moderate extra total (× market deal)"
+                label="Moderate APY (× market)"
                 defaultValue={desk.rules.moderateMarketMultiplier}
                 step="0.01"
               />
               <Num
                 name="severeMarketMultiplier"
-                label="Severe extra total (× market deal)"
+                label="Severe APY (× market)"
                 defaultValue={desk.rules.severeMarketMultiplier}
                 step="0.01"
               />
@@ -133,7 +134,7 @@ export default async function AdminContractsPage() {
                   <option value="PENDING">Commissioner chooses each case</option>
                   <option value="VOID_SIGNING">Always void signing rights</option>
                   <option value="STEEP_BELOW_MARKET">
-                    Always keep player: fewer years, more money
+                    Always keep player: slightly shorter, small APY bump
                   </option>
                 </Select>
               </div>

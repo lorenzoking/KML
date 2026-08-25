@@ -129,12 +129,40 @@ export type MaddenInputs = {
   notes: string[];
 };
 
+export const CONTRACT_TERM_GOALS = ["STANDARD", "LONG"] as const;
+export type ContractTermGoal = (typeof CONTRACT_TERM_GOALS)[number];
+
+export const LEFTOVER_MODES = ["ADD_ON", "REPLACE"] as const;
+export type LeftoverMode = (typeof LEFTOVER_MODES)[number];
+
+export const TERM_GOAL_LABELS: Record<ContractTermGoal, string> = {
+  STANDARD: "Standard term",
+  LONG: "Long-term",
+};
+
+export const LEFTOVER_MODE_LABELS: Record<LeftoverMode, string> = {
+  ADD_ON: "Add onto leftover years",
+  REPLACE: "Replace leftover years",
+};
+
+export type LengthPlan = {
+  leftoverYears: number;
+  newYears: number;
+  maddenLength: number;
+  leftoverMode: LeftoverMode | "NONE";
+  termGoal: ContractTermGoal;
+  headline: string;
+  detail: string;
+};
+
 export type PlayerOfferInput = {
   playerName: string;
   position: ContractPosition;
   playerTier: ContractPlayerTier;
   yearsRemaining: number;
   remainingDealApy: number | null;
+  termGoal?: ContractTermGoal;
+  leftoverMode?: LeftoverMode;
 };
 
 export type OfferGuidance = {
@@ -147,6 +175,7 @@ export type OfferGuidance = {
   realistic: MaddenInputs;
   maxOffer: MaddenInputs;
   comparables: MarketComparable[];
+  lengthPlan?: LengthPlan;
   sourceNote: string | null;
   math: string[];
 };

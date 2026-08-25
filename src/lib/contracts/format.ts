@@ -89,21 +89,23 @@ export function formatMaddenOneLiner(inputs: MaddenInputs | null): string {
 export function penaltySummary(calc: CalculatedSigning): string {
   const label = PENALTY_LABELS[calc.penaltyTier];
   if (calc.penaltyTier === "NONE") {
-    return `${label}. Good-faith signing — edit to Blended or Market-Value freely.`;
+    return calc.longContractFlag
+      ? `${label}. Good-faith APY — edit Length down to the suggestion. Madden often forces a long placeholder; that is not a penalty by itself.`
+      : `${label}. Good-faith signing — type the suggested Length and money.`;
   }
   if (calc.penaltyTier === "MINOR") {
-    return `${label}. Fewer years and more money than market. Lock this player: no re-sign / restructure for 1 season.`;
+    return `${label}. Slight overpay. Use the suggestion (same length). No restructure lock.`;
   }
   if (calc.penaltyTier === "MODERATE") {
     const cap = calc.capPenaltyMillions
       ? ` Next-season cap hit ${formatMillions(calc.capPenaltyMillions)}.`
       : "";
-    return `${label}. Cut length, pack more total money into the short deal.${cap}`;
+    return `${label}. Keep the suggested length and bump APY a little.${cap}`;
   }
   if (calc.voidSigning) {
     return `${label}. Void signing rights — player returns to FA / original team.`;
   }
-  return `${label}. Void the signing, or keep the player on a min-length deal with more money packed in.`;
+  return `${label}. Void the signing, or keep the player one year shorter with a small APY bump.`;
 }
 
 export function asSignedLine(input: CalculatorInput): string {

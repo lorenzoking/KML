@@ -76,25 +76,39 @@ export async function ensureContractDesk() {
       await prisma.contractRuleSetting.create({
         data: { key: "default", ...DEFAULT_CONTRACT_RULES },
       });
-    } else if (
-      existingRules.moderateMarketMultiplier < 1 ||
-      existingRules.severeMarketMultiplier < 1
-    ) {
-      // Older defaults used 0.90 / 0.75. A cheaper contract rewards the abuser
-      // with a star and leftover cap, so floor those multipliers at market.
-      await prisma.contractRuleSetting.update({
-        where: { key: "default" },
-        data: {
-          moderateMarketMultiplier:
-            existingRules.moderateMarketMultiplier < 1
-              ? 1
-              : existingRules.moderateMarketMultiplier,
-          severeMarketMultiplier:
-            existingRules.severeMarketMultiplier < 1
-              ? DEFAULT_CONTRACT_RULES.severeMarketMultiplier
-              : existingRules.severeMarketMultiplier,
-        },
-      });
+    } else {
+      const data: {
+        moderateMarketMultiplier?: number;
+        severeMarketMultiplier?: number;
+        overpayNoneMax?: number;
+        overpayMinorMax?: number;
+        overpayModerateMax?: number;
+      } = {};
+      if (existingRules.moderateMarketMultiplier < 1) {
+        data.moderateMarketMultiplier = DEFAULT_CONTRACT_RULES.moderateMarketMultiplier;
+      } else if (existingRules.moderateMarketMultiplier <= 1.1 + 1e-6) {
+        data.moderateMarketMultiplier = DEFAULT_CONTRACT_RULES.moderateMarketMultiplier;
+      }
+      if (existingRules.severeMarketMultiplier < 1) {
+        data.severeMarketMultiplier = DEFAULT_CONTRACT_RULES.severeMarketMultiplier;
+      } else if (existingRules.severeMarketMultiplier <= 1.25 + 1e-6) {
+        data.severeMarketMultiplier = DEFAULT_CONTRACT_RULES.severeMarketMultiplier;
+      }
+      if (Math.abs(existingRules.overpayNoneMax - 1.15) < 1e-6) {
+        data.overpayNoneMax = DEFAULT_CONTRACT_RULES.overpayNoneMax;
+      }
+      if (Math.abs(existingRules.overpayMinorMax - 1.5) < 1e-6) {
+        data.overpayMinorMax = DEFAULT_CONTRACT_RULES.overpayMinorMax;
+      }
+      if (Math.abs(existingRules.overpayModerateMax - 2) < 1e-6) {
+        data.overpayModerateMax = DEFAULT_CONTRACT_RULES.overpayModerateMax;
+      }
+      if (Object.keys(data).length > 0) {
+        await prisma.contractRuleSetting.update({
+          where: { key: "default" },
+          data,
+        });
+      }
     }
 
     const existingComps = await prisma.positionMarketComp.findMany({

@@ -369,6 +369,8 @@ export const logContractSigningSchema = z.object({
   playerTier: z.enum(["ELITE", "STARTER", "DEPTH"]),
   yearsRemaining: z.coerce.number().int().min(0).max(10).default(0),
   remainingDealApy: optionalMillions,
+  termGoal: z.enum(["STANDARD", "LONG"]).default("LONG"),
+  leftoverMode: z.enum(["ADD_ON", "REPLACE"]).default("ADD_ON"),
   asSignedLength: z.coerce.number().int().min(1).max(10),
   asSignedTotalSalary: z.coerce.number().min(0).max(600),
   asSignedSigningBonus: z.coerce.number().min(0).max(600),
@@ -387,11 +389,11 @@ export const updateContractRulesSchema = z.object({
   overpayModerateMax: z.coerce.number().min(1.2).max(5),
   moderateMarketMultiplier: z.coerce
     .number()
-    .min(1, "Moderate extra total must be 1.00× the market deal or higher")
+    .min(1, "Moderate APY must be 1.00× market or higher")
     .max(1.5),
   severeMarketMultiplier: z.coerce
     .number()
-    .min(1, "Severe extra total must be 1.00× the market deal or higher")
+    .min(1, "Severe APY must be 1.00× market or higher")
     .max(2),
   capPenaltyPercentOfOverage: z.coerce.number().min(0).max(100),
   rookieScaleFallbackRatio: z.coerce.number().min(0.1).max(1),

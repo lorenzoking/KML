@@ -64,10 +64,11 @@ export default async function ContractsPage({
         </h1>
         <p className="mt-2 max-w-3xl text-sm text-[var(--muted-foreground)]">
           The calculator suggests a realistic contract to type in Madden Edit
-          Player, based on named NFL comps at that position. Walk money up only
-          as far as the max no-penalty offer. If someone still pastes a 9-year
-          placeholder, log the as-signed deal — the edit is fewer years with more
-          money packed in, never a cheaper star.
+          Player. Default is a long-term deal. If the player still has years
+          left, Length is leftover + new years together — say whether you are
+          adding on or replacing. Madden often forces a 7–9 year placeholder;
+          edit Length down. Penalties are a small APY bump, not a packed short
+          contract.
         </p>
       </div>
 

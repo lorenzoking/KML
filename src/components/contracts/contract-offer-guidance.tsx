@@ -32,9 +32,8 @@ export function OfferGuidancePanel({
   onUseNumbers?: (inputs: MaddenInputs) => void;
 }) {
   const overMax =
-    asSigned != null &&
-    (asSigned.apy > offers.maxGoodFaithApy + 1e-6 ||
-      asSigned.length >= longContractYears);
+    asSigned != null && asSigned.apy > offers.maxGoodFaithApy + 1e-6;
+  const plan = offers.lengthPlan;
   const selected = offers.comparables.find((row) => row.selected);
   const exportText = formatMaddenExport({
     playerName,
@@ -42,7 +41,10 @@ export function OfferGuidancePanel({
     teamAbbr,
     optionLabel: "SUGGESTION · type this in Edit Player",
     inputs: offers.realistic,
-    extraLines: [offers.suggestionWhy],
+    extraLines: [
+      ...(plan ? [plan.headline, plan.detail] : []),
+      offers.suggestionWhy,
+    ],
   });
   const maxExport = formatMaddenExport({
     playerName,
@@ -63,11 +65,32 @@ export function OfferGuidancePanel({
             Type this contract in Madden
           </CardTitle>
           <p className="text-sm text-[var(--muted-foreground)]">
-            Open the player → Edit Player → enter these four fields. This is a
-            suggested realistic deal, not a placeholder to game later.
+            Open the player → Edit Player → enter these four fields. Length is
+            the full remaining term (leftover + new years together), not extra
+            years on the side.
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
+          {plan ? (
+            <div className="rounded-xl border border-[color-mix(in_srgb,var(--primary)_30%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_8%,transparent)] px-3 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--primary)]">
+                Madden Length
+              </p>
+              <p className="mt-1 text-sm font-semibold leading-relaxed">
+                {plan.headline}
+              </p>
+              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                {plan.detail}
+              </p>
+              <p className="mt-2 font-mono text-sm">
+                {plan.leftoverMode === "REPLACE"
+                  ? `Replace leftover ${plan.leftoverYears} → type Length ${plan.maddenLength}`
+                  : plan.leftoverYears > 0
+                    ? `Leftover ${plan.leftoverYears} + new ${plan.newYears} = Length ${plan.maddenLength}`
+                    : `Length ${plan.maddenLength} · do not add extra years`}
+              </p>
+            </div>
+          ) : null}
           <p className="rounded-xl border border-[color-mix(in_srgb,var(--primary)_30%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_8%,transparent)] px-3 py-2 text-sm leading-relaxed">
             {offers.suggestionWhy ||
               "Type the four fields below in Madden Edit Player."}
@@ -125,8 +148,9 @@ export function OfferGuidancePanel({
               <CardTitle className="text-base">Max you can type without a penalty</CardTitle>
               <p className="text-sm text-[var(--muted-foreground)]">
                 Only walk APY up to this if you have to win the bidding. Same
-                length as the suggestion. {longContractYears}+ years is still a
-                flag.
+                length as the suggestion. If Madden forces a{" "}
+                {longContractYears}+ year placeholder, edit Length down — length
+                alone is not a penalty.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -143,8 +167,8 @@ export function OfferGuidancePanel({
               value={formatRatio(offers.maxGoodFaithRatio)}
             />
             <Stat
-              label="Longest without a length flag"
-              value={`${offers.maxGoodFaithLength} yrs`}
+              label="Suggested length"
+              value={`${offers.realistic.length} yrs`}
             />
             <Stat
               label="Max total"
@@ -172,8 +196,8 @@ export function OfferGuidancePanel({
               )}
             >
               {overMax
-                ? `As-signed ${formatMillions(asSigned.apy)} APY over ${asSigned.length} yrs is over this ceiling (${formatMillions(offers.maxGoodFaithApy)} APY, under ${longContractYears} yrs). Penalty will fire.`
-                : `As-signed ${formatMillions(asSigned.apy)} APY over ${asSigned.length} yrs stays within the max realistic offer.`}
+                ? `As-signed ${formatMillions(asSigned.apy)} APY is over the max realistic APY (${formatMillions(offers.maxGoodFaithApy)}). Penalty will fire on the money, not the year count.`
+                : `As-signed ${formatMillions(asSigned.apy)} APY over ${asSigned.length} yrs stays within the max realistic APY. If Length is ${longContractYears}+, still edit it down to ${offers.realistic.length}.`}
             </p>
           ) : null}
         </CardContent>
@@ -217,7 +241,7 @@ function ComparableRow({ row }: { row: MarketComparable }) {
         <p className="font-mono text-sm font-semibold">
           {formatMillions(row.apy)} APY
           <span className="ml-2 text-xs font-medium text-[var(--muted-foreground)]">
-            · {row.typicalLengthYears} yr typical
+            · NFL-typical {row.typicalLengthYears} yr
           </span>
         </p>
         {row.selected ? <Badge variant="elite">Used for this player</Badge> : null}

@@ -66,7 +66,7 @@ export function ContractResultPanel({
             </div>
             <Badge variant={penaltyBadgeVariant(calc.penaltyTier)}>
               {PENALTY_LABELS[calc.penaltyTier]}
-              {calc.longContractFlag ? " · long deal" : ""}
+              {calc.longContractFlag ? " · long placeholder" : ""}
             </Badge>
           </div>
         </CardHeader>
@@ -100,11 +100,13 @@ export function ContractResultPanel({
 
       <div className="grid gap-4 lg:grid-cols-2">
         <OptionCard
-          title="Blended / pure extension"
+          title="Add-on / blended extension"
           subtitle={
             input.yearsRemaining > 0
-              ? "Weights leftover years against new-money market"
-              : "No leftover years — same rate as market, typical length"
+              ? input.leftoverMode === "REPLACE"
+                ? "Replace leftover years — this is the same as a fresh market deal"
+                : "Leftover years stay in Length; new years are added on top"
+              : "New contract — do not add extra years"
           }
           inputs={calc.blended}
           math={calc.math.blended}
@@ -116,7 +118,7 @@ export function ContractResultPanel({
             optionLabel: "OPTION A · Blended / pure extension",
             inputs: calc.blended,
           })}
-          locked={calc.penaltyTier !== "NONE"}
+          locked={calc.penaltyTier === "MODERATE" || calc.penaltyTier === "SEVERE"}
         />
         <OptionCard
           title="Market-value reset"
@@ -131,14 +133,14 @@ export function ContractResultPanel({
             optionLabel: "OPTION B · Market-value reset",
             inputs: calc.market,
           })}
-          locked={calc.penaltyTier !== "NONE"}
+          locked={calc.penaltyTier === "MODERATE" || calc.penaltyTier === "SEVERE"}
         />
       </div>
 
       {calc.penaltyAdjusted ? (
         <OptionCard
           title={calc.recommended.label}
-          subtitle="Fewer years than market, more total money packed into that short deal"
+          subtitle="Same idea as the suggestion, with a small APY bump — not a packed short deal"
           inputs={calc.penaltyAdjusted}
           math={calc.math.penalty}
           recommended

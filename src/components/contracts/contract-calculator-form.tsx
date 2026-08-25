@@ -23,9 +23,12 @@ import {
   type ContractPosition,
   type ContractPlayerTier,
   type ContractRules,
+  type ContractTermGoal,
+  type LeftoverMode,
   type MaddenInputs,
   type MarketComp,
 } from "@/lib/contracts/types";
+import { cn } from "@/lib/utils";
 
 type FranchiseOption = { id: string; name: string; abbreviation: string };
 
@@ -58,6 +61,8 @@ export function ContractCalculatorForm({
   const [playerTier, setPlayerTier] = useState<ContractPlayerTier>("STARTER");
   const [yearsRemaining, setYearsRemaining] = useState("0");
   const [remainingDealApy, setRemainingDealApy] = useState("");
+  const [termGoal, setTermGoal] = useState<ContractTermGoal>("LONG");
+  const [leftoverMode, setLeftoverMode] = useState<LeftoverMode>("ADD_ON");
   const [asSignedLength, setAsSignedLength] = useState("");
   const [asSignedTotalSalary, setAsSignedTotalSalary] = useState("");
   const [asSignedSigningBonus, setAsSignedSigningBonus] = useState("");
@@ -76,11 +81,13 @@ export function ContractCalculatorForm({
         playerTier,
         yearsRemaining: remainingYears,
         remainingDealApy: remainingApy,
+        termGoal,
+        leftoverMode: remainingYears > 0 ? leftoverMode : "ADD_ON",
       },
       comp,
       rules
     );
-  }, [comp, playerName, playerTier, position, remainingApy, remainingYears, rules]);
+  }, [comp, leftoverMode, playerName, playerTier, position, remainingApy, remainingYears, rules, termGoal]);
 
   const input: CalculatorInput | null = useMemo(() => {
     const length = parseNum(asSignedLength);
@@ -92,6 +99,8 @@ export function ContractCalculatorForm({
       playerTier,
       yearsRemaining: remainingYears,
       remainingDealApy: remainingApy,
+      termGoal,
+      leftoverMode: remainingYears > 0 ? leftoverMode : "ADD_ON",
       asSignedLength: Math.round(length),
       asSignedTotalSalary: total,
       asSignedSigningBonus: parseNum(asSignedSigningBonus) ?? 0,
@@ -102,6 +111,8 @@ export function ContractCalculatorForm({
     playerTier,
     remainingYears,
     remainingApy,
+    termGoal,
+    leftoverMode,
     asSignedLength,
     asSignedTotalSalary,
     asSignedSigningBonus,
@@ -126,9 +137,9 @@ export function ContractCalculatorForm({
         <CardHeader className="pb-3">
           <CardTitle>Player & offer</CardTitle>
           <CardDescription>
-            Pick position and tier. The calculator suggests a realistic Madden
-            Edit Player contract from named NFL comps. Paste as-signed only when
-            logging what they typed.
+            Pick position, tier, and whether this is a long-term deal. If they
+            still have years left, say whether you are adding onto those years
+            or replacing them. Madden Length is the full remaining term.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -187,6 +198,25 @@ export function ContractCalculatorForm({
             </div>
             <p className="text-xs text-[var(--muted-foreground)]">{TIER_HELP[playerTier]}</p>
 
+            <ChoiceRow
+              name="termGoal"
+              label="What kind of contract?"
+              value={termGoal}
+              onChange={setTermGoal}
+              options={[
+                {
+                  value: "LONG",
+                  label: "Long-term",
+                  hint: `Fill to the ${rules.maxContractLength}-year Madden max`,
+                },
+                {
+                  value: "STANDARD",
+                  label: "Standard term",
+                  hint: "Typical NFL length for this position",
+                },
+              ]}
+            />
+
             <div className="grid grid-cols-2 gap-3">
               <Field label="Years left on current deal" htmlFor="yearsRemaining">
                 <Input
@@ -212,6 +242,38 @@ export function ContractCalculatorForm({
                 />
               </Field>
             </div>
+
+            {remainingYears > 0 ? (
+              <ChoiceRow
+                name="leftoverMode"
+                label="Leftover years"
+                value={leftoverMode}
+                onChange={setLeftoverMode}
+                options={[
+                  {
+                    value: "ADD_ON",
+                    label: "Add onto leftover years",
+                    hint: "Type leftover + new years as one Length",
+                  },
+                  {
+                    value: "REPLACE",
+                    label: "Replace leftover years",
+                    hint: "Fresh deal. Do not add leftover on top",
+                  },
+                ]}
+              />
+            ) : (
+              <input type="hidden" name="leftoverMode" value="ADD_ON" />
+            )}
+
+            {offers?.lengthPlan ? (
+              <p className="rounded-xl border border-[color-mix(in_srgb,var(--primary)_35%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_8%,transparent)] px-3 py-2 text-sm leading-relaxed">
+                <span className="font-semibold">{offers.lengthPlan.headline}</span>
+                <span className="mt-1 block text-xs text-[var(--muted-foreground)]">
+                  {offers.lengthPlan.detail}
+                </span>
+              </p>
+            ) : null}
 
             <p className="pt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
               What they typed in Madden
@@ -313,6 +375,8 @@ export function ContractCalculatorForm({
                 setPlayerName("");
                 setYearsRemaining("0");
                 setRemainingDealApy("");
+                setTermGoal("LONG");
+                setLeftoverMode("ADD_ON");
                 setAsSignedLength("");
                 setAsSignedTotalSalary("");
                 setAsSignedSigningBonus("");
@@ -348,13 +412,55 @@ export function ContractCalculatorForm({
               <CardTitle>As-signed verdict</CardTitle>
               <CardDescription>
                 Length and total salary appear once you type them or fill from the
-                Madden suggestion. That checks the placeholder against market and
-                shows the penalty if they went long and inflated.
+                Madden suggestion. That checks APY against market. A 7–9 year
+                Madden placeholder is not a penalty by itself — edit Length down
+                to the suggestion.
               </CardDescription>
             </CardHeader>
           </Card>
         )}
       </div>
+    </div>
+  );
+}
+
+function ChoiceRow<T extends string>({
+  name,
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  name: string;
+  label: string;
+  value: T;
+  onChange: (value: T) => void;
+  options: { value: T; label: string; hint: string }[];
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label>{label}</Label>
+      <div className="grid grid-cols-2 gap-2">
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={cn(
+              "rounded-xl border px-3 py-2 text-left text-sm transition-colors",
+              value === opt.value
+                ? "border-[color-mix(in_srgb,var(--primary)_50%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]"
+                : "border-[var(--border)] bg-[var(--muted)]/20"
+            )}
+          >
+            <span className="block font-semibold">{opt.label}</span>
+            <span className="mt-0.5 block text-xs text-[var(--muted-foreground)]">
+              {opt.hint}
+            </span>
+          </button>
+        ))}
+      </div>
+      <input type="hidden" name={name} value={value} />
     </div>
   );
 }
