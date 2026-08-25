@@ -82,6 +82,7 @@ export const GAMEPLAY_RULE_SECTIONS: GameplayRuleSection[] = [
       "Keep your offense pass-first: at least 50/50 pass/run, with passing prioritized because NFL teams pass more than they run. Pass at least 50% of your plays; do not run more than 50%. No more than 69.9% pass",
       "RBs may account for no more than 20% of team receptions; 25% if RB1 has Safety Valve",
       "Do not fake snap simply to draw an offside unless it would result in a first down",
+      "Clicking on is allowed",
       "User playmaker is banned",
     ],
   },
@@ -126,7 +127,7 @@ export const GAMEPLAY_RULE_SECTIONS: GameplayRuleSection[] = [
     items: [
       "You may user any defender, including defensive linemen",
       "Rush at least three defenders on every snap, including a QB spy",
-      "Clicking on is allowed, but do not switch onto a defender after the ball is in the air",
+      "Clicking on is allowed",
       "Do not click off a defender just to let the CPU make the tackle; if you click on, make the tackle yourself",
       "You may only manually move the player you are currently controlling",
       "Use group adjustments for other defenders; do not manually reposition multiple defenders before the snap",
