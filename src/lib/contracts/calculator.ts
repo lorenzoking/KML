@@ -63,6 +63,46 @@ export function toMaddenInputs(
     }
   }
 
+  return withBonus(length, total, bonusRatio, rules, notes);
+}
+
+/** Pack more total money into fewer years. Never add years to dodge the $200M cap. */
+export function toPenaltyMaddenInputs(params: {
+  marketApy: number;
+  typicalLength: number;
+  penaltyLength: number;
+  moneyMultiplier: number;
+  bonusRatio: number;
+  rules: ContractRules;
+}): MaddenInputs {
+  const notes: string[] = [];
+  const minLen = Math.max(1, params.rules.minContractLength);
+  const length = Math.max(minLen, Math.round(params.penaltyLength));
+  const marketTotal = Math.max(0, params.marketApy) * Math.max(1, params.typicalLength);
+  const multiplier = Math.max(1, params.moneyMultiplier);
+  let total = roundMoney(marketTotal * multiplier);
+  if (total > params.rules.maxTotalSalaryMillions) {
+    total = roundMoney(params.rules.maxTotalSalaryMillions);
+    notes.push(
+      `Kept ${length} yrs and capped Total Salary at ${formatMillions(params.rules.maxTotalSalaryMillions)} — did not add years.`
+    );
+  }
+  notes.push(
+    `Penalty shape: ${length} yrs (typical market ${params.typicalLength}) and ${formatMillions(total)} total (${formatPercent(multiplier)} of a real ${params.typicalLength}-yr market deal).`
+  );
+  notes.push(
+    `That is less control and more money per year than market ${formatMillions(params.marketApy)} APY.`
+  );
+  return withBonus(length, total, params.bonusRatio, params.rules, notes);
+}
+
+function withBonus(
+  length: number,
+  total: number,
+  bonusRatio: number,
+  rules: ContractRules,
+  notes: string[]
+): MaddenInputs {
   const rawBonus = total * clamp(bonusRatio, 0, 1.5);
   let signingBonus = roundMoney(rawBonus);
   if (signingBonus > rules.maxSigningBonusMillions) {
@@ -71,17 +111,38 @@ export function toMaddenInputs(
       `Signing bonus capped at ${formatMillions(rules.maxSigningBonusMillions)}.`
     );
   }
-
-  const effectiveApy = length > 0 ? roundMoney(total / length) : 0;
   notes.push("Contract Year always set to 1 (Madden Edit Player default).");
-
   return {
     length,
     contractYear: 1,
     totalSalary: total,
     signingBonus,
-    effectiveApy,
+    effectiveApy: length > 0 ? roundMoney(total / length) : 0,
     notes,
+  };
+}
+
+function penaltyShape(
+  tier: ContractPenaltyTier,
+  typicalLength: number,
+  rules: ContractRules
+): { length: number; moneyMultiplier: number } {
+  const minLen = Math.max(1, rules.minContractLength);
+  if (tier === "MINOR") {
+    return {
+      length: Math.max(minLen, typicalLength - 1),
+      moneyMultiplier: 1.05,
+    };
+  }
+  if (tier === "MODERATE") {
+    return {
+      length: Math.max(minLen, typicalLength - 2),
+      moneyMultiplier: Math.max(1.1, rules.moderateMarketMultiplier),
+    };
+  }
+  return {
+    length: minLen,
+    moneyMultiplier: Math.max(1.15, rules.severeMarketMultiplier),
   };
 }
 
@@ -171,26 +232,17 @@ export function calculateSigning(
   const voidSigning =
     penaltyTier === "SEVERE" && severeResolution === "VOID_SIGNING";
 
-  const moderateMultiplier = Math.max(1, rules.moderateMarketMultiplier);
-  const severeMultiplier = Math.max(1, rules.severeMarketMultiplier);
-
   let penaltyAdjusted: MaddenInputs | null = null;
-  if (penaltyTier === "MODERATE" && moderateMultiplier > 1) {
-    penaltyAdjusted = toMaddenInputs(
-      marketApy * moderateMultiplier,
+  if (penaltyTier !== "NONE" && !voidSigning) {
+    const shape = penaltyShape(penaltyTier, typicalLength, rules);
+    penaltyAdjusted = toPenaltyMaddenInputs({
+      marketApy,
       typicalLength,
-      comp.typicalBonusRatio,
-      rules
-    );
-  } else if (penaltyTier === "SEVERE" && !voidSigning && severeMultiplier > 1) {
-    penaltyAdjusted = toMaddenInputs(
-      marketApy * severeMultiplier,
-      typicalLength,
-      comp.typicalBonusRatio,
-      rules
-    );
-  } else if (penaltyTier === "SEVERE" && !voidSigning) {
-    penaltyAdjusted = market;
+      penaltyLength: shape.length,
+      moneyMultiplier: shape.moneyMultiplier,
+      bonusRatio: comp.typicalBonusRatio,
+      rules,
+    });
   }
 
   const recommended = pickRecommended({
@@ -242,34 +294,28 @@ export function calculateSigning(
     capPenaltyMillions
       ? `Overage ${formatMillions(overageTotal)} × ${rules.capPenaltyPercentOfOverage}% = ${formatMillions(capPenaltyMillions)} next-season cap penalty.`
       : null,
-    "Under-market APY is never used as a penalty — that would reward the signing with a star and extra cap space.",
-    penaltyTier === "MODERATE" && rules.moderateMarketMultiplier < 1
-      ? `Configured moderate multiplier ${formatPercent(rules.moderateMarketMultiplier)} was below market; floored to 100%.`
+    penaltyTier === "NONE"
+      ? null
+      : "Penalty contract is the opposite of the exploit: fewer years and more money, never a discount.",
+    penaltyTier !== "NONE" && penaltyAdjusted
+      ? `Use ${penaltyAdjusted.length} yrs / ${formatMillions(penaltyAdjusted.totalSalary)} tot / ${formatMillions(penaltyAdjusted.effectiveApy)} APY (market was ${typicalLength} yrs / ${formatMillions(marketApy)} APY).`
       : null,
-    penaltyTier === "SEVERE" &&
-    !voidSigning &&
-    rules.severeMarketMultiplier < 1
-      ? `Configured severe multiplier ${formatPercent(rules.severeMarketMultiplier)} was below market; floored to ${formatPercent(severeMultiplier)}.`
-      : null,
-    "Under-market APY is never used as a penalty — that would reward the signing with a star and extra cap space.",
     penaltyTier === "MINOR"
-      ? "Commissioner edits to Market-Value (not cheaper) and locks re-sign / restructure on this player for 1 season."
+      ? "Minor: cut 1 year off typical length, pack 105% of market total into that shorter deal, lock re-sign / restructure 1 season."
       : null,
     penaltyTier === "MODERATE"
-      ? moderateMultiplier > 1
-        ? `Tampering tax: ${formatPercent(moderateMultiplier)} of market APY (premium, never a discount) plus next-season cap hit.`
-        : "Tampering tax: keep Market-Value (no discount) plus next-season cap hit and a restructure lock."
+      ? "Moderate: cut 2 years, pack extra total money into the short deal, plus next-season cap hit and a restructure lock."
       : null,
     penaltyTier === "SEVERE" && voidSigning
       ? "Severe default: void signing rights."
       : null,
     penaltyTier === "SEVERE" && !voidSigning && severeResolution === "PENDING"
-      ? "Severe: commissioner chooses void vs keeping the player at an above-market premium."
+      ? "Severe: commissioner chooses void vs a min-length deal with more money packed in."
       : null,
     penaltyTier === "SEVERE" &&
     severeResolution === "STEEP_BELOW_MARKET" &&
     penaltyAdjusted
-      ? `Keep-player premium: ${formatPercent(severeMultiplier)} of market APY — above market, not a discount.`
+      ? `Keep-player penalty: ${penaltyAdjusted.length} yrs at ${formatMillions(penaltyAdjusted.effectiveApy)} APY.`
       : null,
   ].filter((line): line is string => Boolean(line));
 
@@ -292,8 +338,7 @@ export function calculateSigning(
     voidSigning,
     blended,
     market,
-    penaltyAdjusted:
-      penaltyTier === "MINOR" ? null : penaltyAdjusted,
+    penaltyAdjusted,
     recommended,
     math: {
       blended: blendedMath,
@@ -363,32 +408,15 @@ function pickRecommended(params: {
   if (params.voidSigning) {
     return { key: "VOID", label: "Void signing", inputs: null };
   }
-  if (params.penaltyTier === "MODERATE") {
-    if (params.penaltyAdjusted) {
-      return {
-        key: "PENALTY",
-        label: "Penalty-adjusted (APY premium + cap tax)",
-        inputs: params.penaltyAdjusted,
-      };
-    }
-    return {
-      key: "MARKET",
-      label: "Market-Value + next-season cap tax (locked)",
-      inputs: params.market,
-    };
-  }
-  if (params.penaltyTier === "SEVERE") {
+  if (
+    params.penaltyTier === "MINOR" ||
+    params.penaltyTier === "MODERATE" ||
+    params.penaltyTier === "SEVERE"
+  ) {
     return {
       key: "PENALTY",
-      label: "Penalty-adjusted (above-market premium)",
+      label: "Penalty: fewer years, more money",
       inputs: params.penaltyAdjusted,
-    };
-  }
-  if (params.penaltyTier === "MINOR") {
-    return {
-      key: "MARKET",
-      label: "Market-Value (locked by minor penalty)",
-      inputs: params.market,
     };
   }
   if (params.yearsRemaining > 0) {

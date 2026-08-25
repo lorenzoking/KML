@@ -714,7 +714,7 @@ enum ContractSigningStatus {
 enum SeverePenaltyResolution {
   PENDING
   VOID_SIGNING
-  /// Keep the player at a >= market APY premium. Legacy enum name — never a discount.
+  /// Keep the player on a short, expensive deal (legacy enum name).
   STEEP_BELOW_MARKET
 }
 
@@ -729,10 +729,10 @@ model ContractRuleSetting {
   overpayNoneMax             Float                    @default(1.15)
   overpayMinorMax            Float                    @default(1.50)
   overpayModerateMax         Float                    @default(2.00)
-  /// Floor 1.00 — a cheaper contract is not a penalty (star + extra cap).
-  moderateMarketMultiplier   Float                    @default(1.00)
-  /// Floor 1.00. Values above 1.00 are an APY premium if the player is kept.
-  severeMarketMultiplier     Float                    @default(1.15)
+  /// Packed into fewer years. Floor 1.10 in the calculator.
+  moderateMarketMultiplier   Float                    @default(1.10)
+  /// Packed into min length. Floor 1.15 in the calculator.
+  severeMarketMultiplier     Float                    @default(1.25)
   capPenaltyPercentOfOverage Float                    @default(25)
   rookieScaleFallbackRatio   Float                    @default(0.35)
   depthMarketRatio           Float                    @default(0.55)

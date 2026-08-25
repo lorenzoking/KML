@@ -387,11 +387,11 @@ export const updateContractRulesSchema = z.object({
   overpayModerateMax: z.coerce.number().min(1.2).max(5),
   moderateMarketMultiplier: z.coerce
     .number()
-    .min(1, "Moderate APY must be 1.00× market or higher — cheaper is extra cap, not a penalty")
+    .min(1, "Moderate extra total must be 1.00× the market deal or higher")
     .max(1.5),
   severeMarketMultiplier: z.coerce
     .number()
-    .min(1, "Severe keep-player APY must be 1.00× market or higher — cheaper is extra cap, not a penalty")
+    .min(1, "Severe extra total must be 1.00× the market deal or higher")
     .max(2),
   capPenaltyPercentOfOverage: z.coerce.number().min(0).max(100),
   rookieScaleFallbackRatio: z.coerce.number().min(0.1).max(1),

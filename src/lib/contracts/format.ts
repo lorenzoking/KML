@@ -90,18 +90,18 @@ export function penaltySummary(calc: CalculatedSigning): string {
     return `${label}. Good-faith signing — edit to Blended or Market-Value freely.`;
   }
   if (calc.penaltyTier === "MINOR") {
-    return `${label}. Edit to Market-Value. Lock this player: no re-sign / restructure for 1 season.`;
+    return `${label}. Fewer years and more money than market. Lock this player: no re-sign / restructure for 1 season.`;
   }
   if (calc.penaltyTier === "MODERATE") {
     const cap = calc.capPenaltyMillions
       ? ` Next-season cap hit ${formatMillions(calc.capPenaltyMillions)}.`
       : "";
-    return `${label}. Tampering tax — keep the player at market or above, never cheaper.${cap}`;
+    return `${label}. Cut length, pack more total money into the short deal.${cap}`;
   }
   if (calc.voidSigning) {
     return `${label}. Void signing rights — player returns to FA / original team.`;
   }
-  return `${label}. Void the signing, or keep the player at an above-market premium — never a discount.`;
+  return `${label}. Void the signing, or keep the player on a min-length deal with more money packed in.`;
 }
 
 export function asSignedLine(input: CalculatorInput): string {

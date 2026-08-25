@@ -36,7 +36,7 @@ export type ContractSigningStatus = (typeof CONTRACT_SIGNING_STATUSES)[number];
 export const SEVERE_RESOLUTIONS = [
   "PENDING",
   "VOID_SIGNING",
-  /** Keep the player at a >= market APY premium (legacy enum name). */
+  /** Keep the player on a short, expensive deal (legacy enum name). */
   "STEEP_BELOW_MARKET",
 ] as const;
 export type SeverePenaltyResolution = (typeof SEVERE_RESOLUTIONS)[number];

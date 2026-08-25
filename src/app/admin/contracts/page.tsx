@@ -35,9 +35,9 @@ export default async function AdminContractsPage() {
           <CardTitle>Penalty & Madden caps</CardTitle>
           <CardDescription>
             Overpay ratio = as-signed APY ÷ market-value APY. Length 7+ is an automatic
-            minor flag even when APY looks fine. Penalty APY multipliers cannot go below
-            1.00 — a cheaper contract gives them a star and leftover cap, which is a
-            reward, not a penalty.
+            minor flag even when APY looks fine. Penalty deals always cut years and pack
+            more total money into that shorter term — they tried to buy long, cheap
+            control, so they get short, expensive control.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -96,13 +96,13 @@ export default async function AdminContractsPage() {
               />
               <Num
                 name="moderateMarketMultiplier"
-                label="Moderate APY floor (× market)"
+                label="Moderate extra total (× market deal)"
                 defaultValue={desk.rules.moderateMarketMultiplier}
                 step="0.01"
               />
               <Num
                 name="severeMarketMultiplier"
-                label="Severe keep-player premium (× market)"
+                label="Severe extra total (× market deal)"
                 defaultValue={desk.rules.severeMarketMultiplier}
                 step="0.01"
               />
@@ -133,7 +133,7 @@ export default async function AdminContractsPage() {
                   <option value="PENDING">Commissioner chooses each case</option>
                   <option value="VOID_SIGNING">Always void signing rights</option>
                   <option value="STEEP_BELOW_MARKET">
-                    Always keep player at above-market premium
+                    Always keep player: fewer years, more money
                   </option>
                 </Select>
               </div>

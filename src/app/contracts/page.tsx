@@ -65,8 +65,8 @@ export default async function ContractsPage({
         <p className="mt-2 max-w-3xl text-sm text-[var(--muted-foreground)]">
           Paste the placeholder deal they typed in Madden. The desk pulls Spotrac-style
           comps, builds a legal Length / Total Salary / Signing Bonus, and flags
-          overpay so inflated 9-year deals cannot game the edit. Penalties never cut
-          APY below market — that would reward a placeholder with a star and extra cap.
+          overpay so inflated 9-year deals cannot game the edit. A real penalty is the
+          opposite of the exploit: fewer years and more money, never a cheaper star.
         </p>
       </div>
 

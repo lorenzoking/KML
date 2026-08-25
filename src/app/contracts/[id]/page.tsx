@@ -126,7 +126,7 @@ function CommissionerActions({
                 id="commissionerNote"
                 name="commissionerNote"
                 defaultValue={note ?? ""}
-                placeholder="Why void vs keep at an above-market premium"
+                placeholder="Why void vs a short, expensive keep-player deal"
               />
               <div className="flex flex-wrap gap-2">
                 <SubmitButton variant="destructive">Void signing rights</SubmitButton>
@@ -141,7 +141,7 @@ function CommissionerActions({
               <input type="hidden" name="signingId" value={signingId} />
               <input type="hidden" name="resolution" value="STEEP_BELOW_MARKET" />
               <input type="hidden" name="commissionerNote" value={note ?? ""} />
-              <SubmitButton variant="outline">Keep player at above-market premium</SubmitButton>
+              <SubmitButton variant="outline">Keep player — fewer years, more money</SubmitButton>
             </form>
           </div>
         ) : (

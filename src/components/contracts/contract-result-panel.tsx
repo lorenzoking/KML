@@ -130,13 +130,14 @@ export function ContractResultPanel({
             optionLabel: "OPTION B · Market-value reset",
             inputs: calc.market,
           })}
+          locked={calc.penaltyTier !== "NONE"}
         />
       </div>
 
       {calc.penaltyAdjusted ? (
         <OptionCard
           title={calc.recommended.label}
-          subtitle="Penalty-adjusted Madden inputs — at or above market, never cheaper"
+          subtitle="Fewer years than market, more total money packed into that short deal"
           inputs={calc.penaltyAdjusted}
           math={calc.math.penalty}
           recommended
