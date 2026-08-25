@@ -7,6 +7,7 @@ import {
   voidContractSigning,
 } from "@/actions/contracts";
 import { ContractResultPanel } from "@/components/contracts/contract-result-panel";
+import { OfferGuidancePanel } from "@/components/contracts/contract-offer-guidance";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getSessionUser, isCommissioner } from "@/lib/auth";
+import { resolveOfferGuidance } from "@/lib/contracts/calculator";
 import { penaltyBadgeVariant } from "@/lib/contracts/format";
 import {
   PENALTY_LABELS,
@@ -45,6 +47,8 @@ export default async function ContractSigningPage({
   if (!snapshot?.input || !snapshot.blended) {
     notFound();
   }
+
+  const offers = resolveOfferGuidance(snapshot, snapshot.input);
 
   return (
     <div className="space-y-6">
@@ -79,6 +83,20 @@ export default async function ContractSigningPage({
           status={signing.status}
           severeResolution={signing.severeResolution}
           note={signing.commissionerNote}
+        />
+      ) : null}
+
+      {offers ? (
+        <OfferGuidancePanel
+          offers={offers}
+          playerName={signing.playerName}
+          position={signing.position}
+          teamAbbr={signing.franchise.abbreviation}
+          asSigned={{
+            apy: snapshot.asSignedApy,
+            length: snapshot.input.asSignedLength,
+          }}
+          longContractYears={snapshot.rulesUsed?.longContractYears ?? 7}
         />
       ) : null}
 

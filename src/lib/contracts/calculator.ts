@@ -9,6 +9,8 @@ import {
   type ContractRules,
   type MaddenInputs,
   type MarketComp,
+  type OfferGuidance,
+  type PlayerOfferInput,
   type RecommendedKey,
   type SeverePenaltyResolution,
 } from "./types";
@@ -146,6 +148,144 @@ function penaltyShape(
   };
 }
 
+export function maxGoodFaithApy(marketApy: number, rules: ContractRules): number {
+  const ceiling = marketApy * rules.overpayNoneMax;
+  return roundMoney(Math.max(marketApy, ceiling - 0.1));
+}
+
+export function maxGoodFaithLength(rules: ContractRules): number {
+  return Math.max(
+    rules.minContractLength,
+    Math.min(rules.maxContractLength, rules.longContractYears - 1)
+  );
+}
+
+type DealStructure = {
+  marketApy: number;
+  typicalLength: number;
+  blendedLength: number;
+  blendedApy: number;
+  remainingApyUsed: number | null;
+  remainingApyWasEstimated: boolean;
+  leftoverValue: number;
+  newMoneyYears: number;
+  newMoneyValue: number;
+  blended: MaddenInputs;
+  market: MaddenInputs;
+};
+
+function buildDealStructure(
+  player: PlayerOfferInput,
+  comp: MarketComp,
+  rules: ContractRules
+): DealStructure {
+  const marketApy = marketApyForTier(comp, player.playerTier, rules);
+  const typicalLength = clamp(
+    comp.typicalLengthYears,
+    rules.minContractLength,
+    rules.maxContractLength
+  );
+
+  let remainingApyUsed: number | null = null;
+  let remainingApyWasEstimated = false;
+  if (player.yearsRemaining > 0) {
+    if (player.remainingDealApy != null && player.remainingDealApy > 0) {
+      remainingApyUsed = player.remainingDealApy;
+    } else {
+      remainingApyUsed = roundMoney(
+        comp.starterFloorApy * rules.rookieScaleFallbackRatio
+      );
+      remainingApyWasEstimated = true;
+    }
+  }
+
+  let blendedLength = typicalLength;
+  if (player.yearsRemaining > 0 && player.yearsRemaining >= blendedLength) {
+    blendedLength = Math.min(player.yearsRemaining + 1, rules.maxContractLength);
+  }
+  const newMoneyYears =
+    player.yearsRemaining > 0
+      ? Math.max(1, blendedLength - player.yearsRemaining)
+      : blendedLength;
+  const leftoverYears =
+    player.yearsRemaining > 0
+      ? Math.max(0, blendedLength - newMoneyYears)
+      : 0;
+  const leftoverValue = leftoverYears * (remainingApyUsed ?? 0);
+  const newMoneyValue = newMoneyYears * marketApy;
+  const blendedApy =
+    player.yearsRemaining > 0 && blendedLength > 0
+      ? (leftoverValue + newMoneyValue) / blendedLength
+      : marketApy;
+
+  return {
+    marketApy,
+    typicalLength,
+    blendedLength,
+    blendedApy,
+    remainingApyUsed,
+    remainingApyWasEstimated,
+    leftoverValue,
+    newMoneyYears,
+    newMoneyValue,
+    blended: toMaddenInputs(
+      blendedApy,
+      blendedLength,
+      comp.typicalBonusRatio,
+      rules
+    ),
+    market: toMaddenInputs(
+      marketApy,
+      typicalLength,
+      comp.typicalBonusRatio,
+      rules
+    ),
+  };
+}
+
+export function calculateOfferGuidance(
+  player: PlayerOfferInput,
+  comp: MarketComp,
+  rules: ContractRules
+): OfferGuidance {
+  const deal = buildDealStructure(player, comp, rules);
+  const maxApy = maxGoodFaithApy(deal.marketApy, rules);
+  const maxLength = maxGoodFaithLength(rules);
+  const extension = player.yearsRemaining > 0;
+  const realistic = extension ? deal.blended : deal.market;
+  const intendedLength = extension ? deal.blendedLength : deal.typicalLength;
+  const maxOffer = toMaddenInputs(
+    maxApy,
+    intendedLength,
+    comp.typicalBonusRatio,
+    rules
+  );
+  const ratio = deal.marketApy > 0 ? maxApy / deal.marketApy : 1;
+  const setter = comp.marketSetterName ? ` (${comp.marketSetterName})` : "";
+
+  return {
+    marketApy: roundMoney(deal.marketApy),
+    maxGoodFaithApy: maxApy,
+    maxGoodFaithLength: maxLength,
+    maxGoodFaithRatio: roundMoney(ratio, 0.01),
+    realisticLabel: extension
+      ? "Most realistic: blended extension"
+      : "Most realistic: market-value deal",
+    realistic,
+    maxOffer,
+    math: [
+      `${player.position} ${POSITION_LABELS[player.position]} · ${TIER_LABELS[player.playerTier]}.`,
+      `Market APY for this tier: ${formatMillions(deal.marketApy)}${setter}.`,
+      extension
+        ? `Leftover ${player.yearsRemaining} yr${player.yearsRemaining === 1 ? "" : "s"} at ${formatMillions(deal.remainingApyUsed ?? 0)}${deal.remainingApyWasEstimated ? " (rookie-scale estimate)" : ""} blended with ${deal.newMoneyYears} new-money yr${deal.newMoneyYears === 1 ? "" : "s"} at market.`
+        : `Typical ${player.position} length is ${deal.typicalLength} yrs.`,
+      `Good-faith APY must stay under ${rules.overpayNoneMax.toFixed(2)}× market (${formatMillions(deal.marketApy * rules.overpayNoneMax)}). Max offer uses ${formatMillions(maxApy)} (${formatRatio(ratio)}).`,
+      `Do not sign ${rules.longContractYears}+ years — length itself is an automatic penalty even if APY looks fine. Hard ceiling ${maxLength} yrs.`,
+      `Type the realistic deal first. Only walk APY up toward the max if you have to win the bidding.`,
+    ],
+  };
+}
+
 export function calculateSigning(
   input: CalculatorInput,
   comp: MarketComp,
@@ -156,63 +296,23 @@ export function calculateSigning(
     input.asSignedLength > 0
       ? input.asSignedTotalSalary / input.asSignedLength
       : 0;
-  const marketApy = marketApyForTier(comp, input.playerTier, rules);
-  const overpayRatio = marketApy > 0 ? asSignedApy / marketApy : Infinity;
-  const longContractFlag = input.asSignedLength >= rules.longContractYears;
-
-  let remainingApyUsed: number | null = null;
-  let remainingApyWasEstimated = false;
-  if (input.yearsRemaining > 0) {
-    if (input.remainingDealApy != null && input.remainingDealApy > 0) {
-      remainingApyUsed = input.remainingDealApy;
-    } else {
-      remainingApyUsed = roundMoney(
-        comp.starterFloorApy * rules.rookieScaleFallbackRatio
-      );
-      remainingApyWasEstimated = true;
-    }
-  }
-
-  const typicalLength = clamp(
-    comp.typicalLengthYears,
-    rules.minContractLength,
-    rules.maxContractLength
-  );
-
-  let blendedLength = typicalLength;
-  if (input.yearsRemaining > 0 && input.yearsRemaining >= blendedLength) {
-    blendedLength = Math.min(
-      input.yearsRemaining + 1,
-      rules.maxContractLength
-    );
-  }
-  const newMoneyYears =
-    input.yearsRemaining > 0
-      ? Math.max(1, blendedLength - input.yearsRemaining)
-      : blendedLength;
-  const leftoverYears =
-    input.yearsRemaining > 0
-      ? Math.max(0, blendedLength - newMoneyYears)
-      : 0;
-  const leftoverValue = leftoverYears * (remainingApyUsed ?? 0);
-  const newMoneyValue = newMoneyYears * marketApy;
-  const blendedApy =
-    input.yearsRemaining > 0 && blendedLength > 0
-      ? (leftoverValue + newMoneyValue) / blendedLength
-      : marketApy;
-
-  const blended = toMaddenInputs(
-    blendedApy,
-    blendedLength,
-    comp.typicalBonusRatio,
-    rules
-  );
-  const market = toMaddenInputs(
+  const deal = buildDealStructure(input, comp, rules);
+  const {
     marketApy,
     typicalLength,
-    comp.typicalBonusRatio,
-    rules
-  );
+    blendedLength,
+    blendedApy,
+    remainingApyUsed,
+    remainingApyWasEstimated,
+    leftoverValue,
+    newMoneyYears,
+    newMoneyValue,
+    blended,
+    market,
+  } = deal;
+  const offers = calculateOfferGuidance(input, comp, rules);
+  const overpayRatio = marketApy > 0 ? asSignedApy / marketApy : Infinity;
+  const longContractFlag = input.asSignedLength >= rules.longContractYears;
 
   const { penaltyTier, penaltyReasons } = resolvePenaltyTier({
     overpayRatio,
@@ -345,6 +445,7 @@ export function calculateSigning(
       market: marketMath,
       penalty: penaltyMath,
     },
+    offers,
     compsUsed: comp,
     rulesUsed: rules,
   };
@@ -435,4 +536,13 @@ function pickRecommended(params: {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+export function resolveOfferGuidance(
+  calc: Pick<CalculatedSigning, "offers" | "compsUsed" | "rulesUsed">,
+  player: PlayerOfferInput
+): OfferGuidance | null {
+  if (calc.offers) return calc.offers;
+  if (!calc.compsUsed || !calc.rulesUsed) return null;
+  return calculateOfferGuidance(player, calc.compsUsed, calc.rulesUsed);
 }

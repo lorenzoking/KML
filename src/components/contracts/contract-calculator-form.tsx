@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { logContractSigning } from "@/actions/contracts";
+import { OfferGuidancePanel } from "@/components/contracts/contract-offer-guidance";
 import { ContractResultPanel } from "@/components/contracts/contract-result-panel";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { calculateSigning } from "@/lib/contracts/calculator";
+import { calculateOfferGuidance, calculateSigning } from "@/lib/contracts/calculator";
 import {
   CONTRACT_POSITIONS,
   CONTRACT_PLAYER_TIERS,
@@ -22,6 +23,7 @@ import {
   type ContractPosition,
   type ContractPlayerTier,
   type ContractRules,
+  type MaddenInputs,
   type MarketComp,
 } from "@/lib/contracts/types";
 
@@ -62,18 +64,34 @@ export function ContractCalculatorForm({
   const [franchiseId, setFranchiseId] = useState(defaultFranchiseId ?? "");
 
   const comp = comps.find((row) => row.position === position) ?? comps[0];
+  const remainingYears = parseNum(yearsRemaining) ?? 0;
+  const remainingApy = parseNum(remainingDealApy);
+
+  const offers = useMemo(() => {
+    if (!comp) return null;
+    return calculateOfferGuidance(
+      {
+        playerName: playerName.trim(),
+        position,
+        playerTier,
+        yearsRemaining: remainingYears,
+        remainingDealApy: remainingApy,
+      },
+      comp,
+      rules
+    );
+  }, [comp, playerName, playerTier, position, remainingApy, remainingYears, rules]);
 
   const input: CalculatorInput | null = useMemo(() => {
     const length = parseNum(asSignedLength);
     const total = parseNum(asSignedTotalSalary);
     if (length == null || length < 1 || total == null || total < 0) return null;
-    const remainingYears = parseNum(yearsRemaining) ?? 0;
     return {
       playerName: playerName.trim(),
       position,
       playerTier,
       yearsRemaining: remainingYears,
-      remainingDealApy: parseNum(remainingDealApy),
+      remainingDealApy: remainingApy,
       asSignedLength: Math.round(length),
       asSignedTotalSalary: total,
       asSignedSigningBonus: parseNum(asSignedSigningBonus) ?? 0,
@@ -82,8 +100,8 @@ export function ContractCalculatorForm({
     playerName,
     position,
     playerTier,
-    yearsRemaining,
-    remainingDealApy,
+    remainingYears,
+    remainingApy,
     asSignedLength,
     asSignedTotalSalary,
     asSignedSigningBonus,
@@ -96,13 +114,21 @@ export function ContractCalculatorForm({
 
   const team = franchises.find((f) => f.id === franchiseId);
 
+  function fillAsSigned(deal: MaddenInputs) {
+    setAsSignedLength(String(deal.length));
+    setAsSignedTotalSalary(String(deal.totalSalary));
+    setAsSignedSigningBonus(String(deal.signingBonus));
+  }
+
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:items-start">
       <Card className="lg:sticky lg:top-20">
         <CardHeader className="pb-3">
-          <CardTitle>As-signed contract</CardTitle>
+          <CardTitle>Player & offer</CardTitle>
           <CardDescription>
-            What they typed in Madden. Numbers are millions (170 = $170M).
+            Position and tier unlock a realistic deal and a max before penalty.
+            As-signed is what they typed — fill it when you log, or use Fill to
+            preview.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -187,6 +213,13 @@ export function ContractCalculatorForm({
               </Field>
             </div>
 
+            <p className="pt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+              What they typed in Madden
+            </p>
+            <p className="-mt-2 text-xs text-[var(--muted-foreground)]">
+              Millions (170 = $170M). Needed to log; skip it to just shop an offer.
+            </p>
+
             <div className="grid grid-cols-3 gap-3">
               <Field label="Length" htmlFor="asSignedLength">
                 <Input
@@ -196,7 +229,7 @@ export function ContractCalculatorForm({
                   min={1}
                   max={10}
                   required
-                  placeholder="9"
+                  placeholder="4"
                   value={asSignedLength}
                   onChange={(e) => setAsSignedLength(e.target.value)}
                 />
@@ -294,16 +327,32 @@ export function ContractCalculatorForm({
         </CardContent>
       </Card>
 
-      <div>
+      <div className="space-y-6">
+        {offers ? (
+          <OfferGuidancePanel
+            offers={offers}
+            playerName={playerName.trim()}
+            position={position}
+            teamAbbr={team?.abbreviation}
+            asSigned={
+              calc && input
+                ? { apy: calc.asSignedApy, length: input.asSignedLength }
+                : null
+            }
+            longContractYears={rules.longContractYears}
+            onUseNumbers={fillAsSigned}
+          />
+        ) : null}
         {calc && input ? (
           <ContractResultPanel calc={calc} input={input} teamAbbr={team?.abbreviation} />
         ) : (
           <Card>
             <CardHeader>
-              <CardTitle>Waiting on as-signed numbers</CardTitle>
+              <CardTitle>As-signed verdict</CardTitle>
               <CardDescription>
-                Enter length and total salary. Results update as you type — no need to save
-                just to see the edit.
+                Length and total salary appear above once you type them or tap Fill.
+                That checks the placeholder against market and shows the penalty if
+                they went long and inflated.
               </CardDescription>
             </CardHeader>
           </Card>

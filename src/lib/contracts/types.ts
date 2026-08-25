@@ -109,17 +109,6 @@ export type ContractRules = {
   defaultSevereResolution: SeverePenaltyResolution;
 };
 
-export type CalculatorInput = {
-  playerName: string;
-  position: ContractPosition;
-  playerTier: ContractPlayerTier;
-  yearsRemaining: number;
-  remainingDealApy: number | null;
-  asSignedLength: number;
-  asSignedTotalSalary: number;
-  asSignedSigningBonus: number;
-};
-
 export type MaddenInputs = {
   length: number;
   contractYear: 1;
@@ -127,6 +116,31 @@ export type MaddenInputs = {
   signingBonus: number;
   effectiveApy: number;
   notes: string[];
+};
+
+export type PlayerOfferInput = {
+  playerName: string;
+  position: ContractPosition;
+  playerTier: ContractPlayerTier;
+  yearsRemaining: number;
+  remainingDealApy: number | null;
+};
+
+export type OfferGuidance = {
+  marketApy: number;
+  maxGoodFaithApy: number;
+  maxGoodFaithLength: number;
+  maxGoodFaithRatio: number;
+  realisticLabel: string;
+  realistic: MaddenInputs;
+  maxOffer: MaddenInputs;
+  math: string[];
+};
+
+export type CalculatorInput = PlayerOfferInput & {
+  asSignedLength: number;
+  asSignedTotalSalary: number;
+  asSignedSigningBonus: number;
 };
 
 export type RecommendedKey = "BLENDED" | "MARKET" | "PENALTY" | "VOID";
@@ -156,6 +170,7 @@ export type CalculatedSigning = {
     market: string[];
     penalty: string[];
   };
+  offers?: OfferGuidance;
   compsUsed: MarketComp;
   rulesUsed: ContractRules;
 };
