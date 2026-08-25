@@ -38,28 +38,15 @@ export function toMaddenInputs(
   const notes: string[] = [];
   const minLen = Math.max(1, rules.minContractLength);
   const maxLen = Math.max(minLen, rules.maxContractLength);
-  let length = clamp(Math.round(desiredLength), minLen, maxLen);
+  const length = clamp(Math.round(desiredLength), minLen, maxLen);
   const safeApy = Math.max(0, targetApy);
   let total = roundMoney(safeApy * length);
 
   if (total > rules.maxTotalSalaryMillions) {
-    const maxLenAtApy =
-      safeApy > 0
-        ? Math.floor(rules.maxTotalSalaryMillions / safeApy)
-        : maxLen;
-    if (maxLenAtApy >= minLen) {
-      length = Math.min(length, maxLenAtApy);
-      total = roundMoney(Math.min(safeApy * length, rules.maxTotalSalaryMillions));
-      notes.push(
-        `Shortened to ${length} yrs so APY stays near ${formatMillions(safeApy)} under the ${formatMillions(rules.maxTotalSalaryMillions)} Total Salary cap.`
-      );
-    } else {
-      length = minLen;
-      total = roundMoney(rules.maxTotalSalaryMillions);
-      notes.push(
-        `APY compressed: ${formatMillions(safeApy)} × ${length} would exceed the ${formatMillions(rules.maxTotalSalaryMillions)} Total Salary cap.`
-      );
-    }
+    total = roundMoney(rules.maxTotalSalaryMillions);
+    notes.push(
+      `Kept Length ${length}. Total Salary is capped at ${formatMillions(rules.maxTotalSalaryMillions)}, so typed APY is ${formatMillions(total / length)} instead of ${formatMillions(safeApy)}.`
+    );
   }
 
   return withBonus(length, total, bonusRatio, rules, notes);
@@ -448,6 +435,7 @@ export function calculateOfferGuidance(
       why,
       deal.lengthPlan.detail,
       `NFL typical for this position is ${deal.typicalLength} yrs; Madden Length is ${deal.lengthPlan.maddenLength}.`,
+      ...realistic.notes.filter((note) => !note.includes("Contract Year always")),
       `Good-faith APY must stay under ${rules.overpayNoneMax.toFixed(2)}× market (${formatMillions(deal.marketApy * rules.overpayNoneMax)}). Max offer uses ${formatMillions(maxApy)} (${formatRatio(ratio)}).`,
       `Madden often forces a ${rules.longContractYears}+ year placeholder. Edit Length down to ${deal.lengthPlan.maddenLength}. Length alone is not a penalty — overpay is.`,
       `Type the suggested contract in Madden Edit Player (Contract Year, Length, Total Salary, Signing Bonus). Only walk APY up toward the max if you have to win the bidding.`,

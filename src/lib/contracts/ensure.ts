@@ -83,6 +83,8 @@ export async function ensureContractDesk() {
         overpayNoneMax?: number;
         overpayMinorMax?: number;
         overpayModerateMax?: number;
+        maxTotalSalaryMillions?: number;
+        maxSigningBonusMillions?: number;
       } = {};
       if (existingRules.moderateMarketMultiplier < 1) {
         data.moderateMarketMultiplier = DEFAULT_CONTRACT_RULES.moderateMarketMultiplier;
@@ -102,6 +104,12 @@ export async function ensureContractDesk() {
       }
       if (Math.abs(existingRules.overpayModerateMax - 2) < 1e-6) {
         data.overpayModerateMax = DEFAULT_CONTRACT_RULES.overpayModerateMax;
+      }
+      if (existingRules.maxTotalSalaryMillions <= 200 + 1e-6) {
+        data.maxTotalSalaryMillions = DEFAULT_CONTRACT_RULES.maxTotalSalaryMillions;
+      }
+      if (existingRules.maxSigningBonusMillions <= 250 + 1e-6) {
+        data.maxSigningBonusMillions = DEFAULT_CONTRACT_RULES.maxSigningBonusMillions;
       }
       if (Object.keys(data).length > 0) {
         await prisma.contractRuleSetting.update({

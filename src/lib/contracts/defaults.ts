@@ -139,8 +139,8 @@ export const DEFAULT_MARKET_COMPS: MarketComp[] = [
 export const DEFAULT_CONTRACT_RULES: ContractRules = {
   maxContractLength: 6,
   minContractLength: 2,
-  maxTotalSalaryMillions: 200,
-  maxSigningBonusMillions: 250,
+  maxTotalSalaryMillions: 500,
+  maxSigningBonusMillions: 350,
   longContractYears: 7,
   overpayNoneMax: 1.4,
   overpayMinorMax: 1.75,

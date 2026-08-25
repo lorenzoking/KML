@@ -96,6 +96,16 @@ export function OfferGuidancePanel({
               "Type the four fields below in Madden Edit Player."}
           </p>
           <MaddenFields inputs={offers.realistic} size="lg" />
+          {offers.realistic.notes
+            .filter((note) => !note.includes("Contract Year always"))
+            .map((note) => (
+              <p
+                key={note}
+                className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm"
+              >
+                {note}
+              </p>
+            ))}
           <p className="font-mono text-sm text-[var(--muted-foreground)]">
             {formatMaddenOneLiner(offers.realistic)} ·{" "}
             {formatMillions(offers.realistic.effectiveApy)} APY
@@ -161,10 +171,14 @@ export function OfferGuidancePanel({
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid gap-2 sm:grid-cols-4">
-            <Stat label="Max APY" value={formatMillions(offers.maxGoodFaithApy)} />
+            <Stat label="Max APY" value={formatMillions(offers.maxOffer.effectiveApy)} />
             <Stat
               label="Vs market"
-              value={formatRatio(offers.maxGoodFaithRatio)}
+              value={formatRatio(
+                offers.marketApy > 0
+                  ? offers.maxOffer.effectiveApy / offers.marketApy
+                  : offers.maxGoodFaithRatio
+              )}
             />
             <Stat
               label="Suggested length"

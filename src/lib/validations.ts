@@ -381,8 +381,8 @@ export const logContractSigningSchema = z.object({
 export const updateContractRulesSchema = z.object({
   maxContractLength: z.coerce.number().int().min(3).max(8),
   minContractLength: z.coerce.number().int().min(1).max(5),
-  maxTotalSalaryMillions: z.coerce.number().min(50).max(300),
-  maxSigningBonusMillions: z.coerce.number().min(50).max(400),
+  maxTotalSalaryMillions: z.coerce.number().min(50).max(600),
+  maxSigningBonusMillions: z.coerce.number().min(50).max(500),
   longContractYears: z.coerce.number().int().min(5).max(10),
   overpayNoneMax: z.coerce.number().min(1).max(2),
   overpayMinorMax: z.coerce.number().min(1.1).max(3),
