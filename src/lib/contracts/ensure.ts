@@ -46,6 +46,7 @@ export function rulesFromRow(row: {
 export function compFromRow(row: {
   position: MarketComp["position"];
   marketSetterName: string | null;
+  starterCompName: string | null;
   topOfMarketApy: number;
   starterFloorApy: number;
   typicalBonusRatio: number;
@@ -56,6 +57,7 @@ export function compFromRow(row: {
   return {
     position: row.position,
     marketSetterName: row.marketSetterName,
+    starterCompName: row.starterCompName,
     topOfMarketApy: row.topOfMarketApy,
     starterFloorApy: row.starterFloorApy,
     typicalBonusRatio: row.typicalBonusRatio,
@@ -96,13 +98,22 @@ export async function ensureContractDesk() {
     }
 
     const existingComps = await prisma.positionMarketComp.findMany({
-      select: { position: true },
+      select: { id: true, position: true, starterCompName: true },
     });
     const have = new Set(existingComps.map((row) => row.position));
     const missing = DEFAULT_MARKET_COMPS.filter((comp) => !have.has(comp.position));
     if (missing.length > 0) {
       await prisma.positionMarketComp.createMany({
         data: missing,
+      });
+    }
+    for (const row of existingComps) {
+      if (row.starterCompName) continue;
+      const seed = DEFAULT_MARKET_COMPS.find((comp) => comp.position === row.position);
+      if (!seed?.starterCompName) continue;
+      await prisma.positionMarketComp.update({
+        where: { id: row.id },
+        data: { starterCompName: seed.starterCompName },
       });
     }
   } catch (error) {

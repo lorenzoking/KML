@@ -9,6 +9,7 @@ import {
   type ContractRules,
   type MaddenInputs,
   type MarketComp,
+  type MarketComparable,
   type OfferGuidance,
   type PlayerOfferInput,
   type RecommendedKey,
@@ -243,6 +244,80 @@ function buildDealStructure(
   };
 }
 
+function displayCompName(name: string | null): string | null {
+  if (!name) return null;
+  const trimmed = name.trim();
+  if (!trimmed || /^positional market$/i.test(trimmed)) return null;
+  return trimmed;
+}
+
+function buildComparables(
+  player: PlayerOfferInput,
+  comp: MarketComp,
+  rules: ContractRules,
+  typicalLength: number
+): MarketComparable[] {
+  const depthApy = roundMoney(comp.starterFloorApy * rules.depthMarketRatio);
+  return [
+    {
+      tier: "ELITE",
+      bandLabel: TIER_LABELS.ELITE,
+      playerName: displayCompName(comp.marketSetterName),
+      apy: comp.topOfMarketApy,
+      typicalLengthYears: typicalLength,
+      selected: player.playerTier === "ELITE",
+      role: "Top APY at this position",
+    },
+    {
+      tier: "STARTER",
+      bandLabel: TIER_LABELS.STARTER,
+      playerName: displayCompName(comp.starterCompName),
+      apy: comp.starterFloorApy,
+      typicalLengthYears: typicalLength,
+      selected: player.playerTier === "STARTER",
+      role: "Starter-tier floor / median",
+    },
+    {
+      tier: "DEPTH",
+      bandLabel: TIER_LABELS.DEPTH,
+      playerName: null,
+      apy: depthApy,
+      typicalLengthYears: typicalLength,
+      selected: player.playerTier === "DEPTH",
+      role: `${formatPercent(rules.depthMarketRatio)} of the starter floor`,
+    },
+  ];
+}
+
+function suggestionWhy(
+  player: PlayerOfferInput,
+  comparables: MarketComparable[],
+  rules: ContractRules,
+  extension: boolean
+): string {
+  const pos = POSITION_LABELS[player.position];
+  const elite = comparables.find((row) => row.tier === "ELITE");
+  const starter = comparables.find((row) => row.tier === "STARTER");
+  const selected = comparables.find((row) => row.selected) ?? starter;
+  const eliteBit = elite?.playerName
+    ? `${elite.playerName} at ${formatMillions(elite.apy)}`
+    : `the ${formatMillions(elite?.apy ?? 0)} market-setter`;
+  const starterBit = starter?.playerName
+    ? `${starter.playerName} at ${formatMillions(starter.apy)}`
+    : `the starter floor at ${formatMillions(starter?.apy ?? 0)}`;
+  const blend = extension
+    ? " Leftover years are blended in, then new money is priced at this rate."
+    : "";
+
+  if (player.playerTier === "ELITE") {
+    return `This ${pos} is priced at the top of the market — ${eliteBit}.${blend}`;
+  }
+  if (player.playerTier === "STARTER") {
+    return `This ${pos} is priced as a starter like ${starterBit}, below ${eliteBit}.${blend}`;
+  }
+  return `This ${pos} is priced as depth at ${formatMillions(selected?.apy ?? 0)} (${formatPercent(rules.depthMarketRatio)} of the ${starter?.playerName ?? "starter"} band), well below ${eliteBit}.${blend}`;
+}
+
 export function calculateOfferGuidance(
   player: PlayerOfferInput,
   comp: MarketComp,
@@ -261,7 +336,12 @@ export function calculateOfferGuidance(
     rules
   );
   const ratio = deal.marketApy > 0 ? maxApy / deal.marketApy : 1;
-  const setter = comp.marketSetterName ? ` (${comp.marketSetterName})` : "";
+  const comparables = buildComparables(player, comp, rules, deal.typicalLength);
+  const selected = comparables.find((row) => row.selected);
+  const why = suggestionWhy(player, comparables, rules, extension);
+  const selectedName = selected?.playerName
+    ? ` — ${selected.playerName}`
+    : "";
 
   return {
     marketApy: roundMoney(deal.marketApy),
@@ -271,17 +351,20 @@ export function calculateOfferGuidance(
     realisticLabel: extension
       ? "Most realistic: blended extension"
       : "Most realistic: market-value deal",
+    suggestionWhy: why,
     realistic,
     maxOffer,
+    comparables,
+    sourceNote: comp.sourceNote,
     math: [
-      `${player.position} ${POSITION_LABELS[player.position]} · ${TIER_LABELS[player.playerTier]}.`,
-      `Market APY for this tier: ${formatMillions(deal.marketApy)}${setter}.`,
+      `${player.position} ${POSITION_LABELS[player.position]} · ${TIER_LABELS[player.playerTier]}${selectedName}.`,
+      why,
       extension
         ? `Leftover ${player.yearsRemaining} yr${player.yearsRemaining === 1 ? "" : "s"} at ${formatMillions(deal.remainingApyUsed ?? 0)}${deal.remainingApyWasEstimated ? " (rookie-scale estimate)" : ""} blended with ${deal.newMoneyYears} new-money yr${deal.newMoneyYears === 1 ? "" : "s"} at market.`
         : `Typical ${player.position} length is ${deal.typicalLength} yrs.`,
       `Good-faith APY must stay under ${rules.overpayNoneMax.toFixed(2)}× market (${formatMillions(deal.marketApy * rules.overpayNoneMax)}). Max offer uses ${formatMillions(maxApy)} (${formatRatio(ratio)}).`,
       `Do not sign ${rules.longContractYears}+ years — length itself is an automatic penalty even if APY looks fine. Hard ceiling ${maxLength} yrs.`,
-      `Type the realistic deal first. Only walk APY up toward the max if you have to win the bidding.`,
+      `Type the suggested contract in Madden Edit Player (Contract Year, Length, Total Salary, Signing Bonus). Only walk APY up toward the max if you have to win the bidding.`,
     ],
   };
 }
@@ -379,7 +462,7 @@ export function calculateSigning(
 
   const marketMath = [
     `Market-Value Reset prices the player now at ${formatMillions(marketApy)} APY (${tier}).`,
-    `Top of market ${formatMillions(comp.topOfMarketApy)} · starter floor ${formatMillions(comp.starterFloorApy)}.`,
+    `Top of market ${formatMillions(comp.topOfMarketApy)}${comp.marketSetterName ? ` (${comp.marketSetterName})` : ""} · starter floor ${formatMillions(comp.starterFloorApy)}${comp.starterCompName ? ` (${comp.starterCompName})` : ""}.`,
     `Typical length ${typicalLength} yrs → Madden Length ${market.length}.`,
     `Total Salary ${formatMillions(market.totalSalary)} · Signing Bonus ${formatMillions(market.signingBonus)} (${formatPercent(comp.typicalBonusRatio)} typical bonus).`,
     ...market.notes,
@@ -542,7 +625,7 @@ export function resolveOfferGuidance(
   calc: Pick<CalculatedSigning, "offers" | "compsUsed" | "rulesUsed">,
   player: PlayerOfferInput
 ): OfferGuidance | null {
-  if (calc.offers) return calc.offers;
-  if (!calc.compsUsed || !calc.rulesUsed) return null;
+  if (calc.offers?.comparables?.length) return calc.offers;
+  if (!calc.compsUsed || !calc.rulesUsed) return calc.offers ?? null;
   return calculateOfferGuidance(player, calc.compsUsed, calc.rulesUsed);
 }

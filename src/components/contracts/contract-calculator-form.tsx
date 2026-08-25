@@ -126,9 +126,9 @@ export function ContractCalculatorForm({
         <CardHeader className="pb-3">
           <CardTitle>Player & offer</CardTitle>
           <CardDescription>
-            Position and tier unlock a realistic deal and a max before penalty.
-            As-signed is what they typed — fill it when you log, or use Fill to
-            preview.
+            Pick position and tier. The calculator suggests a realistic Madden
+            Edit Player contract from named NFL comps. Paste as-signed only when
+            logging what they typed.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -288,10 +288,7 @@ export function ContractCalculatorForm({
 
             {comp ? (
               <p className="rounded-xl bg-[var(--muted)]/40 px-3 py-2 text-xs text-[var(--muted-foreground)]">
-                {position} comps: top {comp.topOfMarketApy.toFixed(1)}M
-                {comp.marketSetterName ? ` (${comp.marketSetterName})` : ""} · starter
-                floor {comp.starterFloorApy.toFixed(1)}M · typical {comp.typicalLengthYears}{" "}
-                yr · bonus {Math.round(comp.typicalBonusRatio * 100)}%
+                {`${position} comps: elite ${comp.marketSetterName ?? "market-setter"} $${comp.topOfMarketApy.toFixed(1)}M · starter ${comp.starterCompName ?? "floor"} $${comp.starterFloorApy.toFixed(1)}M · typical ${comp.typicalLengthYears} yr · bonus ${Math.round(comp.typicalBonusRatio * 100)}%`}
               </p>
             ) : null}
 
@@ -350,9 +347,9 @@ export function ContractCalculatorForm({
             <CardHeader>
               <CardTitle>As-signed verdict</CardTitle>
               <CardDescription>
-                Length and total salary appear above once you type them or tap Fill.
-                That checks the placeholder against market and shows the penalty if
-                they went long and inflated.
+                Length and total salary appear once you type them or fill from the
+                Madden suggestion. That checks the placeholder against market and
+                shows the penalty if they went long and inflated.
               </CardDescription>
             </CardHeader>
           </Card>

@@ -50,11 +50,13 @@ export function formatMaddenExport(params: {
     POSITION_LABELS[params.position as keyof typeof POSITION_LABELS] ??
     params.position;
   const header = [
-    "MADDEN 27 — EDIT PLAYER",
+    "MADDEN 27 — TYPE THESE IN EDIT PLAYER",
     params.optionLabel,
     params.teamAbbr ? `Team: ${params.teamAbbr}` : null,
     `Player: ${params.playerName || "—"}`,
     `Position: ${params.position} (${pos})`,
+    "",
+    "Contract Year / Length / Total Salary / Signing Bonus",
     "",
   ].filter((line) => line !== null);
 

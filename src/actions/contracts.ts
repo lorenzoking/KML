@@ -203,6 +203,7 @@ export async function updateAllPositionComps(formData: FormData) {
     const parsed = updatePositionCompSchema.safeParse({
       position: comp.position,
       marketSetterName: formData.get(`${comp.position}_marketSetterName`),
+      starterCompName: formData.get(`${comp.position}_starterCompName`),
       topOfMarketApy: formData.get(`${comp.position}_topOfMarketApy`),
       starterFloorApy: formData.get(`${comp.position}_starterFloorApy`),
       typicalBonusPercent: formData.get(`${comp.position}_typicalBonusPercent`),
@@ -223,6 +224,7 @@ export async function updateAllPositionComps(formData: FormData) {
       where: { position: row.position },
       update: {
         marketSetterName: row.marketSetterName?.trim() || null,
+        starterCompName: row.starterCompName?.trim() || null,
         topOfMarketApy: row.topOfMarketApy,
         starterFloorApy: row.starterFloorApy,
         typicalBonusRatio: row.typicalBonusPercent / 100,
@@ -234,6 +236,7 @@ export async function updateAllPositionComps(formData: FormData) {
       create: {
         position: row.position,
         marketSetterName: row.marketSetterName?.trim() || null,
+        starterCompName: row.starterCompName?.trim() || null,
         topOfMarketApy: row.topOfMarketApy,
         starterFloorApy: row.starterFloorApy,
         typicalBonusRatio: row.typicalBonusPercent / 100,

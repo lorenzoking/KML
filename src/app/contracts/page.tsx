@@ -63,10 +63,11 @@ export default async function ContractsPage({
           Madden 27 Franchise Contract Calculator
         </h1>
         <p className="mt-2 max-w-3xl text-sm text-[var(--muted-foreground)]">
-          Pick a position and tier to see the most realistic offer and the max you
-          can type without a penalty. When someone still pastes a 9-year placeholder,
-          log the as-signed deal — the desk flags overpay and the commissioner edit
-          is fewer years with more money packed in, never a cheaper star.
+          The calculator suggests a realistic contract to type in Madden Edit
+          Player, based on named NFL comps at that position. Walk money up only
+          as far as the max no-penalty offer. If someone still pastes a 9-year
+          placeholder, log the as-signed deal — the edit is fewer years with more
+          money packed in, never a cheaper star.
         </p>
       </div>
 

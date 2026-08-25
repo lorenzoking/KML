@@ -406,6 +406,7 @@ export const updateContractRulesSchema = z.object({
 export const updatePositionCompSchema = z.object({
   position: contractPosition,
   marketSetterName: z.string().trim().max(80).optional().or(z.literal("")),
+  starterCompName: z.string().trim().max(80).optional().or(z.literal("")),
   topOfMarketApy: z.coerce.number().min(0).max(100),
   starterFloorApy: z.coerce.number().min(0).max(80),
   typicalBonusPercent: z.coerce.number().min(0).max(100),

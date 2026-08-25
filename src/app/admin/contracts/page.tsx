@@ -147,8 +147,8 @@ export default async function AdminContractsPage() {
         <CardHeader>
           <CardTitle>Spotrac positional comps</CardTitle>
           <CardDescription>
-            Top APY = market-setter. Starter floor = median/floor for a starter-tier
-            player. Bonus % is typical signing-bonus / total-salary. Percents are 0–100.
+            Top APY = named market-setter. Starter APY = named starter-tier comp.
+            Bonus % is typical signing-bonus / total-salary. Percents are 0–100.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -160,13 +160,14 @@ export default async function AdminContractsPage() {
             className="space-y-4"
           >
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[64rem] text-sm">
+              <table className="w-full min-w-[72rem] text-sm">
                 <thead>
                   <tr className="text-left text-xs uppercase tracking-wide text-[var(--muted-foreground)]">
                     <th className="p-2">Pos</th>
-                    <th className="p-2">Market-setter</th>
+                    <th className="p-2">Elite comp</th>
                     <th className="p-2">Top APY</th>
-                    <th className="p-2">Starter floor</th>
+                    <th className="p-2">Starter comp</th>
+                    <th className="p-2">Starter APY</th>
                     <th className="p-2">Bonus %</th>
                     <th className="p-2">Yrs</th>
                     <th className="p-2">GTD %</th>
@@ -195,6 +196,12 @@ export default async function AdminContractsPage() {
                           step="0.01"
                           required
                           defaultValue={comp.topOfMarketApy}
+                        />
+                      </td>
+                      <td className="p-2">
+                        <Input
+                          name={`${comp.position}_starterCompName`}
+                          defaultValue={comp.starterCompName ?? ""}
                         />
                       </td>
                       <td className="p-2">

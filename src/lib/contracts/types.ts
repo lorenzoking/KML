@@ -84,12 +84,23 @@ export const STATUS_LABELS: Record<ContractSigningStatus, string> = {
 export type MarketComp = {
   position: ContractPosition;
   marketSetterName: string | null;
+  starterCompName: string | null;
   topOfMarketApy: number;
   starterFloorApy: number;
   typicalBonusRatio: number;
   typicalLengthYears: number;
   guaranteePercent: number | null;
   sourceNote: string | null;
+};
+
+export type MarketComparable = {
+  tier: ContractPlayerTier;
+  bandLabel: string;
+  playerName: string | null;
+  apy: number;
+  typicalLengthYears: number;
+  selected: boolean;
+  role: string;
 };
 
 export type ContractRules = {
@@ -132,8 +143,11 @@ export type OfferGuidance = {
   maxGoodFaithLength: number;
   maxGoodFaithRatio: number;
   realisticLabel: string;
+  suggestionWhy: string;
   realistic: MaddenInputs;
   maxOffer: MaddenInputs;
+  comparables: MarketComparable[];
+  sourceNote: string | null;
   math: string[];
 };
 

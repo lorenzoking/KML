@@ -11,7 +11,7 @@ import {
   formatMillions,
   formatRatio,
 } from "@/lib/contracts/format";
-import { POSITION_LABELS, type MaddenInputs, type OfferGuidance } from "@/lib/contracts/types";
+import type { MaddenInputs, MarketComparable, OfferGuidance } from "@/lib/contracts/types";
 import { cn } from "@/lib/utils";
 
 export function OfferGuidancePanel({
@@ -35,37 +35,133 @@ export function OfferGuidancePanel({
     asSigned != null &&
     (asSigned.apy > offers.maxGoodFaithApy + 1e-6 ||
       asSigned.length >= longContractYears);
+  const selected = offers.comparables.find((row) => row.selected);
+  const exportText = formatMaddenExport({
+    playerName,
+    position,
+    teamAbbr,
+    optionLabel: "SUGGESTION · type this in Edit Player",
+    inputs: offers.realistic,
+    extraLines: [offers.suggestionWhy],
+  });
+  const maxExport = formatMaddenExport({
+    playerName,
+    position,
+    teamAbbr,
+    optionLabel: "MAX REALISTIC · no penalty",
+    inputs: offers.maxOffer,
+  });
 
   return (
     <div className="space-y-4">
-      <Card className="border-[color-mix(in_srgb,var(--primary)_40%,var(--border))]">
+      <Card className="border-[color-mix(in_srgb,var(--primary)_55%,var(--border))] ring-1 ring-[color-mix(in_srgb,var(--primary)_35%,transparent)]">
         <CardHeader className="pb-3">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--primary)]">
-            Before you type
+            Madden Edit Player suggestion
           </p>
-          <CardTitle className="mt-1 text-xl">Realistic offer vs max</CardTitle>
+          <CardTitle className="mt-1 text-xl sm:text-2xl">
+            Type this contract in Madden
+          </CardTitle>
           <p className="text-sm text-[var(--muted-foreground)]">
-            Start with the realistic deal. Walk APY up toward the max only if you
-            have to win the bidding. Past that APY, or {longContractYears}+ years,
-            and the penalty fires.
+            Open the player → Edit Player → enter these four fields. This is a
+            suggested realistic deal, not a placeholder to game later.
           </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="rounded-xl border border-[color-mix(in_srgb,var(--primary)_30%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_8%,transparent)] px-3 py-2 text-sm leading-relaxed">
+            {offers.suggestionWhy ||
+              "Type the four fields below in Madden Edit Player."}
+          </p>
+          <MaddenFields inputs={offers.realistic} size="lg" />
+          <p className="font-mono text-sm text-[var(--muted-foreground)]">
+            {formatMaddenOneLiner(offers.realistic)} ·{" "}
+            {formatMillions(offers.realistic.effectiveApy)} APY
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <CopyButton
+              text={exportText}
+              label="Copy for Madden Edit Player"
+              variant="default"
+              size="default"
+            />
+            {onUseNumbers ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onUseNumbers(offers.realistic)}
+              >
+                Fill as-signed with this suggestion
+              </Button>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Compared to these NFL deals</CardTitle>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            {selected
+              ? `The calculator used the ${selected.bandLabel.toLowerCase()} band for this player.`
+              : "Spotrac-style comps by position and tier."}
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {(offers.comparables ?? []).map((row) => (
+            <ComparableRow key={row.tier} row={row} />
+          ))}
+          {offers.sourceNote ? (
+            <p className="pt-1 text-xs text-[var(--muted-foreground)]">
+              Source: {offers.sourceNote}
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <CardTitle className="text-base">Max you can type without a penalty</CardTitle>
+              <p className="text-sm text-[var(--muted-foreground)]">
+                Only walk APY up to this if you have to win the bidding. Same
+                length as the suggestion. {longContractYears}+ years is still a
+                flag.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="pending">Ceiling</Badge>
+              <CopyButton text={maxExport} label="Copy max" />
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid gap-2 sm:grid-cols-4">
-            <Stat label="Market APY" value={formatMillions(offers.marketApy)} />
+            <Stat label="Max APY" value={formatMillions(offers.maxGoodFaithApy)} />
             <Stat
-              label="Max APY (no penalty)"
-              value={formatMillions(offers.maxGoodFaithApy)}
-            />
-            <Stat
-              label="That max vs market"
+              label="Vs market"
               value={formatRatio(offers.maxGoodFaithRatio)}
             />
             <Stat
               label="Longest without a length flag"
               value={`${offers.maxGoodFaithLength} yrs`}
             />
+            <Stat
+              label="Max total"
+              value={formatMillions(offers.maxOffer.totalSalary)}
+            />
           </div>
+          <MaddenFields inputs={offers.maxOffer} />
+          {onUseNumbers ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onUseNumbers(offers.maxOffer)}
+            >
+              Fill as-signed with the max
+            </Button>
+          ) : null}
           {asSigned ? (
             <p
               className={cn(
@@ -76,39 +172,12 @@ export function OfferGuidancePanel({
               )}
             >
               {overMax
-                ? `As-signed ${formatMillions(asSigned.apy)} APY over ${asSigned.length} yrs is over the max realistic offer (${formatMillions(offers.maxGoodFaithApy)} APY, under ${longContractYears} yrs). Penalty will fire.`
+                ? `As-signed ${formatMillions(asSigned.apy)} APY over ${asSigned.length} yrs is over this ceiling (${formatMillions(offers.maxGoodFaithApy)} APY, under ${longContractYears} yrs). Penalty will fire.`
                 : `As-signed ${formatMillions(asSigned.apy)} APY over ${asSigned.length} yrs stays within the max realistic offer.`}
             </p>
           ) : null}
         </CardContent>
       </Card>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <OfferCard
-          title={offers.realisticLabel}
-          subtitle="What you should actually type for this player"
-          badge="Start here"
-          badgeVariant="elite"
-          inputs={offers.realistic}
-          playerName={playerName}
-          position={position}
-          teamAbbr={teamAbbr}
-          optionLabel={`REALISTIC · ${offers.realisticLabel}`}
-          onUseNumbers={onUseNumbers}
-        />
-        <OfferCard
-          title="Max offer (no penalty)"
-          subtitle={`Highest APY that stays under ${formatRatio(offers.maxGoodFaithRatio)} market. Same length as the realistic deal.`}
-          badge="Ceiling"
-          badgeVariant="pending"
-          inputs={offers.maxOffer}
-          playerName={playerName}
-          position={position}
-          teamAbbr={teamAbbr}
-          optionLabel="MAX REALISTIC · no penalty"
-          onUseNumbers={onUseNumbers}
-        />
-      </div>
 
       <details className="rounded-2xl border border-[var(--border)] bg-[var(--card)]/50 px-4 py-3 text-sm">
         <summary className="cursor-pointer font-medium">How these numbers are built</summary>
@@ -122,67 +191,37 @@ export function OfferGuidancePanel({
   );
 }
 
-function OfferCard({
-  title,
-  subtitle,
-  badge,
-  badgeVariant,
-  inputs,
-  playerName,
-  position,
-  teamAbbr,
-  optionLabel,
-  onUseNumbers,
-}: {
-  title: string;
-  subtitle: string;
-  badge: string;
-  badgeVariant: "elite" | "pending";
-  inputs: MaddenInputs;
-  playerName: string;
-  position: string;
-  teamAbbr?: string | null;
-  optionLabel: string;
-  onUseNumbers?: (inputs: MaddenInputs) => void;
-}) {
-  const exportText = formatMaddenExport({
-    playerName,
-    position,
-    teamAbbr,
-    optionLabel,
-    inputs,
-  });
-
+function ComparableRow({ row }: { row: MarketComparable }) {
+  const posName = row.playerName ?? row.role;
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <CardTitle className="text-base">{title}</CardTitle>
-            <p className="text-sm text-[var(--muted-foreground)]">{subtitle}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant={badgeVariant}>{badge}</Badge>
-            <CopyButton text={exportText} />
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <MaddenFields inputs={inputs} />
-        <p className="font-mono text-xs text-[var(--muted-foreground)]">
-          {formatMaddenOneLiner(inputs)} · {formatMillions(inputs.effectiveApy)} APY
+    <div
+      className={cn(
+        "flex flex-wrap items-center justify-between gap-2 rounded-xl border px-3 py-2.5",
+        row.selected
+          ? "border-[color-mix(in_srgb,var(--primary)_50%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_10%,transparent)]"
+          : "border-[var(--border)] bg-[var(--muted)]/20"
+      )}
+    >
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">
+          {posName}
+          {row.playerName ? (
+            <span className="ml-2 text-xs font-medium text-[var(--muted-foreground)]">
+              {row.role}
+            </span>
+          ) : null}
         </p>
-        {onUseNumbers ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onUseNumbers(inputs)}
-          >
-            Fill as-signed with these numbers
-          </Button>
-        ) : null}
-      </CardContent>
-    </Card>
+        <p className="text-xs text-[var(--muted-foreground)]">{row.bandLabel}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <p className="font-mono text-sm font-semibold">
+          {formatMillions(row.apy)} APY
+          <span className="ml-2 text-xs font-medium text-[var(--muted-foreground)]">
+            · {row.typicalLengthYears} yr typical
+          </span>
+        </p>
+        {row.selected ? <Badge variant="elite">Used for this player</Badge> : null}
+      </div>
+    </div>
   );
 }
