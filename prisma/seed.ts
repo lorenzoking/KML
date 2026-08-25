@@ -12,6 +12,7 @@ import {
 } from "@/generated/prisma/client";
 import { prisma } from "../src/lib/prisma";
 import { NFL_2026_GAMES } from "../src/lib/nfl-schedule-2026";
+import { DEFAULT_CONTRACT_RULES, DEFAULT_MARKET_COMPS } from "../src/lib/contracts/defaults";
 
 const NFL_TEAMS = [
   { name: "Arizona Cardinals", abbreviation: "ARI", city: "Arizona", conference: "NFC", division: "West", primaryColor: "#97233F", sortOrder: 1 },
@@ -105,6 +106,9 @@ async function main() {
     "ALLOW_DB_RESET=true — wiping app tables (Supabase Auth users are NOT deleted)."
   );
 
+  await prisma.playerContractSigning.deleteMany();
+  await prisma.positionMarketComp.deleteMany();
+  await prisma.contractRuleSetting.deleteMany();
   await prisma.carouselApplication.deleteMany();
   await prisma.carouselVacancy.deleteMany();
   await prisma.waitlistEntry.deleteMany();
@@ -155,6 +159,13 @@ async function main() {
       carouselOpen: true,
       rulesMarkdown: DEFAULT_RULES,
     },
+  });
+
+  await prisma.contractRuleSetting.create({
+    data: { key: "default", ...DEFAULT_CONTRACT_RULES },
+  });
+  await prisma.positionMarketComp.createMany({
+    data: DEFAULT_MARKET_COMPS,
   });
 
   const commissioner = await prisma.user.create({

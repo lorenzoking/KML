@@ -144,6 +144,7 @@ model User {
   storyReactions        StoryReaction[]        @relation("StoryReactionUser")
   storyComments         StoryComment[]         @relation("StoryCommentUser")
   auditLogs             AuditLog[]
+  contractSigningsSubmitted PlayerContractSigning[] @relation("ContractSigningSubmitter")
   requestedFranchise    Franchise?             @relation("UserRequestedFranchise", fields: [requestedFranchiseId], references: [id], onDelete: SetNull)
 
   @@index([requestedFranchiseId])
@@ -176,6 +177,7 @@ model Franchise {
   storyPollOptions              StoryPollOption[]
   scheduledHome                 ScheduledGame[]       @relation("ScheduledHome")
   scheduledAway                 ScheduledGame[]       @relation("ScheduledAway")
+  contractSignings              PlayerContractSigning[]
 }
 
 model Season {
@@ -197,6 +199,7 @@ model Season {
   carouselApplications  CarouselApplication[]
   stories               LeagueStory[]
   scheduledGames        ScheduledGame[]
+  contractSignings      PlayerContractSigning[]
 }
 
 model ScheduledGame {
@@ -672,4 +675,119 @@ model AuditLog {
 
   @@index([createdAt])
   @@index([entityType, entityId])
+}
+
+enum ContractPosition {
+  QB
+  RB
+  WR
+  TE
+  OL
+  EDGE
+  DL
+  LB
+  CB
+  S
+  K
+  P
+}
+
+enum ContractPlayerTier {
+  ELITE
+  STARTER
+  DEPTH
+}
+
+enum ContractPenaltyTier {
+  NONE
+  MINOR
+  MODERATE
+  SEVERE
+}
+
+enum ContractSigningStatus {
+  LOGGED
+  APPLIED
+  VOIDED
+}
+
+enum SeverePenaltyResolution {
+  PENDING
+  VOID_SIGNING
+  /// Keep the player at a >= market APY premium. Legacy enum name — never a discount.
+  STEEP_BELOW_MARKET
+}
+
+model ContractRuleSetting {
+  id                         String                   @id @default(cuid())
+  key                        String                   @unique @default("default")
+  maxContractLength          Int                      @default(6)
+  minContractLength          Int                      @default(2)
+  maxTotalSalaryMillions     Float                    @default(200)
+  maxSigningBonusMillions    Float                    @default(250)
+  longContractYears          Int                      @default(7)
+  overpayNoneMax             Float                    @default(1.15)
+  overpayMinorMax            Float                    @default(1.50)
+  overpayModerateMax         Float                    @default(2.00)
+  /// Floor 1.00 — a cheaper contract is not a penalty (star + extra cap).
+  moderateMarketMultiplier   Float                    @default(1.00)
+  /// Floor 1.00. Values above 1.00 are an APY premium if the player is kept.
+  severeMarketMultiplier     Float                    @default(1.15)
+  capPenaltyPercentOfOverage Float                    @default(25)
+  rookieScaleFallbackRatio   Float                    @default(0.35)
+  depthMarketRatio           Float                    @default(0.55)
+  defaultSevereResolution    SeverePenaltyResolution  @default(PENDING)
+  updatedAt                  DateTime                 @updatedAt
+}
+
+/// Spotrac-style positional comps, pasted in by the commissioner (no public API).
+model PositionMarketComp {
+  id                 String            @id @default(cuid())
+  position           ContractPosition  @unique
+  marketSetterName   String?
+  topOfMarketApy     Float
+  starterFloorApy    Float
+  typicalBonusRatio  Float
+  typicalLengthYears Int
+  guaranteePercent   Float?
+  sourceNote         String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+}
+
+model PlayerContractSigning {
+  id                   String                    @id @default(cuid())
+  seasonId             String
+  franchiseId          String
+  submittedById        String
+  playerName           String
+  position             ContractPosition
+  playerTier           ContractPlayerTier        @default(STARTER)
+  yearsRemaining       Int                       @default(0)
+  remainingDealApy     Float?
+  asSignedLength       Int
+  asSignedTotalSalary  Float
+  asSignedSigningBonus Float
+  asSignedApy          Float
+  marketApy            Float
+  overpayRatio         Float
+  penaltyTier          ContractPenaltyTier
+  longContractFlag     Boolean                   @default(false)
+  recommendedOption    String
+  snapshot             Json
+  status               ContractSigningStatus     @default(LOGGED)
+  severeResolution     SeverePenaltyResolution   @default(PENDING)
+  commissionerNote     String?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
+  season      Season    @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  franchise   Franchise @relation(fields: [franchiseId], references: [id])
+  submittedBy User      @relation("ContractSigningSubmitter", fields: [submittedById], references: [id], onDelete: Cascade)
+
+  @@index([seasonId, overpayRatio])
+  @@index([seasonId, penaltyTier])
+  @@index([franchiseId])
+  @@index([createdAt])
+  @@index([seasonId, playerName])
 }

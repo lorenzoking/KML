@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { CalendarDays, ClipboardCheck, Flag, ListOrdered, Send, Shirt, Star, Trophy, User, UserRound, Vote } from "lucide-react";
+import { CalendarDays, ClipboardCheck, FileSignature, Flag, ListOrdered, Send, Shirt, Star, Trophy, User, UserRound, Vote } from "lucide-react";
 import { CoachAvatar } from "@/components/coach/coach-avatar";
 import { JobStatusBadge } from "@/components/coach/job-status-badge";
 import { Group, GroupRow, HomeSection, Shortcut } from "@/components/dashboard/ios";
@@ -541,7 +541,7 @@ export default async function DashboardPage({
         )}
       </HomeSection>
 
-      <nav className="stagger grid grid-cols-4 gap-1 px-1">
+      <nav className="stagger grid grid-cols-4 gap-1 px-1 sm:grid-cols-5">
         <Shortcut href="/games?tab=week" label="Games" icon={Trophy} tone="gold" />
         <Shortcut
           href={
@@ -559,6 +559,7 @@ export default async function DashboardPage({
           icon={ListOrdered}
           tone="soft"
         />
+        <Shortcut href="/contracts" label="Contracts" icon={FileSignature} tone="gold" />
         {membership ? (
           <Shortcut
             href={`/coach/profiles/${user.id}`}

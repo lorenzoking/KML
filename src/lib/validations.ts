@@ -342,3 +342,88 @@ export const createLeagueStorySchema = z.object({
 export const updateLeagueStorySchema = createLeagueStorySchema.extend({
   storyId: z.string().min(1),
 });
+
+const contractPosition = z.enum([
+  "QB",
+  "RB",
+  "WR",
+  "TE",
+  "OL",
+  "EDGE",
+  "DL",
+  "LB",
+  "CB",
+  "S",
+  "K",
+  "P",
+]);
+
+const optionalMillions = z.preprocess(
+  (value) => (value === "" || value == null ? undefined : value),
+  z.coerce.number().min(0).max(600).optional()
+);
+
+export const logContractSigningSchema = z.object({
+  playerName: z.string().trim().min(2, "Player name is required").max(80),
+  position: contractPosition,
+  playerTier: z.enum(["ELITE", "STARTER", "DEPTH"]),
+  yearsRemaining: z.coerce.number().int().min(0).max(10).default(0),
+  remainingDealApy: optionalMillions,
+  asSignedLength: z.coerce.number().int().min(1).max(10),
+  asSignedTotalSalary: z.coerce.number().min(0).max(600),
+  asSignedSigningBonus: z.coerce.number().min(0).max(600),
+  franchiseId: z.string().min(1, "Pick the signing team"),
+  notes: z.string().trim().max(500).optional().or(z.literal("")),
+});
+
+export const updateContractRulesSchema = z.object({
+  maxContractLength: z.coerce.number().int().min(3).max(8),
+  minContractLength: z.coerce.number().int().min(1).max(5),
+  maxTotalSalaryMillions: z.coerce.number().min(50).max(300),
+  maxSigningBonusMillions: z.coerce.number().min(50).max(400),
+  longContractYears: z.coerce.number().int().min(5).max(10),
+  overpayNoneMax: z.coerce.number().min(1).max(2),
+  overpayMinorMax: z.coerce.number().min(1.1).max(3),
+  overpayModerateMax: z.coerce.number().min(1.2).max(5),
+  moderateMarketMultiplier: z.coerce
+    .number()
+    .min(1, "Moderate APY must be 1.00× market or higher — cheaper is extra cap, not a penalty")
+    .max(1.5),
+  severeMarketMultiplier: z.coerce
+    .number()
+    .min(1, "Severe keep-player APY must be 1.00× market or higher — cheaper is extra cap, not a penalty")
+    .max(2),
+  capPenaltyPercentOfOverage: z.coerce.number().min(0).max(100),
+  rookieScaleFallbackRatio: z.coerce.number().min(0.1).max(1),
+  depthMarketRatio: z.coerce.number().min(0.2).max(1),
+  defaultSevereResolution: z.enum([
+    "PENDING",
+    "VOID_SIGNING",
+    "STEEP_BELOW_MARKET",
+  ]),
+});
+
+export const updatePositionCompSchema = z.object({
+  position: contractPosition,
+  marketSetterName: z.string().trim().max(80).optional().or(z.literal("")),
+  topOfMarketApy: z.coerce.number().min(0).max(100),
+  starterFloorApy: z.coerce.number().min(0).max(80),
+  typicalBonusPercent: z.coerce.number().min(0).max(100),
+  typicalLengthYears: z.coerce.number().int().min(1).max(8),
+  guaranteePercent: z.preprocess(
+    (value) => (value === "" || value == null ? undefined : value),
+    z.coerce.number().min(0).max(100).optional()
+  ),
+  sourceNote: z.string().trim().max(240).optional().or(z.literal("")),
+});
+
+export const contractSigningIdSchema = z.object({
+  signingId: z.string().min(1),
+  commissionerNote: z.string().trim().max(500).optional().or(z.literal("")),
+});
+
+export const resolveSevereSigningSchema = z.object({
+  signingId: z.string().min(1),
+  resolution: z.enum(["VOID_SIGNING", "STEEP_BELOW_MARKET"]),
+  commissionerNote: z.string().trim().max(500).optional().or(z.literal("")),
+});
