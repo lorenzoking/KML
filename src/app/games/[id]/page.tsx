@@ -147,7 +147,10 @@ export default async function GameDetailPage({
           {game.filedByCommissioner ? (
             <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
               Commissioner filed this result. It counts for standings and
-              Coaching Reputation. Coaches did not earn XP.
+              Coaching Reputation.
+              {game.skipXp
+                ? " Coaches did not earn XP."
+                : " Coaches earned XP as if they had submitted."}
             </p>
           ) : null}
           {game.notes ? (

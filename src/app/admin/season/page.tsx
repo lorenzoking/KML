@@ -113,8 +113,8 @@ export default async function AdminSeasonPage() {
           <CardDescription>
             2026 NFL regular-season slate through week {settings.currentWeek}.
             Advance even if games are still open — they stay on this list until
-            someone files a result. File a missing score here; coaches do not
-            earn XP.
+            someone files a result. File a missing score here and choose whether
+            coaches earn XP.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

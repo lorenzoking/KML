@@ -61,8 +61,8 @@ export default async function ApprovalsPage() {
           XP based on the reason: both coaches if the game cut out, or only the
           available coach if the opponent could not play. The CPU score can wait
           until after the week advances. If the desk has to file a
-          score for coaches, use the form below — reputation still applies, XP
-          does not. Primetime is taken from the checkbox or the official
+          score for coaches, use the form below — reputation still applies, and
+          you choose whether coaches get XP. Primetime is taken from the checkbox or the official
           Primetime poll slate.
         </p>
       </div>
@@ -71,8 +71,8 @@ export default async function ApprovalsPage() {
         <CardHeader>
           <CardTitle>File a result for coaches</CardTitle>
           <CardDescription>
-            Posts immediately. Coaches do not earn XP. Coaching Reputation and
-            standings still count.
+            Posts immediately. Choose whether coaches earn XP. Coaching
+            Reputation and standings still count.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -224,9 +224,11 @@ export default async function ApprovalsPage() {
                         ? s.forceWinReason === "GAME_CUT_OUT"
                           ? " · both coaches play XP"
                           : " · play XP for available coach"
-                        : s.skipXp || s.filedByCommissioner
+                        : s.skipXp || s.gameType === "SIMULATED"
                           ? " · no XP"
-                          : ""}
+                          : s.filedByCommissioner
+                            ? " · XP awarded"
+                            : ""}
                       {s.decisionNote ? ` · ${s.decisionNote}` : ""}
                     </p>
                   </div>

@@ -25,6 +25,7 @@ export function CommissionerFileMissingGameForm({
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [awardXp, setAwardXp] = useState(false);
   const [pending, startTransition] = useTransition();
 
   return (
@@ -50,7 +51,11 @@ export function CommissionerFileMissingGameForm({
       <input
         type="hidden"
         name="notes"
-        value="Commissioner filed a missing scheduled game — no XP awarded."
+        value={
+          awardXp
+            ? "Commissioner filed a missing scheduled game. XP awarded."
+            : "Commissioner filed a missing scheduled game — no XP awarded."
+        }
       />
 
       <div className="flex flex-wrap items-end gap-2">
@@ -80,14 +85,29 @@ export function CommissionerFileMissingGameForm({
           />
         </label>
         <SubmitButton size="sm" disabled={pending} pendingText="Posting...">
-          Post (no XP)
+          {awardXp ? "Post (with XP)" : "Post (no XP)"}
         </SubmitButton>
       </div>
+      <label className="flex items-start gap-2 text-xs text-[var(--muted-foreground)]">
+        <input
+          type="checkbox"
+          name="awardXp"
+          value="true"
+          checked={awardXp}
+          onChange={(event) => setAwardXp(event.target.checked)}
+          className="mt-0.5 h-3.5 w-3.5"
+        />
+        <span>
+          Award XP — both coaches get game-played XP; the winner gets the win
+          bonus.
+        </span>
+      </label>
       {error ? (
         <p className="text-xs text-rose-300">{error}</p>
       ) : (
         <p className="text-[11px] text-[var(--muted-foreground)]">
-          Posts immediately. Counts for standings and reputation, not XP.
+          Posts immediately. Counts for standings and reputation
+          {awardXp ? ", and coach XP." : ". Leave XP unchecked if they should not earn it."}
         </p>
       )}
     </form>

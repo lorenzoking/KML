@@ -25,6 +25,7 @@ export function CommissionerFileGameForm({
 }) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [awardXp, setAwardXp] = useState(false);
   const [pending, startTransition] = useTransition();
 
   return (
@@ -36,14 +37,22 @@ export function CommissionerFileGameForm({
         startTransition(async () => {
           const result = await commissionerFileGame(formData);
           if (result?.error) setError(result.error);
-          else setSuccess("Result posted. Standings and reputation updated; no XP awarded.");
+          else {
+            setSuccess(
+              awardXp
+                ? "Result posted. Standings, reputation, and coach XP updated."
+                : "Result posted. Standings and reputation updated; no XP awarded."
+            );
+            setAwardXp(false);
+          }
         });
       }}
     >
       <p className="text-sm text-[var(--muted-foreground)]">
         Use this when coaches did not submit and the desk has to post the score.
-        The game still counts for standings and Coaching Reputation. Coaches do
-        not earn XP.
+        The game still counts for standings and Coaching Reputation. Check Award
+        XP if both coaches should get game-played XP and the winner should get
+        the win bonus.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -199,6 +208,26 @@ export function CommissionerFileGameForm({
         </label>
       </div>
 
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 px-3 py-3">
+        <label className="flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            name="awardXp"
+            value="true"
+            checked={awardXp}
+            onChange={(event) => setAwardXp(event.target.checked)}
+            className="mt-1 h-4 w-4"
+          />
+          <span>
+            <span className="font-semibold">Award coach XP</span>
+            <span className="mt-0.5 block text-xs text-[var(--muted-foreground)]">
+              Both coaches get game-played XP. The winner also gets the win bonus.
+              Leave unchecked if they should not earn XP for this filing.
+            </span>
+          </span>
+        </label>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="file-notes">Notes</Label>
         <Textarea
@@ -218,7 +247,7 @@ export function CommissionerFileGameForm({
       ) : null}
 
       <SubmitButton disabled={pending} pendingText="Posting...">
-        Post result (no XP)
+        {awardXp ? "Post result (with XP)" : "Post result (no XP)"}
       </SubmitButton>
     </form>
   );

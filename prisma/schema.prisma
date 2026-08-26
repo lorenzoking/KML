@@ -297,7 +297,7 @@ model GameSubmission {
   /// Official KML Primetime window (desk slate or submitter-marked).
   isPrimetime    Boolean          @default(false)
   /// Commissioner filed this result for the coaches. Still counts for standings
-  /// and Coaching Reputation, but does not award coach XP.
+  /// and Coaching Reputation. skipXp is the commissioner’s XP choice.
   skipXp               Boolean @default(false)
   filedByCommissioner  Boolean @default(false)
   status         SubmissionStatus @default(PENDING)

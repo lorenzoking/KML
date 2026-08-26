@@ -4,7 +4,7 @@ export function sumXp(adjustments: { amount: number }[]) {
 
 export function awardsCoachXp(gameType: string, skipXp = false) {
   // Simulated (CPU) results count for standings only — never coach XP.
-  // Commissioner-filed results still count for standings/reputation, but not XP.
+  // Commissioner-filed results skip XP unless the desk opts in.
   if (skipXp) return false;
   return gameType !== "SIMULATED";
 }

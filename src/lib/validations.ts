@@ -122,6 +122,7 @@ export const commissionerFileGameSchema = z
     opponentSimScore: z.coerce.number().int().min(1).max(5).default(3),
     userTeamSimScore: z.coerce.number().int().min(1).max(5).optional(),
     isPrimetime: z.coerce.boolean().default(false),
+    awardXp: z.coerce.boolean().default(false),
     notes: z.string().max(500).optional(),
   })
   .refine((data) => data.userTeamId !== data.opponentTeamId, {

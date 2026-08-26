@@ -289,6 +289,7 @@ export async function commissionerFileGame(formData: FormData) {
     opponentSimScore: formData.get("opponentSimScore") || 3,
     userTeamSimScore: formData.get("userTeamSimScore") || undefined,
     isPrimetime: formData.get("isPrimetime") === "true",
+    awardXp: formData.get("awardXp") === "true",
     notes: formData.get("notes") || undefined,
   });
 
@@ -341,7 +342,11 @@ export async function commissionerFileGame(formData: FormData) {
 
   const notes =
     data.notes?.trim() ||
-    "Commissioner filed — coaches did not submit, no XP awarded.";
+    (data.awardXp
+      ? "Commissioner filed — coaches did not submit. XP awarded."
+      : "Commissioner filed — coaches did not submit, no XP awarded.");
+
+  const skipXp = !data.awardXp;
 
   const created = await prisma.gameSubmission.create({
     data: {
@@ -357,7 +362,7 @@ export async function commissionerFileGame(formData: FormData) {
       userTeamSimScore: data.userTeamSimScore ?? null,
       isPrimetime: data.isPrimetime,
       notes,
-      skipXp: true,
+      skipXp,
       filedByCommissioner: true,
       status: SubmissionStatus.PENDING,
     },
@@ -370,7 +375,7 @@ export async function commissionerFileGame(formData: FormData) {
   const { winnerTeamId, isPrimetime, grantXp } = await approvePendingSubmission(
     commissioner.id,
     created,
-    "Commissioner filed — no coach XP"
+    data.awardXp ? "Commissioner filed" : "Commissioner filed — no coach XP"
   );
 
   await writeAuditLog({
@@ -385,7 +390,7 @@ export async function commissionerFileGame(formData: FormData) {
       opponentSimScore: created.opponentSimScore,
       gameType: created.gameType,
       awardsXp: grantXp,
-      skipXp: true,
+      skipXp,
       isPrimetime,
     },
   });
