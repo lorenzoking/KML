@@ -10,6 +10,7 @@ type PulseGame = {
   userTeamId: string;
   opponentTeamId: string;
   isForceWin?: boolean;
+  forceWinReason?: string | null;
   userTeam: { abbreviation: string; name: string };
   opponentTeam: { abbreviation: string; name: string };
 };
@@ -115,11 +116,16 @@ function buildHeadline(
     const them = theTeam(opponent.name);
 
     if (input.weekGame.isForceWin) {
+      const bothXp = input.weekGame.forceWinReason === "GAME_CUT_OUT";
       if (input.weekGame.status === "PENDING") {
-        return `I saw your Week ${week} force win claim against ${them}. I’m waiting for the desk to make it official.`;
+        return bothXp
+          ? `I saw your Week ${week} force win claim against ${them} after the game cut out. I’m waiting for the desk to make it official.`
+          : `I saw your Week ${week} force win claim against ${them}. I’m waiting for the desk to make it official.`;
       }
       if (myScore == null || theirScore == null) {
-        return `Week ${week} is a force win against ${them}. Post the simulated score after the league advances — you’ll already get game-played XP.`;
+        return bothXp
+          ? `Week ${week} is a force win against ${them} after the game cut out. Post the simulated score after the league advances — both coaches already get game-played XP.`
+          : `Week ${week} is a force win against ${them}. Post the simulated score after the league advances — you’ll already get game-played XP.`;
       }
       return `Week ${week} was a force win against ${them}. The sim score is in (${myScore}–${theirScore}) for standings only.`;
     }

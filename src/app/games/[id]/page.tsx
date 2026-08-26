@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getSessionUser, isCommissioner } from "@/lib/auth";
-import { GAME_TYPE_LABELS } from "@/lib/constants";
+import { GAME_TYPE_LABELS, forceWinReasonLabel, forceWinXpBlurb } from "@/lib/constants";
 import { formatMatchupScore, hasFinalScores } from "@/lib/game-score";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
@@ -110,9 +110,14 @@ export default async function GameDetailPage({
           <CardDescription>
             {GAME_TYPE_LABELS[game.gameType]}
             {game.isForceWin ? " · Force win" : ""}
+            {game.isForceWin && forceWinReasonLabel(game.forceWinReason)
+              ? ` · ${forceWinReasonLabel(game.forceWinReason)}`
+              : ""}
             {game.isPrimetime ? " · Primetime" : ""}
             {game.isForceWin
-              ? " · play XP only"
+              ? game.forceWinReason === "GAME_CUT_OUT"
+                ? " · both coaches play XP"
+                : " · play XP for available coach"
               : game.skipXp || game.gameType === "SIMULATED"
                 ? " · no XP"
                 : ""}
@@ -126,10 +131,13 @@ export default async function GameDetailPage({
           </p>
           {game.isForceWin ? (
             <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
-              Force win: {game.userTeam.abbreviation} was available and the
-              opponent could not play. The available coach gets game-played XP
-              after approval. The CPU score, once posted, counts in standings
-              only — no win bonus and no Sim Score.
+              {forceWinXpBlurb(
+                game.forceWinReason,
+                game.userTeam.abbreviation,
+                game.opponentTeam.abbreviation
+              )}{" "}
+              The CPU score, once posted, counts in standings only — no win bonus
+              and no Sim Score.
             </p>
           ) : (
             <p className="text-[var(--muted-foreground)]">

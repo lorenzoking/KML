@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { SubmissionStatus, type GameType } from "@/generated/prisma/client";
+import { SubmissionStatus, type ForceWinReason, type GameType } from "@/generated/prisma/client";
 import { requireCommissioner } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason, getLeagueSettings } from "@/lib/league";
@@ -10,7 +10,7 @@ import {
   commissionerFileGameSchema,
 } from "@/lib/validations";
 import { writeAuditLog } from "@/lib/audit";
-import { awardsCoachXp, xpFromApprovedGame } from "@/lib/xp";
+import { awardsCoachXp, forceWinAwardsOpponentXp, xpFromApprovedGame } from "@/lib/xp";
 import { hasFinalScores } from "@/lib/game-score";
 import {
   applyReputationForApprovedGame,
@@ -30,6 +30,7 @@ type ReviewableSubmission = {
   opponentSimScore: number | null;
   userTeamSimScore: number | null;
   isForceWin: boolean;
+  forceWinReason: ForceWinReason | null;
   isPrimetime: boolean;
   skipXp: boolean;
   userTeam: { id: string; name: string; abbreviation: string };
@@ -104,6 +105,7 @@ async function approvePendingSubmission(
         won,
         gameType: submission.gameType,
         isForceWin: submission.isForceWin,
+        forceWinReason: submission.forceWinReason,
       });
 
       for (const entry of xpEntries) {
@@ -121,15 +123,19 @@ async function approvePendingSubmission(
         });
       }
 
-      const opponentMembership = submission.isForceWin
-        ? null
-        : await tx.leagueMembership.findFirst({
+      const awardOpponentXp =
+        !submission.isForceWin ||
+        forceWinAwardsOpponentXp(submission.forceWinReason);
+
+      const opponentMembership = awardOpponentXp
+        ? await tx.leagueMembership.findFirst({
             where: {
               franchiseId: submission.opponentTeamId,
               seasonId: submission.seasonId,
               isActive: true,
             },
-          });
+          })
+        : null;
 
       if (opponentMembership) {
         const oppXp = xpFromApprovedGame({
@@ -137,6 +143,8 @@ async function approvePendingSubmission(
           xpWinBonus: settings.xpWinBonus,
           won: lost,
           gameType: submission.gameType,
+          isForceWin: submission.isForceWin,
+          forceWinReason: submission.forceWinReason,
         });
         for (const entry of oppXp) {
           await tx.xPAdjustment.create({
@@ -257,6 +265,7 @@ export async function reviewSubmission(formData: FormData) {
       awardsXp: grantXp,
       skipXp: submission.skipXp,
       isForceWin: submission.isForceWin,
+      forceWinReason: submission.forceWinReason,
       isPrimetime,
     },
   });

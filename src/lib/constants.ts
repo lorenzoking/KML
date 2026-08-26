@@ -28,3 +28,43 @@ export const STATUS_LABELS: Record<string, string> = {
   REJECTED: "Rejected",
   VOIDED: "Voided",
 };
+
+export const FORCE_WIN_REASONS = [
+  "GAME_CUT_OUT",
+  "OPPONENT_UNAVAILABLE",
+] as const;
+
+export type ForceWinReasonCode = (typeof FORCE_WIN_REASONS)[number];
+
+export const FORCE_WIN_REASON_LABELS: Record<ForceWinReasonCode, string> = {
+  GAME_CUT_OUT: "The game cut out",
+  OPPONENT_UNAVAILABLE: "Opponent said they can’t play",
+};
+
+export const FORCE_WIN_REASON_XP_HINTS: Record<ForceWinReasonCode, string> = {
+  GAME_CUT_OUT: "Both coaches get game-played XP after approval. No win bonus.",
+  OPPONENT_UNAVAILABLE:
+    "Only you get game-played XP after approval. The opponent does not. No win bonus.",
+};
+
+export function forceWinReasonLabel(reason: string | null | undefined) {
+  if (reason === "GAME_CUT_OUT" || reason === "OPPONENT_UNAVAILABLE") {
+    return FORCE_WIN_REASON_LABELS[reason];
+  }
+  return null;
+}
+
+export function forceWinXpBlurb(
+  reason: ForceWinReasonCode | string | null | undefined,
+  userAbbr?: string,
+  oppAbbr?: string
+) {
+  if (reason === "GAME_CUT_OUT") {
+    return userAbbr && oppAbbr
+      ? `Game cut out. Both ${userAbbr} and ${oppAbbr} get game-played XP.`
+      : "Game cut out. Both coaches get game-played XP.";
+  }
+  return userAbbr
+    ? `Opponent could not play. Only ${userAbbr} gets game-played XP.`
+    : "Opponent could not play. Only the available coach gets game-played XP.";
+}

@@ -27,16 +27,17 @@ export const gameSubmissionSchema = z
     opponentScore: optionalScore,
     opponentSimScore: optionalSimScore,
     isForceWin: z.coerce.boolean().default(false),
+    forceWinReason: z.enum(["GAME_CUT_OUT", "OPPONENT_UNAVAILABLE"]).optional(),
     isPrimetime: z.coerce.boolean().default(false),
     notes: z.string().max(500).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.isForceWin) {
-      if (!data.notes?.trim()) {
+      if (!data.forceWinReason) {
         ctx.addIssue({
           code: "custom",
-          message: "Add a note explaining why the opponent could not play.",
-          path: ["notes"],
+          message: "Pick why you received the force win.",
+          path: ["forceWinReason"],
         });
       }
       if (

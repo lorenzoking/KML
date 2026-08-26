@@ -28,6 +28,11 @@ enum SubmissionStatus {
   VOIDED
 }
 
+enum ForceWinReason {
+  GAME_CUT_OUT
+  OPPONENT_UNAVAILABLE
+}
+
 enum SeasonStatus {
   ACTIVE
   ARCHIVED
@@ -282,8 +287,10 @@ model GameSubmission {
   opponentScore  Int?
   /// Madden/KML realism rating for the opponent's play (1–5), reported by the submitter. Scores ≤2 feed Bad Sim rules for that opponent. Null on force wins — nobody played.
   opponentSimScore Int?
-  /// Submitter was available and received a force win because the opponent could not play.
+  /// Submitter was available and received a force win.
   isForceWin     Boolean          @default(false)
+  /// Why the force win was claimed. GAME_CUT_OUT awards game-played XP to both coaches.
+  forceWinReason ForceWinReason?
   /// Sim Score the opponent coach gave the submitting team (1–5). Null until that coach submits.
   userTeamSimScore Int?
   notes          String?

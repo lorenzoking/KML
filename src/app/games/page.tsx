@@ -415,14 +415,15 @@ export default async function GamesPage({
                 <CardTitle>Submit result</CardTitle>
                 <CardDescription>
                   Season {settings.currentSeason} · Week {settings.currentWeek}. If
-                  your opponent could not play, mark a force win instead of a score.
+                  the game cut out or your opponent could not play, mark a force
+                  win and pick the reason.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {!user ? (
                   <EmptyState
                     title="Sign in to submit"
-                    description="Coaches submit scores after their game, or a force win if the opponent could not play. Commissioners approve before they count."
+                    description="Coaches submit scores after their game, or a force win if the game cut out or the opponent could not play. Commissioners approve before they count."
                   />
                 ) : !user.isActive ? (
                   <EmptyState title="Account inactive" />

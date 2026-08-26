@@ -7,6 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { SubmitButton } from "@/components/forms/submit-button";
+import {
+  FORCE_WIN_REASON_LABELS,
+  FORCE_WIN_REASON_XP_HINTS,
+  FORCE_WIN_REASONS,
+} from "@/lib/constants";
 
 type FranchiseOption = {
   id: string;
@@ -36,6 +41,9 @@ export function SubmissionForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [forceWin, setForceWin] = useState(false);
+  const [forceWinReason, setForceWinReason] = useState<
+    "" | "GAME_CUT_OUT" | "OPPONENT_UNAVAILABLE"
+  >("");
   const [pending, startTransition] = useTransition();
 
   return (
@@ -50,10 +58,13 @@ export function SubmissionForm({
           else {
             setSuccess(
               forceWin
-                ? "Force win submitted. You’ll get game-played XP after approval. Add the simulated score after the week advances."
+                ? forceWinReason === "GAME_CUT_OUT"
+                  ? "Force win submitted. Both coaches get game-played XP after approval. Add the simulated score after the week advances."
+                  : "Force win submitted. You’ll get game-played XP after approval; the opponent will not. Add the simulated score after the week advances."
                 : "Submission saved as pending."
             );
             setForceWin(false);
+            setForceWinReason("");
           }
         });
       }}
@@ -138,20 +149,52 @@ export function SubmissionForm({
             name="isForceWin"
             value="true"
             checked={forceWin}
-            onChange={(event) => setForceWin(event.target.checked)}
+            onChange={(event) => {
+              setForceWin(event.target.checked);
+              if (!event.target.checked) setForceWinReason("");
+            }}
             className="mt-1 h-4 w-4"
           />
           <span>
             <span className="font-semibold">I received a force win</span>
             <span className="mt-0.5 block text-xs text-[var(--muted-foreground)]">
-              Use this when the opponent could not play and awarded you the game.
-              The simulated score is posted after the week advances. You get
-              game-played XP for being available — not win-bonus XP, and not XP
-              from the CPU score.
+              Use this when the game did not finish as a normal user game. The
+              simulated score is posted after the week advances. Force wins never
+              award win-bonus XP.
             </span>
           </span>
         </label>
       </div>
+
+      {forceWin ? (
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium">Why did you get the force win?</legend>
+          <div className="space-y-2">
+            {FORCE_WIN_REASONS.map((reason) => (
+              <label
+                key={reason}
+                className="flex items-start gap-3 rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 px-3 py-3 text-sm"
+              >
+                <input
+                  type="radio"
+                  name="forceWinReason"
+                  value={reason}
+                  checked={forceWinReason === reason}
+                  onChange={() => setForceWinReason(reason)}
+                  required
+                  className="mt-1 h-4 w-4"
+                />
+                <span>
+                  <span className="font-semibold">{FORCE_WIN_REASON_LABELS[reason]}</span>
+                  <span className="mt-0.5 block text-xs text-[var(--muted-foreground)]">
+                    {FORCE_WIN_REASON_XP_HINTS[reason]}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
 
       {forceWin ? null : (
         <>
@@ -213,14 +256,17 @@ export function SubmissionForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="notes">Notes{forceWin ? " (required)" : ""}</Label>
+        <Label htmlFor="notes">Notes{forceWin ? " (optional)" : ""}</Label>
         <Textarea
           id="notes"
           name="notes"
-          required={forceWin}
           placeholder={
             forceWin
-              ? "Who couldn’t play, and how the force win was agreed"
+              ? forceWinReason === "GAME_CUT_OUT"
+                ? "Optional: when it dropped and any proof for commissioners"
+                : forceWinReason === "OPPONENT_UNAVAILABLE"
+                  ? "Optional: who said they couldn’t play, and how it was agreed"
+                  : "Optional context for commissioners"
               : "Optional context for commissioners"
           }
         />
