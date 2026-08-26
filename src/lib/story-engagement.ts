@@ -224,6 +224,41 @@ const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
       },
     ],
   },
+  {
+    storySlug: "season-1-week-5-primetime",
+    key: "week-5-primetime",
+    title: "Week 5 Primetime lock-in",
+    questions: [
+      {
+        prompt: "Game of the Week — Lions vs Cardinals",
+        options: [
+          { label: "Curry · Lions", franchiseAbbr: "DET" },
+          { label: "Dooders · Cardinals", franchiseAbbr: "ARI" },
+        ],
+      },
+      {
+        prompt: "Divisional battle — Packers vs Bears",
+        options: [
+          { label: "Chance · Packers", franchiseAbbr: "GB" },
+          { label: "Jaylen Stowe · Bears", franchiseAbbr: "CHI" },
+        ],
+      },
+      {
+        prompt: "Buccaneers vs Cowboys",
+        options: [
+          { label: "Swagg · Buccaneers", franchiseAbbr: "TB" },
+          { label: "Javon · Cowboys", franchiseAbbr: "DAL" },
+        ],
+      },
+      {
+        prompt: "Colts vs Steelers",
+        options: [
+          { label: "Quon · Colts", franchiseAbbr: "IND" },
+          { label: "Big Al · Steelers", franchiseAbbr: "PIT" },
+        ],
+      },
+    ],
+  },
 ];
 
 function isMissingEngagementTable(error: unknown) {

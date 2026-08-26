@@ -24,6 +24,8 @@ const STORY_ASSETS = {
   week3Primetime: "/stories/wk3/primetime.png",
   week3Potw: "/stories/wk3/potw.png",
   week4Primetime: "/stories/wk4/primetime.png",
+  week4Potw: "/stories/wk4/potw.png",
+  week5Primetime: "/stories/wk5/primetime.png",
 } as const;
 
 const DEFAULT_STORIES = [
@@ -904,9 +906,145 @@ Lock your picks. Submit the scores. Let the desk argue.
 One league. All eyes. Every week.
 
 Compete. Conquer. Be legendary.`,
-    isFeatured: true,
+    isFeatured: false,
     sortOrder: -60,
     week: 4,
+  },
+  {
+    slug: "season-1-week-5-primetime",
+    category: StoryCategory.GAME_OF_WEEK,
+    title: "KML Primetime Week 5: four massive matchups, one statement week",
+    eyebrow: "Games of the week · Primetime slate",
+    summary:
+      "Curry’s 4–0 Lions are the Game of the Week against Dooders. Chance and Jaylen Stowe collide at 3–1. Swagg draws Javon. Big Al and Quon meet at .500. Anybody can win. Legends are made in primetime.",
+    body: `![KML Primetime Week 5](${STORY_ASSETS.week5Primetime})
+
+**Anybody can win. But legends are made in primetime. KML.**
+
+Four massive matchups. One statement week. The desk did not pick a Thursday-Sunday-Monday split this time. It picked four games that can change the table.
+
+This is KML. This is primetime. Every game matters.
+
+## Game of the Week — Lions vs Cardinals
+
+**Respect is earned. This game can change everything.**
+
+**Curry’s Lions (87 OVR · 91 OFF)** are **4–0** and running the most explosive offense in the league. They just dropped **56** on Carolina. **Jahmyr Gibbs** went for 163 rushing, 53 receiving, and four total touchdowns. Curry is making a name on a 91 overall attack that does not slow down.
+
+**Dooders’ Cardinals (78 OVR)** are the high-IQ trap on the other sideline. Arizona is not supposed to hang with 4–0 Detroit. That is the point. A 78 overall club with a coach who can steal weeks is how undefeated starts die.
+
+If Curry keeps stacking, the Lions stop being a hot start and start looking like the team to beat. If Dooders knocks off 4–0, the whole league rewrites the board overnight.
+
+## Why this game matters
+
+- **The only 4–0:** Detroit is the last unbeaten. This is the first real scalp hunt
+- **Rating vs IQ:** 91 offense against a 78 overall coach who lives for this spot
+- **Statement week:** a Lions win makes Curry the name. A Cardinals win makes everybody else believe
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Lions** | Curry | **Jared Goff** | **Jahmyr Gibbs** — 216 scrimmage yards and 4 TD is the new baseline | **91 OFF** — the most explosive attack in Madden 27 |
+| **Cardinals** | Dooders | **Kyler Murray** | **Jeremiyah Love** — already on the Week 3 honors board | **the trap** — 78 OVR that only works if Dooders steals it |
+
+## Divisional battle — Packers vs Bears
+
+**3–1 vs 3–1.**
+
+**Chance’s Packers (81 OVR)** just won a primetime nail-biter over **Swagg**, 31–30. **Matthew Golden** had three scores. Chance has been telling the league he’s the best in it. He now has a primetime win to staple to the Love stamp.
+
+**Jaylen Stowe’s Bears (83 OVR · 85 OFF)** are also **3–1**. Cover-athlete juice. Caleb Williams. Jaylon Johnson. The graphic already said it: this may be more of a test for Stowe than for Chance.
+
+NFC North. Same record. One of them leaves 4–1 looking like a contender. The other starts answering questions.
+
+## Why this game matters
+
+- **Division math:** 3–1 vs 3–1 in the same division is January seeding in Week 5
+- **Chance’s primetime:** he just took down Swagg. Can he stack it against Stowe?
+- **The test:** the desk thinks this one sits heavier on Chicago
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Packers** | Chance | **Jordan Love** | **Matthew Golden** — 133 yards and 3 TD in the TNF win | **the primetime hangover** — Chance has to prove 31–30 was not a one-off |
+| **Bears** | Jaylen Stowe | **Caleb Williams** | **Jaylon Johnson** — 90 CB who can take Green Bay’s WR1 out | **Rome Odunze** — the volume WR who makes 85 OFF travel |
+
+## Buccaneers vs Cowboys
+
+**Swagg is coming off the loss. Javon is coming off a heartbreaker.**
+
+**Swagg’s Buccaneers (80 OVR)** were 3–0 until Chance ended it by one. Bucky Irving still has the heater. Tampa is 3–1 and hunting the bounce-back.
+
+**Javon’s Cowboys (83 OVR · 87 OFF)** are **2–2** after a one-score loss to Houston. The graphic already said it: **CeeDee Lamb is returning from injury**. Dak (91) and a 93 overall Lamb is how you assert dominance. Javon has been looking for that stamp since Week 1.
+
+Could this be the night Dallas tells the league the 1–1 start was a mirage?
+
+## Why this game matters
+
+- **Bounce-back vs assertion:** Swagg needs the get-right. Javon needs the statement
+- **CeeDee’s return:** 93 OVR gravity changes the entire Cowboys tree
+- **3–1 vs 2–2:** Tampa can stay in the hunt. Dallas can climb back into it
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Buccaneers** | Swagg | **Baker Mayfield** | **Bucky Irving** — 162 and 3 TD is still the Week 3 stamp | **the 3–1 start** — one loss cannot become two |
+| **Cowboys** | Javon | **Dak Prescott** | **CeeDee Lamb** — back from injury, 93 OVR, the whole offense | **the Houston scar** — a 21–23 loss that has to get answered |
+
+## Colts vs Steelers
+
+**A respected user. Solid history. Still missing a ring.**
+
+**Big Al’s Steelers (81 OVR · 87 DEF)** are **2–2** and rolling after the 0–2 start. Rodgers dropped six in Week 3, then 314 and three more on Cleveland. The 5x champ is off the schneid and back in the conversation.
+
+**Quon’s Colts (82 OVR)** have not had a primetime appearance yet. **Jonathan Taylor** just ran for 137 and three scores. Indianapolis can put the league on notice with one win under the lights.
+
+This is the get-right game for a legend versus the first big-stage night for a coach who has been waiting.
+
+## Why this game matters
+
+- **Big Al’s climb:** 0–2 is gone. 2–2 with Rodgers cooking is a different Steelers club
+- **Quon’s first primetime:** the desk has been waiting to see Indianapolis under the lights
+- **The ring line:** respected user, solid history, still hunting the one thing that travels
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Colts** | Quon | the Colts QB | **Jonathan Taylor** — 137 yards and 3 TD is the Week 4 stamp | **first primetime** — no excuses, no quiet Sunday |
+| **Steelers** | Big Al | **Aaron Rodgers** | **Rodgers’ heater** — six TDs, then 314 more | **T.J. Watt / DK Metcalf** — the 87 DEF and the 2026 skill juice |
+
+## Primetime Week 5 cheat sheet
+
+| Window | Matchup | Coaches | Why it’s on the board |
+| --- | --- | --- | --- |
+| GOTW | Lions–Cardinals | Curry vs Dooders | 4–0 vs the trap. Respect is earned. |
+| Division | Packers–Bears | Chance vs Jaylen Stowe | 3–1 vs 3–1. Test for Stowe. |
+| Bounce-back | Buccaneers–Cowboys | Swagg vs Javon | CeeDee’s back. Somebody asserts. |
+| Lights | Colts–Steelers | Quon vs Big Al | Quon’s first primetime. Big Al rolling. |
+
+## Desk verdict
+
+Week 4 told you **Chance can win a one-score primetime**, **Mease can drop 55**, and **Ji’Ayir Brown can score three times on defense**.
+
+Week 5 asks the loud ones:
+
+- Can Curry’s 4–0 Lions survive Dooders, or does a 78 overall club end the last unbeaten?
+- Is Chance-Stowe a Packers statement, or the test that finally slows Jaylen Stowe down?
+- Does Javon and CeeDee take the 2–2 scar out on Swagg — or does Tampa bounce back?
+- Is this the night Quon puts the league on notice, or does Rodgers keep Big Al climbing?
+
+Lock your picks. Submit the scores. Let the desk argue.
+
+This is KML. This is primetime. Every game matters.
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: true,
+    sortOrder: -70,
+    week: 5,
   },
   {
     slug: "season-1-week-1-preview",
@@ -1211,6 +1349,102 @@ Compete. Conquer. Be legendary.`,
     isFeatured: false,
     sortOrder: -46,
     week: 3,
+  },
+  {
+    slug: "season-1-week-4-players-of-the-week",
+    category: StoryCategory.PLAYER_OF_WEEK,
+    title: "Week 4 Players of the Week: Bryce dropped six, Ji’Ayir scored three",
+    eyebrow: "Honors desk · Week 4",
+    summary:
+      "Bryce Young threw for 412 yards and six touchdowns in a 56–44 shootout. Ji’Ayir Brown had four interceptions and three pick-sixes in San Francisco’s demolition of Denver. Week 4 belonged to a Panthers quarterback and a 49ers safety.",
+    body: `![KML Week 4 Players of the Week](${STORY_ASSETS.week4Potw})
+
+**A dominant night. The most impactful performance of the week.**
+
+Week 3 belonged to Rodgers and Sneed. Week 4 handed the stamps to a quarterback who lost and a safety who scored three times.
+
+**Bryce Young** put up **412 yards and six touchdowns** for **Nick’s Panthers** in a 56–44 war with Detroit. **Ji’Ayir Brown** turned **Swipe’s 49ers** into a scoring defense: **four interceptions, three pick-sixes**, a sack, and a forced fumble in a 45–14 win over Denver.
+
+Everybody else on the board had a heater. Those two owned the week.
+
+## Offensive Player of the Week — Bryce Young
+
+**Panthers · QB · Nick · #9**
+
+| Pass yards | TDs | INTs | Comp |
+| --- | --- | --- | --- |
+| **412** | **6** | 2 | **59%** |
+
+A dominant performance. The top offensive effort of Week 4. And it came in a loss.
+
+Detroit dropped 56. Carolina dropped 44. Young still walked out with Offensive Player of the Week because 412 and six scores does not care about the final. **Tet McMillan** went with him — 158 yards and three touchdowns. Nick’s club did not go quietly against the last unbeaten.
+
+That is how a 2–2 team stays in the conversation. The quarterback just out-dueled a 4–0 offense on volume and still wants the win back.
+
+## Defensive Player of the Week — Ji’Ayir Brown
+
+**49ers · S · Swipe · #27**
+
+| INTs | Pick-sixes | Splash |
+| --- | --- | --- |
+| **4** | **3** | 1 sack, 1 FF |
+
+The most impactful performance of the week. Three defensive touchdowns.
+
+Puddin’s Broncos are 0–4. Brown made sure of it. Four interceptions. Three of them went to the house. A sack. A forced fumble. **Ricky Pearsall** added 112 and two scores on offense, but the graphic did not need a second look on defense.
+
+Week 1 it was Hicks. Week 3 it was Sneed. Week 4 it is Ji’Ayir Brown scoring from the secondary until Denver ran out of footballs.
+
+## Other Week 4 standouts
+
+The board under the two winners was stacked. The graphic did not hide.
+
+### Offense
+
+| Player | Team | Line | Why he’s on the board |
+| --- | --- | --- | --- |
+| **Jahmyr Gibbs** | Lions · Curry | 16/163/2 rush, 3/53/2 rec | Four total TDs in the 56–44 win that kept Detroit 4–0 |
+| **De’Von Achane** | Dolphins · Mease | 18 car, **201 yards**, 3 TD | Mease dropped 55–7 on Minnesota. Still Malik Willis, still no Tyreek |
+| **Ja’Marr Chase** | Bengals · Dawson | 7 rec, **233 yards**, 2 TD | Unguardable in a 35–27 win over Jacksonville |
+| **Jaxon Smith-Njigba** | Seahawks · Petey | 8 rec, **176 yards**, 1 TD | Petey’s 40–34 primetime win over Oli |
+| **Fernando Mendoza** | Raiders · Da Truth | **307 yards**, 4 TD, **90%** | Vegas took down Kansas City 45–27 |
+| **Matthew Golden** | Packers · Chance | 5 rec, **133 yards**, 3 TD | The difference in Chance’s 31–30 TNF win over Swagg |
+| **Malik Willis** | Dolphins · Mease | **223 yards**, 4 TD | The other half of Miami’s 55-point night |
+| **Derrick Henry** | Ravens | 11 car, **124 yards**, 1 TD | Still the King in a 49–43 road win |
+| **Zay Flowers** | Ravens | 5 rec, **144 yards**, 3 TD | Three scores next to Henry |
+| **Aaron Rodgers** | Steelers · Big Al | **314 yards**, 3 TD | The follow-up to six TDs. Pittsburgh is 2–2 |
+| **Michael Pittman Jr.** | Steelers · Big Al | 5 rec, **122 yards** | The volume target in the same win |
+| **Jonathan Taylor** | Colts · Quon | 17 car, **137 yards**, 3 TD | Indianapolis got the Week 4 win |
+| **Joe Burrow** | Bengals · Dawson | **266 yards**, 4 TD | Stacked with Chase’s 233 |
+| **Tet McMillan** | Panthers · Nick | 6 rec, **158 yards**, 3 TD | Young’s answer in the 44-point loss |
+| **Ricky Pearsall** | 49ers · Swipe | 3 rec, **112 yards**, 2 TD | The offensive juice next to Brown’s three scores |
+
+### Defense
+
+| Player | Team | Line | Why he’s on the board |
+| --- | --- | --- | --- |
+| **Ji’Ayir Brown** | 49ers · Swipe | 4 INT, **3 pick-sixes**, 1 sack, 1 FF | The DPOW tape. Three defensive touchdowns |
+| **Jordyn Brooks** | Dolphins · Mease | 2 TFL, 1 sack, 1 INT, 7 tackles | Splash on a 74 OVR club that just dropped 55 |
+| **Jonathan Allen** | Bengals · Dawson | 3 TFL, **2 sacks** | Interior havoc next to Burrow and Chase |
+
+Gibbs going for four scores is how 4–0 stays 4–0. Achane and Willis stacking 201 and four passing TDs is how Mease keeps beating the rating. Chase’s 233 is a WR1 night. Mendoza at 90 percent in a Chiefs upset is how Da Truth stays dangerous. Golden’s three scores is how Chance won TNF by one.
+
+None of them beat 412 and six. None of them beat three pick-sixes.
+
+## Desk verdict
+
+**Nick and Bryce Young** own the offensive stamp. Four hundred twelve yards. Six scores. In a loss. That is how loud a 2–2 club can still get.
+
+**Swipe and Ji’Ayir Brown** own the defensive stamp. Four interceptions. Three touchdowns. Denver never recovered. That is the most impactful tape of Week 4.
+
+The rest of the board is the warning: **Gibbs, Achane, Chase, JSN, Mendoza, Golden, Willis, Henry, Flowers, Rodgers, Taylor, Burrow** all left fingerprints. The standard is already higher than Week 3.
+
+Week 5 primetime is four massive matchups. The honors desk will be watching.
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: false,
+    sortOrder: -56,
+    week: 4,
   },
   {
     slug: "season-1-coaching-storylines",
