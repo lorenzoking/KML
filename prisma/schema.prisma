@@ -115,6 +115,17 @@ enum StoryCategory {
   LEAGUE
 }
 
+enum MaddenExportKind {
+  LEAGUE_TEAMS
+  STANDINGS
+  SCHEDULE
+  TEAM_STATS
+  PLAYER_STATS
+  TEAM_ROSTER
+  FREE_AGENTS
+  UNKNOWN
+}
+
 model User {
   id                   String    @id @default(cuid())
   email                String    @unique
@@ -205,6 +216,7 @@ model Season {
   stories               LeagueStory[]
   scheduledGames        ScheduledGame[]
   contractSignings      PlayerContractSigning[]
+  maddenExports         MaddenExportDump[]
 }
 
 model ScheduledGame {
@@ -271,6 +283,8 @@ model LeagueSetting {
   startingContractYears Int   @default(3)
   carouselOpen       Boolean  @default(false)
   rulesMarkdown      String   @default("")
+  /// Secret segment of the Madden Companion App export URL. Rotating it invalidates the old URL.
+  maddenExportToken  String?
   updatedAt          DateTime @updatedAt
 }
 
@@ -798,4 +812,34 @@ model PlayerContractSigning {
   @@index([franchiseId])
   @@index([createdAt])
   @@index([seasonId, playerName])
+}
+
+/// Raw JSON posted by the Madden Companion App. Kept intact so M27 field
+/// changes can be inspected before we map them into league pages.
+model MaddenExportDump {
+  id          String           @id @default(cuid())
+  seasonId    String?
+  method      String
+  path        String
+  kind        MaddenExportKind @default(UNKNOWN)
+  platform    String?
+  leagueId    String?
+  weekType    String?
+  weekNumber  Int?
+  teamId      String?
+  dataType    String?
+  payload     Json
+  payloadKeys String[]
+  listCounts  Json?
+  success     Boolean?
+  message     String?
+  byteSize    Int
+  receivedAt  DateTime         @default(now())
+
+  season Season? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+
+  @@index([receivedAt])
+  @@index([kind])
+  @@index([seasonId])
+  @@index([path])
 }
