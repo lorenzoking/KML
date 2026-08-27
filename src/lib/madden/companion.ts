@@ -32,7 +32,14 @@ export function newMaddenExportToken() {
 }
 
 export function maddenExportUrl(token: string) {
-  return `${getSiteUrl()}/api/madden/${token}`;
+  const site = getSiteUrl();
+  // Apex kingsmaddenleague.com 308s to www. Companion POSTs typically do not
+  // follow that redirect, so the export URL must already be on www.
+  const origin =
+    site.includes("kingsmaddenleague.com") && !site.includes("www.")
+      ? site.replace("://kingsmaddenleague.com", "://www.kingsmaddenleague.com")
+      : site;
+  return `${origin}/api/madden/${token}`;
 }
 
 export type CompanionPathInfo = {
