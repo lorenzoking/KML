@@ -17,7 +17,7 @@ import { GAME_TYPE_LABELS, forceWinReasonLabel, forceWinXpBlurb } from "@/lib/co
 import { getActiveSeason } from "@/lib/league";
 import { formatBothSimScores } from "@/lib/sim-score";
 import { formatMatchupScore, hasFinalScores } from "@/lib/game-score";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 
 export default async function ApprovalsPage() {
   const { settings } = await getActiveSeason();
@@ -115,7 +115,7 @@ export default async function ApprovalsPage() {
                   {s.filedByCommissioner ? " · desk filed" : ""}
                   {s.isForceWin ? "" : ` · ${formatBothSimScores(s)}`} · submitted by{" "}
                   {s.submitter.name ?? s.submitter.email} ·{" "}
-                  {format(s.createdAt, "MMM d, h:mm a")}
+                  {formatLeagueDate(s.createdAt, "MMM d, h:mm a")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">

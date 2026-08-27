@@ -17,7 +17,7 @@ import { formatMatchupScore, hasFinalScores } from "@/lib/game-score";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
 import { formatBothSimScores } from "@/lib/sim-score";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 
 export default async function GameDetailPage({
   params,
@@ -127,7 +127,7 @@ export default async function GameDetailPage({
         <CardContent className="space-y-3 text-sm">
           <p>
             Submitted by {game.submitter.name?.trim() || "Unnamed coach"} ·{" "}
-            {format(game.createdAt, "MMM d, yyyy")}
+            {formatLeagueDate(game.createdAt, "MMM d, yyyy")}
           </p>
           {game.isForceWin ? (
             <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">

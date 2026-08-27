@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 import {
   markContractApplied,
   resolveSevereSigning,
@@ -61,7 +61,7 @@ export default async function ContractSigningPage({
             {signing.playerName}
           </h1>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            Logged {format(signing.createdAt, "MMM d, yyyy · h:mm a")} by{" "}
+            Logged {formatLeagueDate(signing.createdAt, "MMM d, yyyy · h:mm a")} by{" "}
             {signing.submittedBy.name ?? signing.submittedBy.email}
           </p>
         </div>

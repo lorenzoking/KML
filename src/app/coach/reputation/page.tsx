@@ -17,7 +17,7 @@ import { getCoachBoardRows } from "@/lib/coach/coach-board";
 import { getActiveSeason } from "@/lib/league";
 import { COACHING_REP_GRADES } from "@/lib/hot-seat-rules";
 import { prisma } from "@/lib/prisma";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 import Link from "next/link";
 
 type SearchParams = Promise<{
@@ -140,7 +140,7 @@ export default async function CoachReputationPage({
                   <p className="text-xs text-[var(--muted-foreground)]">{row.category}</p>
                 </div>
                 <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                  {format(row.createdAt, "MMM d, h:mm a")} · Week {row.week ?? "—"}
+                  {formatLeagueDate(row.createdAt, "MMM d, h:mm a")} · Week {row.week ?? "—"}
                 </p>
                 <p className="mt-1 text-xs text-[var(--muted-foreground)]">
                   Coach {row.amount > 0 ? `+${row.amount}` : row.amount} · GM{" "}
@@ -176,7 +176,7 @@ export default async function CoachReputationPage({
               <tbody>
                 {filtered.map((row) => (
                   <tr key={row.id} className="border-b">
-                    <td className="py-2 pr-3">{format(row.createdAt, "MMM d, h:mm a")}</td>
+                    <td className="py-2 pr-3">{formatLeagueDate(row.createdAt, "MMM d, h:mm a")}</td>
                     <td className="py-2 pr-3">
                       {row.user.name?.trim() || "Unnamed coach"}
                     </td>

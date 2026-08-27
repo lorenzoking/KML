@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { SubmitButton } from "@/components/forms/submit-button";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 
 export default async function AdminPage() {
   const { settings, season } = await getActiveSeason();
@@ -151,7 +151,7 @@ export default async function AdminPage() {
                     <p className="font-medium">{a.action}</p>
                     <p className="text-xs text-[var(--muted-foreground)]">
                       {a.actor?.name ?? "System"} ·{" "}
-                      {format(a.createdAt, "MMM d, h:mm a")} · {a.entityType}
+                      {formatLeagueDate(a.createdAt, "MMM d, h:mm a")} · {a.entityType}
                     </p>
                   </li>
                 ))}

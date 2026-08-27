@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 import {
   Card,
   CardContent,
@@ -145,7 +145,7 @@ export function MaddenExportExplorer({
                     {dump.weekType
                       ? ` · ${dump.weekType} ${dump.weekNumber ?? ""}`
                       : ""}{" "}
-                    — {format(new Date(dump.receivedAt), "h:mm:ss a")}
+                    — {formatLeagueDate(dump.receivedAt, "h:mm:ss a")}
                   </option>
                 ))}
               </Select>
@@ -193,7 +193,7 @@ function DumpDetail({
             {dump.leagueId ? ` · league ${dump.leagueId}` : ""}
             {dump.teamId ? ` · team ${dump.teamId}` : ""}
             {` · ${(dump.byteSize / 1024).toFixed(1)} KB`}
-            {` · ${format(new Date(dump.receivedAt), "MMM d, h:mm:ss a")}`}
+            {` · ${formatLeagueDate(dump.receivedAt, "MMM d, h:mm:ss a")}`}
           </p>
         </div>
         <Button asChild variant="outline" size="sm">

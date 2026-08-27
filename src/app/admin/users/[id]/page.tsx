@@ -32,7 +32,7 @@ import { addXpAdjustment, addReputationAdjustment } from "@/actions/adjustments"
 import { formatRecord } from "@/lib/utils";
 import { GAME_TYPE_LABELS } from "@/lib/constants";
 import { formatMatchupScore } from "@/lib/game-score";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 
 export default async function AdminUserDetailPage({
   params,
@@ -394,7 +394,7 @@ export default async function AdminUserDetailPage({
                       </p>
                       <p className="text-xs text-[var(--muted-foreground)]">
                         {GAME_TYPE_LABELS[s.gameType]} ·{" "}
-                        {format(s.createdAt, "MMM d, yyyy")}
+                        {formatLeagueDate(s.createdAt, "MMM d, yyyy")}
                       </p>
                     </div>
                     <StatusBadge status={s.status} />
@@ -424,7 +424,7 @@ export default async function AdminUserDetailPage({
                         {x.reason}
                         <span className="block text-xs text-[var(--muted-foreground)]">
                           {x.season ? `S${x.season.number}` : "Career"} ·{" "}
-                          {format(x.createdAt, "MMM d")}
+                          {formatLeagueDate(x.createdAt, "MMM d")}
                         </span>
                       </span>
                       <span className="font-medium">
@@ -448,7 +448,7 @@ export default async function AdminUserDetailPage({
                       <span>
                         {r.reason}
                         <span className="block text-xs text-[var(--muted-foreground)]">
-                          {format(r.createdAt, "MMM d, yyyy")}
+                          {formatLeagueDate(r.createdAt, "MMM d, yyyy")}
                         </span>
                       </span>
                       <span className="font-medium">

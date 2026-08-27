@@ -28,7 +28,7 @@ import {
   resetCurrentSeasonGames,
   voidGame,
 } from "@/actions/season";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 import {
   safeEnsureSeasonSchedule,
   safeGetMissingScheduledGames,
@@ -283,7 +283,7 @@ export default async function AdminSeasonPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {s.archivedAt ? format(s.archivedAt, "MMM d, yyyy") : "—"}
+                    {s.archivedAt ? formatLeagueDate(s.archivedAt, "MMM d, yyyy") : "—"}
                   </TableCell>
                 </TableRow>
               ))}

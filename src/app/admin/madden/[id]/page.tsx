@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 import {
   Card,
   CardContent,
@@ -45,7 +45,7 @@ export default async function MaddenDumpPage({
             {MADDEN_EXPORT_KIND_LABELS[dump.kind]}
           </h2>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            {format(dump.receivedAt, "MMM d, yyyy h:mm:ss a")} · {dump.byteSize}{" "}
+            {formatLeagueDate(dump.receivedAt, "MMM d, yyyy h:mm:ss a")} · {dump.byteSize}{" "}
             bytes
           </p>
         </div>

@@ -12,7 +12,7 @@ import { SubmitButton } from "@/components/forms/submit-button";
 import { updateAllPositionComps, updateContractRules } from "@/actions/contracts";
 import { getContractDesk } from "@/lib/contracts/ensure";
 import { POSITION_LABELS } from "@/lib/contracts/types";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 
 export default async function AdminContractsPage() {
   const desk = await getContractDesk();
@@ -26,7 +26,7 @@ export default async function AdminContractsPage() {
         <p className="text-sm text-[var(--muted-foreground)]">
           Paste current Spotrac numbers here. There is no public API — update these
           when the market moves. Last rules save{" "}
-          {format(desk.rulesUpdatedAt, "MMM d, yyyy")}.
+          {formatLeagueDate(desk.rulesUpdatedAt, "MMM d, yyyy")}.
         </p>
       </div>
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 import {
   Card,
   CardContent,
@@ -149,7 +149,7 @@ export default async function AdminMaddenPage() {
                           {dump.dataType ? ` · ${dump.dataType}` : ""}
                         </p>
                         <p className="text-xs text-[var(--muted-foreground)]">
-                          {format(dump.receivedAt, "MMM d, h:mm:ss a")}
+                          {formatLeagueDate(dump.receivedAt, "MMM d, h:mm:ss a")}
                         </p>
                       </div>
                       <p className="mt-1 break-all text-xs text-[var(--muted-foreground)]">

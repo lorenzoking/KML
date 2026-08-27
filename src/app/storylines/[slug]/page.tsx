@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 import {
   Card,
   CardContent,
@@ -116,7 +116,7 @@ export default async function StorylineDetailPage({
           <CardTitle className="text-3xl leading-tight sm:text-4xl">{story.title}</CardTitle>
           <CardDescription className="text-base">{story.summary}</CardDescription>
           <p className="text-xs text-[var(--muted-foreground)]">
-            {format(story.publishedAt, "MMMM d, yyyy")}
+            {formatLeagueDate(story.publishedAt, "MMMM d, yyyy")}
             {story.author?.name ? ` · ${story.author.name}` : ""}
           </p>
         </CardHeader>

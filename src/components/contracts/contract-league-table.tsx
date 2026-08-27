@@ -17,7 +17,7 @@ import {
 import { PENALTY_LABELS, STATUS_LABELS } from "@/lib/contracts/types";
 import type { ContractPenaltyTier, ContractSigningStatus } from "@/lib/contracts/types";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 
 export type LeagueSigningRow = {
   id: string;
@@ -145,7 +145,7 @@ export function ContractLeagueTable({
               <TableCell>
                 <p className="text-xs">{STATUS_LABELS[row.status]}</p>
                 <p className="text-[11px] text-[var(--muted-foreground)]">
-                  {format(row.createdAt, "MMM d")}
+                  {formatLeagueDate(row.createdAt, "MMM d")}
                 </p>
               </TableCell>
             </TableRow>

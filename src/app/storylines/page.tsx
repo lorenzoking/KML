@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { format } from "date-fns";
+import { formatLeagueDate } from "@/lib/datetime";
 import type { StoryCategory } from "@/generated/prisma/client";
 import {
   Card,
@@ -235,7 +235,7 @@ function StorylineCard({
         </CardHeader>
         <CardContent className="flex items-center justify-between gap-3">
           <p className="text-xs text-[var(--muted-foreground)]">
-            {format(story.publishedAt, "MMM d, yyyy")}
+            {formatLeagueDate(story.publishedAt, "MMM d, yyyy")}
           </p>
           <span className="text-xs font-semibold text-[var(--primary)]">Read →</span>
         </CardContent>
