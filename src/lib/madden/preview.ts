@@ -1,5 +1,9 @@
 import { MaddenExportKind } from "@/generated/prisma/client";
-import { MADDEN_EXPORT_KIND_LABELS } from "@/lib/madden/companion";
+import {
+  displayCompanionWeek,
+  MADDEN_EXPORT_KIND_LABELS,
+  weekIndexFromPayload,
+} from "@/lib/madden/companion";
 
 export const KIND_USE_HINTS: Record<MaddenExportKind, string> = {
   LEAGUE_TEAMS:
@@ -54,6 +58,7 @@ export type DumpPreview = {
   weekNumber: number | null;
   teamId: string | null;
   dataType: string | null;
+  weekLabel: string | null;
   byteSize: number;
   receivedAt: string;
   lists: ListPreview[];
@@ -189,6 +194,10 @@ export function buildDumpPreview(dump: {
   receivedAt: Date;
   payload: unknown;
 }): DumpPreview {
+  const kind =
+    dump.dataType === "team" ? MaddenExportKind.TEAM_STATS : dump.kind;
+  const weekNumber =
+    weekIndexFromPayload(dump.payload) ?? dump.weekNumber;
   const record = asRecord(dump.payload);
   const lists: ListPreview[] = [];
   const scalarFields: Array<{ name: string; value: string }> = [];
@@ -208,16 +217,17 @@ export function buildDumpPreview(dump: {
 
   return {
     id: dump.id,
-    kind: dump.kind,
-    kindLabel: MADDEN_EXPORT_KIND_LABELS[dump.kind],
-    hint: KIND_USE_HINTS[dump.kind],
+    kind,
+    kindLabel: MADDEN_EXPORT_KIND_LABELS[kind],
+    hint: KIND_USE_HINTS[kind],
     path: dump.path,
     platform: dump.platform,
     leagueId: dump.leagueId,
     weekType: dump.weekType,
-    weekNumber: dump.weekNumber,
+    weekNumber,
     teamId: dump.teamId,
     dataType: dump.dataType,
+    weekLabel: displayCompanionWeek(dump.weekType, weekNumber),
     byteSize: dump.byteSize,
     receivedAt: dump.receivedAt.toISOString(),
     lists,

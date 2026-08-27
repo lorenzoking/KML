@@ -72,6 +72,9 @@ export default async function HomePage() {
               <Button asChild variant="outline" size="lg" className="border-white/25 bg-black/30 text-white hover:bg-white/10">
                 <Link href="/games">Games & standings</Link>
               </Button>
+              <Button asChild variant="outline" size="lg" className="border-white/25 bg-black/30 text-white hover:bg-white/10">
+                <Link href="/league">League tape</Link>
+              </Button>
             </div>
           </div>
         </div>

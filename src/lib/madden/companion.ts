@@ -102,7 +102,7 @@ export function classifyCompanionPath(segments: string[]): CompanionPathInfo {
     const kind =
       dataType === "schedules"
         ? MaddenExportKind.SCHEDULE
-        : dataType === "teamstats"
+        : dataType === "teamstats" || dataType === "team"
           ? MaddenExportKind.TEAM_STATS
           : MaddenExportKind.PLAYER_STATS;
     return {
@@ -127,6 +127,7 @@ export function inspectPayload(payload: unknown) {
       kindFromBody: MaddenExportKind.UNKNOWN,
       success: null as boolean | null,
       message: null as string | null,
+      weekIndex: null as number | null,
     };
   }
 
@@ -151,8 +152,45 @@ export function inspectPayload(payload: unknown) {
 
   const success = typeof record.success === "boolean" ? record.success : null;
   const message = typeof record.message === "string" ? record.message : null;
+  const weekIndex = weekIndexFromPayload(record);
 
-  return { keys, listCounts, kindFromBody, success, message };
+  return { keys, listCounts, kindFromBody, success, message, weekIndex };
+}
+
+/** Madden weekIndex is 0-based (0 = Week 1). */
+export function displayCompanionWeek(
+  weekType: string | null,
+  weekNumber: number | null
+) {
+  if (weekNumber == null) return null;
+  const stage =
+    weekType === "reg"
+      ? "Regular season"
+      : weekType === "pre"
+        ? "Preseason"
+        : weekType === "playoff" || weekType === "post"
+          ? "Playoffs"
+          : weekType
+            ? weekType
+            : "Week";
+  return `${stage} week ${weekNumber + 1}`;
+}
+
+export function weekIndexFromPayload(payload: unknown) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return null;
+  }
+  for (const value of Object.values(payload as Record<string, unknown>)) {
+    if (!Array.isArray(value) || value.length === 0) continue;
+    const row = value[0];
+    if (row && typeof row === "object" && !Array.isArray(row)) {
+      const weekIndex = (row as Record<string, unknown>).weekIndex;
+      if (typeof weekIndex === "number" && Number.isFinite(weekIndex)) {
+        return weekIndex;
+      }
+    }
+  }
+  return null;
 }
 
 export function resolveKind(

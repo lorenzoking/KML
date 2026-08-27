@@ -14,6 +14,7 @@ import { CopyTextButton } from "@/components/admin/copy-text-button";
 import { prisma } from "@/lib/prisma";
 import { ensureMaddenExportToken, rotateMaddenExportToken } from "@/actions/madden";
 import {
+  displayCompanionWeek,
   MADDEN_EXPORT_KIND_LABELS,
   maddenExportUrl,
   maddenExploreUrl,
@@ -115,6 +116,29 @@ export default async function AdminMaddenPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Weekly stats from the Companion App</CardTitle>
+          <CardDescription>
+            If player stats fail, the export URL is still working. EA posts that
+            error to us when it cannot pull passing/rushing/receiving/defense
+            from its own servers.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
+          <p>
+            Do not use All Weeks. Export one completed regular-season week.
+            Close the Companion App fully, reopen it on the KML franchise, then
+            export Weekly Stats again.
+          </p>
+          <p>
+            Team weekly stats and the schedule can succeed while player stats
+            fail. That is an EA retrieve error, not a KML URL problem. Free
+            agents often fail the same way.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Received dumps</CardTitle>
           <CardDescription>
             Newest first. Open a dump in the lab to see fields and sample rows.
@@ -157,7 +181,7 @@ export default async function AdminMaddenPage() {
                         {dump.platform ? ` · ${dump.platform}` : ""}
                         {dump.leagueId ? ` · league ${dump.leagueId}` : ""}
                         {dump.weekType
-                          ? ` · ${dump.weekType} week ${dump.weekNumber ?? "?"}`
+                          ? ` · ${displayCompanionWeek(dump.weekType, dump.weekNumber) ?? dump.weekType}`
                           : ""}
                         {dump.teamId ? ` · team ${dump.teamId}` : ""}
                         {` · ${(dump.byteSize / 1024).toFixed(1)} KB`}

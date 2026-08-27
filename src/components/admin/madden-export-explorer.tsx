@@ -141,10 +141,8 @@ export function MaddenExportExplorer({
                   <option key={dump.id} value={dump.id}>
                     {dump.kindLabel}
                     {dump.dataType ? ` · ${dump.dataType}` : ""}
-                    {dump.teamId ? ` · team ${dump.teamId}` : ""}
-                    {dump.weekType
-                      ? ` · ${dump.weekType} ${dump.weekNumber ?? ""}`
-                      : ""}{" "}
+                    {dump.weekLabel ? ` · ${dump.weekLabel}` : ""}
+                    {dump.teamId ? ` · team ${dump.teamId}` : ""}{" "}
                     — {formatLeagueDate(dump.receivedAt, "h:mm:ss a")}
                   </option>
                 ))}
@@ -191,6 +189,7 @@ function DumpDetail({
             {dump.path}
             {dump.platform ? ` · ${dump.platform}` : ""}
             {dump.leagueId ? ` · league ${dump.leagueId}` : ""}
+            {dump.weekLabel ? ` · ${dump.weekLabel}` : ""}
             {dump.teamId ? ` · team ${dump.teamId}` : ""}
             {` · ${(dump.byteSize / 1024).toFixed(1)} KB`}
             {` · ${formatLeagueDate(dump.receivedAt, "MMM d, h:mm:ss a")}`}

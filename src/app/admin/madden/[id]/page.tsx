@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
-import { MADDEN_EXPORT_KIND_LABELS } from "@/lib/madden/companion";
+import { displayCompanionWeek, MADDEN_EXPORT_KIND_LABELS, weekIndexFromPayload } from "@/lib/madden/companion";
 
 export default async function MaddenDumpPage({
   params,
@@ -79,7 +79,10 @@ export default async function MaddenDumpPage({
             {dump.weekType ? (
               <>
                 <span className="text-[var(--muted-foreground)]"> · Week </span>
-                {dump.weekType} {dump.weekNumber ?? ""}
+                {displayCompanionWeek(
+                  dump.weekType,
+                  weekIndexFromPayload(dump.payload) ?? dump.weekNumber
+                ) ?? `${dump.weekType} ${dump.weekNumber ?? ""}`}
               </>
             ) : null}
             {dump.teamId ? (

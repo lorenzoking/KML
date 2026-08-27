@@ -126,6 +126,15 @@ enum MaddenExportKind {
   UNKNOWN
 }
 
+enum MaddenStatCategory {
+  PASSING
+  RUSHING
+  RECEIVING
+  DEFENSE
+  KICKING
+  PUNTING
+}
+
 model User {
   id                   String    @id @default(cuid())
   email                String    @unique
@@ -194,6 +203,7 @@ model Franchise {
   scheduledHome                 ScheduledGame[]       @relation("ScheduledHome")
   scheduledAway                 ScheduledGame[]       @relation("ScheduledAway")
   contractSignings              PlayerContractSigning[]
+  maddenTeam                    MaddenTeam?
 }
 
 model Season {
@@ -835,6 +845,7 @@ model MaddenExportDump {
   message     String?
   byteSize    Int
   receivedAt  DateTime         @default(now())
+  indexedAt   DateTime?
 
   season Season? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
 
@@ -842,4 +853,135 @@ model MaddenExportDump {
   @@index([kind])
   @@index([seasonId])
   @@index([path])
+}
+
+model MaddenTeam {
+  id            String  @id @default(cuid())
+  maddenTeamId  String  @unique
+  franchiseId   String? @unique
+  abbr          String
+  city          String
+  nickName      String
+  displayName   String
+  division      String
+  conference    String
+  ovr           Int     @default(0)
+  userName      String?
+  wins          Int     @default(0)
+  losses        Int     @default(0)
+  ties          Int     @default(0)
+  ptsFor        Int     @default(0)
+  ptsAgainst    Int     @default(0)
+  updatedAt     DateTime @updatedAt
+
+  franchise Franchise?         @relation(fields: [franchiseId], references: [id], onDelete: SetNull)
+  players   MaddenPlayer[]
+  stats     MaddenPlayerStat[]
+  weekStats MaddenTeamWeekStat[]
+  homeGames MaddenGame[]       @relation("MaddenHome")
+  awayGames MaddenGame[]       @relation("MaddenAway")
+
+  @@index([abbr])
+  @@index([ovr])
+}
+
+model MaddenPlayer {
+  id                 String  @id @default(cuid())
+  rosterId           String  @unique
+  maddenTeamId       String
+  firstName          String
+  lastName           String
+  position           String
+  jerseyNum          Int     @default(0)
+  overall            Int     @default(0)
+  age                Int     @default(0)
+  yearsPro           Int     @default(0)
+  height             Int     @default(0)
+  weight             Int     @default(0)
+  devTrait           Int     @default(0)
+  college            String  @default("")
+  contractSalary     Int     @default(0)
+  contractYearsLeft  Int     @default(0)
+  isOnIR             Boolean @default(false)
+  isOnPracticeSquad  Boolean @default(false)
+  updatedAt          DateTime @updatedAt
+
+  team  MaddenTeam         @relation(fields: [maddenTeamId], references: [maddenTeamId], onDelete: Cascade)
+  stats MaddenPlayerStat[]
+
+  @@index([maddenTeamId, overall])
+  @@index([position])
+}
+
+model MaddenPlayerStat {
+  id            String             @id @default(cuid())
+  rosterId      String
+  maddenTeamId  String
+  weekIndex     Int
+  category      MaddenStatCategory
+  fullName      String
+  passYds       Int                @default(0)
+  passTDs       Int                @default(0)
+  passInts      Int                @default(0)
+  passAtt       Int                @default(0)
+  passComp      Int                @default(0)
+  passerRating  Float              @default(0)
+  rushYds       Int                @default(0)
+  rushTDs       Int                @default(0)
+  rushAtt       Int                @default(0)
+  recYds        Int                @default(0)
+  recTDs        Int                @default(0)
+  recCatches    Int                @default(0)
+  defTackles    Int                @default(0)
+  defSacks      Float              @default(0)
+  defInts       Int                @default(0)
+  kickPts       Int                @default(0)
+  payload       Json
+  updatedAt     DateTime           @updatedAt
+
+  player MaddenPlayer @relation(fields: [rosterId], references: [rosterId], onDelete: Cascade)
+  team   MaddenTeam   @relation(fields: [maddenTeamId], references: [maddenTeamId], onDelete: Cascade)
+
+  @@unique([rosterId, weekIndex, category])
+  @@index([weekIndex, category])
+  @@index([maddenTeamId, weekIndex])
+}
+
+model MaddenTeamWeekStat {
+  id            String @id @default(cuid())
+  maddenTeamId  String
+  weekIndex     Int
+  offPassYds    Int    @default(0)
+  offRushYds    Int    @default(0)
+  offPassTDs    Int    @default(0)
+  offRushTDs    Int    @default(0)
+  offPtsPerGame Float  @default(0)
+  defTotalYds   Int    @default(0)
+  defSacks      Float  @default(0)
+  defPtsPerGame Float  @default(0)
+  payload       Json
+  updatedAt     DateTime @updatedAt
+
+  team MaddenTeam @relation(fields: [maddenTeamId], references: [maddenTeamId], onDelete: Cascade)
+
+  @@unique([maddenTeamId, weekIndex])
+  @@index([weekIndex])
+}
+
+model MaddenGame {
+  id               String  @id @default(cuid())
+  scheduleId       String  @unique
+  weekIndex        Int
+  homeTeamId       String
+  awayTeamId       String
+  homeScore        Int     @default(0)
+  awayScore        Int     @default(0)
+  status           Int     @default(0)
+  isGameOfTheWeek  Boolean @default(false)
+  updatedAt        DateTime @updatedAt
+
+  homeTeam MaddenTeam @relation("MaddenHome", fields: [homeTeamId], references: [maddenTeamId], onDelete: Cascade)
+  awayTeam MaddenTeam @relation("MaddenAway", fields: [awayTeamId], references: [maddenTeamId], onDelete: Cascade)
+
+  @@index([weekIndex])
 }

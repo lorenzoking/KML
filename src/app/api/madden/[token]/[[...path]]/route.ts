@@ -6,6 +6,7 @@ import {
   inspectPayload,
   resolveKind,
 } from "@/lib/madden/companion";
+import { indexMaddenDump } from "@/lib/madden/index-dumps";
 import type { Prisma } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -100,7 +101,7 @@ export async function POST(request: Request, context: RouteContext) {
     seasonId = null;
   }
 
-  await prisma.maddenExportDump.create({
+  const dump = await prisma.maddenExportDump.create({
     data: {
       seasonId,
       method: "POST",
@@ -109,7 +110,7 @@ export async function POST(request: Request, context: RouteContext) {
       platform: pathInfo.platform,
       leagueId: pathInfo.leagueId,
       weekType: pathInfo.weekType,
-      weekNumber: pathInfo.weekNumber,
+      weekNumber: inspected.weekIndex ?? pathInfo.weekNumber,
       teamId: pathInfo.teamId,
       dataType: pathInfo.dataType,
       payload,
@@ -120,6 +121,12 @@ export async function POST(request: Request, context: RouteContext) {
       byteSize,
     },
   });
+
+  try {
+    await indexMaddenDump(dump);
+  } catch (error) {
+    console.error("Madden dump index failed", dump.id, error);
+  }
 
   return new NextResponse("OK", {
     status: 200,
