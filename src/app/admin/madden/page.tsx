@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { CopyTextButton } from "@/components/admin/copy-text-button";
 import { prisma } from "@/lib/prisma";
@@ -15,11 +16,13 @@ import { ensureMaddenExportToken, rotateMaddenExportToken } from "@/actions/madd
 import {
   MADDEN_EXPORT_KIND_LABELS,
   maddenExportUrl,
+  maddenExploreUrl,
 } from "@/lib/madden/companion";
 
 export default async function AdminMaddenPage() {
   const token = await ensureMaddenExportToken();
   const exportUrl = maddenExportUrl(token);
+  const exploreUrl = maddenExploreUrl();
   const dumps = await prisma.maddenExportDump.findMany({
     orderBy: { receivedAt: "desc" },
     take: 40,
@@ -91,10 +94,30 @@ export default async function AdminMaddenPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Visualization URL</CardTitle>
+          <CardDescription>
+            After you export from the app, open this page to see fields, types,
+            and sample rows. It does not change standings, games, or rosters.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+            <code className="block min-w-0 flex-1 overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--muted)]/40 px-3 py-2 text-xs sm:text-sm">
+              {exploreUrl}
+            </code>
+            <CopyTextButton value={exploreUrl} label="Copy URL" />
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/madden/explore">Open export lab</Link>
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Received dumps</CardTitle>
           <CardDescription>
-            Newest first. Open a dump to inspect keys and a JSON sample. Nothing
-            is mapped onto standings or rosters until we know the M27 shape.
+            Newest first. Open a dump in the lab to see fields and sample rows.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -117,7 +140,7 @@ export default async function AdminMaddenPage() {
                 return (
                   <li key={dump.id}>
                     <Link
-                      href={`/admin/madden/${dump.id}`}
+                      href={`/admin/madden/explore?dump=${dump.id}`}
                       className="block rounded-lg border border-[var(--border)] px-3 py-3 text-sm transition-colors hover:bg-[var(--muted)]"
                     >
                       <div className="flex flex-wrap items-baseline justify-between gap-2">

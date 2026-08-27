@@ -49,9 +49,14 @@ export default async function MaddenDumpPage({
             bytes
           </p>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/admin/madden">Back to exports</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/madden/explore">Open in lab</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/madden">Back to exports</Link>
+          </Button>
+        </div>
       </div>
 
       <Card>

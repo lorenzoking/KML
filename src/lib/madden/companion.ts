@@ -31,15 +31,24 @@ export function newMaddenExportToken() {
   return randomBytes(24).toString("base64url");
 }
 
-export function maddenExportUrl(token: string) {
+export function maddenPublicOrigin() {
   const site = getSiteUrl();
   // Apex kingsmaddenleague.com 308s to www. Companion POSTs typically do not
-  // follow that redirect, so the export URL must already be on www.
-  const origin =
-    site.includes("kingsmaddenleague.com") && !site.includes("www.")
-      ? site.replace("://kingsmaddenleague.com", "://www.kingsmaddenleague.com")
-      : site;
-  return `${origin}/api/madden/${token}`;
+  // follow that redirect, so league URLs meant for the phone must already be on www.
+  if (site.includes("kingsmaddenleague.com") && !site.includes("www.")) {
+    return site.replace("://kingsmaddenleague.com", "://www.kingsmaddenleague.com");
+  }
+  return site;
+}
+
+export function maddenExportUrl(token: string) {
+  return `${maddenPublicOrigin()}/api/madden/${token}`;
+}
+
+export const MADDEN_EXPLORE_PATH = "/admin/madden/explore";
+
+export function maddenExploreUrl() {
+  return `${maddenPublicOrigin()}${MADDEN_EXPLORE_PATH}`;
 }
 
 export type CompanionPathInfo = {
