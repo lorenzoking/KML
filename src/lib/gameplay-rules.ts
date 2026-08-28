@@ -38,6 +38,7 @@ export const GAMEPLAY_RULE_SECTIONS: GameplayRuleSection[] = [
       "Contact and make a real effort to schedule at least 24 hours before advance",
       "No lying or fabricating messages to get a force win",
       "Force wins need a reason: the game cut out (both coaches get game-played XP) or the opponent could not play (only the available coach gets XP)",
+      "If Madden CPU-sims a game as a force win and nobody filed it on the site, only the winning coach gets game-played XP",
       "Manual player progression is not allowed",
       "No player edits or attribute changes unless approved by a commissioner",
     ],

@@ -26,6 +26,30 @@ export function forceWinPlayedXpReason(
     : "Force win — available to play";
 }
 
+/** Companion CPU-sim with no force-win ticket on the site. */
+export const MADDEN_UNDECLARED_FORCE_WIN_MARKER =
+  "force win — madden sim, no site claim";
+
+export function maddenUndeclaredForceWinXpReason(
+  week: number,
+  scheduleId: string
+) {
+  return `Week ${week} force win — Madden sim, no site claim [${scheduleId}]`;
+}
+
+export function isMaddenUndeclaredForceWinXpReason(
+  reason: string,
+  week?: number
+) {
+  const normalized = reason.toLowerCase();
+  if (week != null) {
+    return normalized.startsWith(
+      `week ${week} ${MADDEN_UNDECLARED_FORCE_WIN_MARKER}`
+    );
+  }
+  return normalized.includes(MADDEN_UNDECLARED_FORCE_WIN_MARKER);
+}
+
 export function xpFromApprovedGame(params: {
   xpGamePlayed: number;
   xpWinBonus: number;

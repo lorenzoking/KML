@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason } from "@/lib/league";
 import {
@@ -6,7 +6,7 @@ import {
   inspectPayload,
   resolveKind,
 } from "@/lib/madden/companion";
-import { indexMaddenDump } from "@/lib/madden/index-dumps";
+import { applyMaddenDump } from "@/lib/madden/ingest";
 import type { Prisma } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
@@ -123,9 +123,13 @@ export async function POST(request: Request, context: RouteContext) {
   });
 
   try {
-    await indexMaddenDump(dump);
+    after(() =>
+      applyMaddenDump(dump).catch((error) => {
+        console.error("Madden dump ingest failed", dump.id, error);
+      })
+    );
   } catch (error) {
-    console.error("Madden dump index failed", dump.id, error);
+    console.error("Madden dump after() failed", dump.id, error);
   }
 
   return new NextResponse("OK", {

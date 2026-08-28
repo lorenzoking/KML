@@ -10,7 +10,12 @@ import {
   commissionerFileGameSchema,
 } from "@/lib/validations";
 import { writeAuditLog } from "@/lib/audit";
-import { awardsCoachXp, forceWinAwardsOpponentXp, xpFromApprovedGame } from "@/lib/xp";
+import {
+  awardsCoachXp,
+  forceWinAwardsOpponentXp,
+  isMaddenUndeclaredForceWinXpReason,
+  xpFromApprovedGame,
+} from "@/lib/xp";
 import { hasFinalScores } from "@/lib/game-score";
 import {
   applyReputationForApprovedGame,
@@ -99,6 +104,25 @@ async function approvePendingSubmission(
     }
 
     if (grantXp) {
+      const companionGrants = await tx.xPAdjustment.findMany({
+        where: {
+          seasonId: submission.seasonId,
+          isAutomatic: true,
+          reason: {
+            startsWith: `Week ${submission.week} force win — Madden sim, no site claim`,
+          },
+        },
+        select: { userId: true, reason: true },
+      });
+      const companionUserIds = new Set(
+        companionGrants
+          .filter((row) =>
+            isMaddenUndeclaredForceWinXpReason(row.reason, submission.week)
+          )
+          .map((row) => row.userId)
+      );
+      const skipPlayXpFor = (userId: string) => companionUserIds.has(userId);
+
       const xpEntries = xpFromApprovedGame({
         xpGamePlayed: settings.xpGamePlayed,
         xpWinBonus: settings.xpWinBonus,
@@ -109,6 +133,9 @@ async function approvePendingSubmission(
       });
 
       for (const entry of xpEntries) {
+        if (skipPlayXpFor(submission.submitterId) && !/win bonus/i.test(entry.reason)) {
+          continue;
+        }
         await tx.xPAdjustment.create({
           data: {
             userId: submission.submitterId,
@@ -147,6 +174,12 @@ async function approvePendingSubmission(
           forceWinReason: submission.forceWinReason,
         });
         for (const entry of oppXp) {
+          if (
+            skipPlayXpFor(opponentMembership.userId) &&
+            !/win bonus/i.test(entry.reason)
+          ) {
+            continue;
+          }
           await tx.xPAdjustment.create({
             data: {
               userId: opponentMembership.userId,

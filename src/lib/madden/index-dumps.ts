@@ -11,6 +11,7 @@ import {
   str,
   teamIdOf,
 } from "@/lib/madden/parse";
+import { awardUndeclaredForceWinXp } from "@/lib/madden/undeclared-force-win-xp";
 
 async function franchiseByAbbr() {
   const franchises = await prisma.franchise.findMany({
@@ -304,6 +305,7 @@ async function indexTeamWeekStats(payload: unknown) {
 }
 
 async function indexSchedule(payload: unknown) {
+  const scheduleIds: string[] = [];
   for (const row of payloadList(payload, "gameScheduleInfoList")) {
     const scheduleId = str(row, "scheduleId") || String(row.scheduleId ?? "");
     const homeTeamId = String(row.homeTeamId ?? "");
@@ -333,6 +335,13 @@ async function indexSchedule(payload: unknown) {
         isGameOfTheWeek: flag(row, "isGameOfTheWeek"),
       },
     });
+    scheduleIds.push(scheduleId);
+  }
+  if (scheduleIds.length === 0) return;
+  try {
+    await awardUndeclaredForceWinXp(scheduleIds);
+  } catch (error) {
+    console.error("Failed to award undeclared force-win XP", error);
   }
 }
 
@@ -374,11 +383,11 @@ export async function indexMaddenDump(dump: {
   });
 }
 
-export async function indexPendingMaddenDumps() {
+export async function indexPendingMaddenDumps(take = 40) {
   const dumps = await prisma.maddenExportDump.findMany({
     where: { indexedAt: null },
     orderBy: { receivedAt: "asc" },
-    take: 200,
+    take,
     select: {
       id: true,
       kind: true,
@@ -399,7 +408,8 @@ export async function indexPendingMaddenDumps() {
 }
 
 export async function ensureMaddenLeague() {
-  await indexPendingMaddenDumps();
+  const indexed = await indexPendingMaddenDumps();
+  if (indexed === 0) return;
   const { generateMaddenStories } = await import("@/lib/madden/stories");
   await generateMaddenStories();
 }

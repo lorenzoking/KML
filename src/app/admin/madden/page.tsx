@@ -43,6 +43,7 @@ export default async function AdminMaddenPage() {
       listCounts: true,
       payloadKeys: true,
       receivedAt: true,
+      indexedAt: true,
     },
   });
 
@@ -53,9 +54,9 @@ export default async function AdminMaddenPage() {
           Madden Companion export
         </h2>
         <p className="text-sm text-[var(--muted-foreground)]">
-          Paste this URL into the Companion App export field. EA does not publish
-          a schema — KML stores every JSON payload the app sends so we can see
-          what Madden 27 actually exports.
+          Paste this URL into the Companion App export field. Every dump is
+          stored and indexed as it lands, then award races, leaders, and
+          rosters refresh on their own.
         </p>
       </div>
 
@@ -66,6 +67,7 @@ export default async function AdminMaddenPage() {
             In the app: Play Franchise → your KML franchise → Export. Paste the
             URL, then export League Info, Teams, Schedule, Rosters, Free Agents,
             and Weekly Stats. The app appends its own paths onto this base.
+            Public league pages update as soon as those dumps index.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -173,6 +175,7 @@ export default async function AdminMaddenPage() {
                           {dump.dataType ? ` · ${dump.dataType}` : ""}
                         </p>
                         <p className="text-xs text-[var(--muted-foreground)]">
+                          {dump.indexedAt ? "Indexed" : "Indexing…"} ·{" "}
                           {formatLeagueDate(dump.receivedAt, "MMM d, h:mm:ss a")}
                         </p>
                       </div>

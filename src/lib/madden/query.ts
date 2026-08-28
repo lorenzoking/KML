@@ -45,6 +45,22 @@ export async function latestStatWeek() {
   return row?.weekIndex ?? null;
 }
 
+export async function getMaddenLivePulse() {
+  const [latest, pending] = await Promise.all([
+    prisma.maddenExportDump.findFirst({
+      where: { indexedAt: { not: null } },
+      orderBy: { indexedAt: "desc" },
+      select: { indexedAt: true },
+    }),
+    prisma.maddenExportDump.count({ where: { indexedAt: null } }),
+  ]);
+  return {
+    indexedAt: latest?.indexedAt ?? null,
+    pending,
+    stamp: latest?.indexedAt?.toISOString() ?? "",
+  };
+}
+
 export async function listStatWeeks() {
   const rows = await prisma.maddenPlayerStat.findMany({
     distinct: ["weekIndex"],
