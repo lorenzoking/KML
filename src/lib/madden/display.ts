@@ -34,6 +34,8 @@ const OFFENSE = new Set(["QB", "HB", "FB", "WR", "TE", "LT", "LG", "C", "RG", "R
 const DEFENSE = new Set([
   "LE",
   "RE",
+  "LEDG",
+  "REDG",
   "DT",
   "LOLB",
   "MLB",
@@ -57,3 +59,37 @@ export function positionGroup(position: string) {
 }
 
 export const POSITION_GROUP_ORDER = ["Offense", "Defense", "Special teams", "Other"];
+
+export function isQuarterback(position: string) {
+  return position.toUpperCase() === "QB";
+}
+
+export function isRookie(yearsPro: number, position: string) {
+  return yearsPro === 0 && position.toUpperCase() !== "UNK";
+}
+
+export function formatStat(value: number, digits = 0) {
+  return value.toLocaleString("en-US", {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: digits,
+  });
+}
+
+export function formatSacks(value: number) {
+  return formatStat(value, Number.isInteger(value) ? 0 : 1);
+}
+
+export function isLightHex(color: string) {
+  const hex = color.replace("#", "");
+  if (hex.length < 6) return false;
+  const r = Number.parseInt(hex.slice(0, 2), 16);
+  const g = Number.parseInt(hex.slice(2, 4), 16);
+  const b = Number.parseInt(hex.slice(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 160;
+}
+
+export function racePhaseLabel(week: number) {
+  if (week <= 6) return "Early";
+  if (week <= 12) return "Midseason";
+  return "Stretch-run";
+}

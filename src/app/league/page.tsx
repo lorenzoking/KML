@@ -1,40 +1,37 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { LeagueNav } from "@/components/league/league-nav";
-import { MaddenStatCategory } from "@/generated/prisma/client";
-import { displayWeek, playerName } from "@/lib/madden/display";
 import {
-  ensureMaddenLeague,
-  getLeaders,
-  getWeekGames,
-  latestStatWeek,
-} from "@/lib/madden/query";
+  AwardRaceGrid,
+  MvpHero,
+  SeasonPulseRow,
+  WeekHeaters,
+} from "@/components/league/award-board";
+import { LeagueNav } from "@/components/league/league-nav";
+import { getLeagueBoard } from "@/lib/madden/awards";
+import { displayWeek, racePhaseLabel } from "@/lib/madden/display";
+import { ensureMaddenLeague } from "@/lib/madden/query";
 import { buildShareMetadata } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = buildShareMetadata({
-  title: "League tape",
-  description: "Live Madden 27 scores, leaders, and weekly tape from the Companion App.",
+  title: "Award races",
+  description:
+    "Early MVP, OPOTY, DPOTY, and Rookie of the Year races from the Madden 27 Companion stats.",
   path: "/league",
 });
 
-export default async function LeagueTapePage() {
+export default async function LeagueRacesPage() {
   await ensureMaddenLeague();
-  const weekIndex = await latestStatWeek();
-  if (weekIndex == null) {
+  const board = await getLeagueBoard();
+  const mvp = board.races.find((race) => race.id === "mvp");
+  const leader = mvp?.candidates[0];
+
+  if (board.weekIndex == null || !leader) {
     return (
       <div className="space-y-6">
-        <LeagueNav active="tape" />
+        <LeagueNav active="races" />
         <EmptyState
           title="Waiting on weekly stats"
           description="Export one completed week of stats from the Companion App."
@@ -43,106 +40,42 @@ export default async function LeagueTapePage() {
     );
   }
 
-  const week = displayWeek(weekIndex);
-  const [games, passing, rushing, receiving, defense] = await Promise.all([
-    getWeekGames(weekIndex),
-    getLeaders(weekIndex, MaddenStatCategory.PASSING, 5),
-    getLeaders(weekIndex, MaddenStatCategory.RUSHING, 5),
-    getLeaders(weekIndex, MaddenStatCategory.RECEIVING, 5),
-    getLeaders(weekIndex, MaddenStatCategory.DEFENSE, 5),
-  ]);
+  const week = displayWeek(board.weekIndex);
+  const phase = racePhaseLabel(week);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
-          On the tape · Week {week}
+          {phase} hardware · through Week {week}
         </p>
-        <h1 className="text-3xl font-semibold uppercase tracking-[0.04em]">
-          League
+        <h1 className="text-3xl font-semibold uppercase tracking-[0.04em] sm:text-5xl">
+          Award races
         </h1>
-        <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-          Scores, heaters, and rosters from the Madden 27 Companion export.
-          This board updates when the next weekly dump lands.
+        <p className="mt-2 max-w-2xl text-sm text-[var(--muted-foreground)]">
+          MVP, Offensive Player, Defensive Player, and Rookie of the Year from
+          the live Companion totals. Scores live under Games — this desk is
+          for who is eating.
         </p>
       </div>
-      <LeagueNav active="tape" />
+      <LeagueNav active="races" />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Week {week} finals</CardTitle>
-          <CardDescription>Pulled from the franchise schedule export.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-2 sm:grid-cols-2">
-          {games.length === 0 ? (
-            <p className="text-sm text-[var(--muted-foreground)]">
-              No completed games in this week’s export.
-            </p>
-          ) : (
-            games.map((game) => (
-              <div
-                key={game.id}
-                className="flex items-center justify-between rounded-lg border border-[var(--border)] px-3 py-3"
-              >
-                <div>
-                  <p className="font-semibold">
-                    {game.awayTeam.abbr} {game.awayScore}
-                  </p>
-                  <p className="font-semibold">
-                    {game.homeTeam.abbr} {game.homeScore}
-                  </p>
-                </div>
-                {game.isGameOfTheWeek ? (
-                  <Badge variant="elite">GOTW</Badge>
-                ) : (
-                  <Badge variant="outline">Final</Badge>
-                )}
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+      <MvpHero
+        leader={leader}
+        phase={phase}
+        week={week}
+        chase={mvp?.candidates[1] ?? null}
+      />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <LeaderCard
-          title="Passing"
-          rows={passing.map((row) => ({
-            id: row.id,
-            name: row.fullName || playerName(row.player),
-            team: row.team.abbr,
-            line: `${row.passYds} yds · ${row.passTDs} TD · ${row.passInts} INT`,
-          }))}
-        />
-        <LeaderCard
-          title="Rushing"
-          rows={rushing.map((row) => ({
-            id: row.id,
-            name: row.fullName || playerName(row.player),
-            team: row.team.abbr,
-            line: `${row.rushYds} yds · ${row.rushTDs} TD · ${row.rushAtt} att`,
-          }))}
-        />
-        <LeaderCard
-          title="Receiving"
-          rows={receiving.map((row) => ({
-            id: row.id,
-            name: row.fullName || playerName(row.player),
-            team: row.team.abbr,
-            line: `${row.recCatches} rec · ${row.recYds} yds · ${row.recTDs} TD`,
-          }))}
-        />
-        <LeaderCard
-          title="Defense"
-          rows={defense.map((row) => ({
-            id: row.id,
-            name: row.fullName || playerName(row.player),
-            team: row.team.abbr,
-            line: `${row.defSacks} sacks · ${row.defInts} INT · ${row.defTackles} tkl`,
-          }))}
-        />
-      </div>
+      <SeasonPulseRow rows={board.pulse} />
 
-      <p className="text-sm text-[var(--muted-foreground)]">
+      <AwardRaceGrid races={board.races} />
+
+      <WeekHeaters week={week} heaters={board.heaters} />
+
+      <p className="text-xs text-[var(--muted-foreground)]">
+        Desk formula, not a vote — production plus winning for MVP, skill work
+        for OPOTY, sacks and takeaways for DPOTY, year-zero players for ROY.{" "}
         <Link href="/league/leaders" className="text-[var(--primary)]">
           Full leaderboards
         </Link>
@@ -151,47 +84,10 @@ export default async function LeagueTapePage() {
           All 32 rosters
         </Link>
         {" · "}
-        <Link href="/storylines" className="text-[var(--primary)]">
-          Storylines from this tape
+        <Link href="/games" className="text-[var(--primary)]">
+          Games
         </Link>
       </p>
     </div>
-  );
-}
-
-function LeaderCard({
-  title,
-  rows,
-}: {
-  title: string;
-  rows: Array<{ id: string; name: string; team: string; line: string }>;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {rows.length === 0 ? (
-          <p className="text-sm text-[var(--muted-foreground)]">No lines yet.</p>
-        ) : (
-          rows.map((row, index) => (
-            <div
-              key={row.id}
-              className="flex items-baseline justify-between gap-3 text-sm"
-            >
-              <p>
-                <span className="text-[var(--muted-foreground)]">{index + 1}.</span>{" "}
-                <span className="font-medium">{row.name}</span>{" "}
-                <span className="text-[var(--muted-foreground)]">{row.team}</span>
-              </p>
-              <p className="shrink-0 text-xs text-[var(--muted-foreground)]">
-                {row.line}
-              </p>
-            </div>
-          ))
-        )}
-      </CardContent>
-    </Card>
   );
 }

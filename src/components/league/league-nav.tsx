@@ -2,19 +2,20 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { href: "/league", label: "Tape" },
-  { href: "/league/leaders", label: "Leaders" },
-  { href: "/league/teams", label: "Rosters" },
-];
+  { href: "/league", label: "Races", key: "races" },
+  { href: "/league/leaders", label: "Leaders", key: "leaders" },
+  { href: "/league/teams", label: "Rosters", key: "rosters" },
+] as const;
 
-export function LeagueNav({ active }: { active: "tape" | "leaders" | "rosters" }) {
+export function LeagueNav({
+  active,
+}: {
+  active: "races" | "leaders" | "rosters";
+}) {
   return (
-    <div className="flex flex-wrap gap-2 border-b border-[var(--border)] pb-3">
+    <div className="flex flex-wrap gap-2">
       {links.map((link) => {
-        const isActive =
-          (active === "tape" && link.href === "/league") ||
-          (active === "leaders" && link.href === "/league/leaders") ||
-          (active === "rosters" && link.href === "/league/teams");
+        const isActive = active === link.key;
         return (
           <Link
             key={link.href}

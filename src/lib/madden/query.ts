@@ -119,7 +119,11 @@ export async function getLeaders(
     where: { weekIndex, category, ...minWhere },
     include: {
       player: true,
-      team: true,
+      team: {
+        include: {
+          franchise: { select: { primaryColor: true } },
+        },
+      },
     },
     orderBy,
     take,
@@ -135,6 +139,136 @@ export async function getTeamWeekStats(
     include: { player: true },
     orderBy: [{ category: "asc" }, { passYds: "desc" }, { rushYds: "desc" }, { recYds: "desc" }],
   });
+}
+
+export type SeasonPlayerTotal = {
+  rosterId: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  position: string;
+  jerseyNum: number;
+  yearsPro: number;
+  overall: number;
+  teamAbbr: string;
+  teamName: string;
+  teamColor: string;
+  wins: number;
+  losses: number;
+  ties: number;
+  passYds: number;
+  passTDs: number;
+  passInts: number;
+  passAtt: number;
+  passComp: number;
+  rushYds: number;
+  rushTDs: number;
+  rushAtt: number;
+  recYds: number;
+  recTDs: number;
+  recCatches: number;
+  defSacks: number;
+  defInts: number;
+  defTackles: number;
+  kickPts: number;
+  weeks: Set<number>;
+};
+
+export async function getSeasonPlayerTotals() {
+  const stats = await prisma.maddenPlayerStat.findMany({
+    where: { team: { NOT: { abbr: "UNK" } } },
+    include: {
+      player: true,
+      team: {
+        include: {
+          franchise: { select: { primaryColor: true } },
+        },
+      },
+    },
+  });
+
+  const byPlayer = new Map<string, SeasonPlayerTotal>();
+  for (const row of stats) {
+    const current = byPlayer.get(row.rosterId);
+    const rosterName = `${row.player.firstName} ${row.player.lastName}`.trim();
+    const name = rosterName || row.fullName;
+    const teamColor =
+      row.team.franchise?.primaryColor &&
+      row.team.franchise.primaryColor.toLowerCase() !== "#000000"
+        ? row.team.franchise.primaryColor
+        : "#d4af37";
+
+    if (!current) {
+      byPlayer.set(row.rosterId, {
+        rosterId: row.rosterId,
+        name,
+        firstName: row.player.firstName,
+        lastName: row.player.lastName,
+        position: row.player.position,
+        jerseyNum: row.player.jerseyNum,
+        yearsPro: row.player.yearsPro,
+        overall: row.player.overall,
+        teamAbbr: row.team.abbr,
+        teamName: row.team.displayName || row.team.nickName,
+        teamColor,
+        wins: row.team.wins,
+        losses: row.team.losses,
+        ties: row.team.ties,
+        passYds: row.passYds,
+        passTDs: row.passTDs,
+        passInts: row.passInts,
+        passAtt: row.passAtt,
+        passComp: row.passComp,
+        rushYds: row.rushYds,
+        rushTDs: row.rushTDs,
+        rushAtt: row.rushAtt,
+        recYds: row.recYds,
+        recTDs: row.recTDs,
+        recCatches: row.recCatches,
+        defSacks: row.defSacks,
+        defInts: row.defInts,
+        defTackles: row.defTackles,
+        kickPts: row.kickPts,
+        weeks: new Set([row.weekIndex]),
+      });
+      continue;
+    }
+
+    current.passYds += row.passYds;
+    current.passTDs += row.passTDs;
+    current.passInts += row.passInts;
+    current.passAtt += row.passAtt;
+    current.passComp += row.passComp;
+    current.rushYds += row.rushYds;
+    current.rushTDs += row.rushTDs;
+    current.rushAtt += row.rushAtt;
+    current.recYds += row.recYds;
+    current.recTDs += row.recTDs;
+    current.recCatches += row.recCatches;
+    current.defSacks += row.defSacks;
+    current.defInts += row.defInts;
+    current.defTackles += row.defTackles;
+    current.kickPts += row.kickPts;
+    const lastWeek = Math.max(...current.weeks);
+    current.weeks.add(row.weekIndex);
+    if (row.weekIndex >= lastWeek) {
+      current.name = name;
+      current.firstName = row.player.firstName;
+      current.lastName = row.player.lastName;
+      current.position = row.player.position;
+      current.jerseyNum = row.player.jerseyNum;
+      current.yearsPro = row.player.yearsPro;
+      current.overall = row.player.overall;
+      current.teamAbbr = row.team.abbr;
+      current.teamName = row.team.displayName || row.team.nickName;
+      current.teamColor = teamColor;
+      current.wins = row.team.wins;
+      current.losses = row.team.losses;
+      current.ties = row.team.ties;
+    }
+  }
+
+  return [...byPlayer.values()];
 }
 
 export async function getSeasonLeaders(category: MaddenStatCategory, take = 10) {

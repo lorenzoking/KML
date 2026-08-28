@@ -73,7 +73,7 @@ export default async function HomePage() {
                 <Link href="/games">Games & standings</Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-white/25 bg-black/30 text-white hover:bg-white/10">
-                <Link href="/league">League tape</Link>
+                <Link href="/league">Award races</Link>
               </Button>
             </div>
           </div>
