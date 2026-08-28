@@ -113,8 +113,9 @@ export default async function AdminSeasonPage() {
           <CardDescription>
             2026 NFL regular-season slate through week {settings.currentWeek}.
             Advance even if games are still open — they stay on this list until
-            someone files a result. File a missing score here and choose whether
-            coaches earn XP.
+            a result is filed. Companion schedule exports fill these automatically
+            when Madden already has the score. You can still file a missing score
+            here and choose whether coaches earn XP.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

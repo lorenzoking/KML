@@ -11,7 +11,7 @@ export const KIND_USE_HINTS: Record<MaddenExportKind, string> = {
   STANDINGS:
     "Records and ranks — wins, losses, conference/division. Could later fill standings.",
   SCHEDULE:
-    "Matchups and scores by week. Could later fill the games page.",
+    "Matchups and scores by week. Fills open games on the site when Madden already has the score.",
   TEAM_STATS:
     "Team-level weekly stats. Could later power box-score summaries.",
   PLAYER_STATS:
