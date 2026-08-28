@@ -20,20 +20,22 @@ import { LeagueNav } from "@/components/league/league-nav";
 import {
   devTraitLabel,
   displayWeek,
-  formatHeight,
   formatRecord,
   formatSalary,
   playerName,
   POSITION_GROUP_ORDER,
   positionGroup,
+  rosterSeasonLine,
+  sumPlayerStats,
+  type PlayerStatSums,
 } from "@/lib/madden/display";
 import {
   ensureMaddenLeague,
   getMaddenTeam,
-  getTeamWeekStats,
   latestStatWeek,
 } from "@/lib/madden/query";
 import { buildShareMetadata } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +51,16 @@ export async function generateMetadata({
   });
 }
 
+type RosterPlayer = Awaited<
+  ReturnType<typeof getMaddenTeam>
+> extends infer Team
+  ? Team extends { players: infer Players }
+    ? Players extends Array<infer Player>
+      ? Player
+      : never
+    : never
+  : never;
+
 export default async function LeagueTeamPage({
   params,
 }: {
@@ -59,25 +71,38 @@ export default async function LeagueTeamPage({
   const team = await getMaddenTeam(abbr);
   if (!team) notFound();
   const weekIndex = await latestStatWeek();
-  const weekStats =
-    weekIndex == null ? [] : await getTeamWeekStats(team.maddenTeamId, weekIndex);
   const coach =
     team.franchise?.memberships[0]?.user.name || team.userName || "CPU";
+
+  const withStats = team.players.map((player) => ({
+    player,
+    stats: sumPlayerStats(player.stats),
+  }));
+  const byId = new Map(withStats.map((row) => [row.player.rosterId, row.stats]));
 
   const groups = POSITION_GROUP_ORDER.map((label) => ({
     label,
     players: team.players.filter((player) => positionGroup(player.position) === label),
   })).filter((group) => group.players.length > 0);
 
-  const passing = weekStats.filter((row) => row.category === "PASSING" && row.passAtt > 0);
-  const rushing = weekStats.filter((row) => row.category === "RUSHING" && row.rushYds > 0);
-  const receiving = weekStats.filter(
-    (row) => row.category === "RECEIVING" && row.recCatches > 0
+  const passing = topBy(withStats, (row) => row.stats.passAtt >= 8, (row) => row.stats.passYds);
+  const rushing = topBy(
+    withStats,
+    (row) => {
+      const pos = row.player.position.toUpperCase();
+      return row.stats.rushYds >= 25 && (pos === "HB" || pos === "FB" || pos === "QB");
+    },
+    (row) => row.stats.rushYds
   );
-  const defense = weekStats.filter(
-    (row) =>
-      row.category === "DEFENSE" &&
-      (row.defSacks > 0 || row.defInts > 0 || row.defTackles > 0)
+  const receiving = topBy(
+    withStats,
+    (row) => row.stats.recCatches > 0,
+    (row) => row.stats.recYds
+  );
+  const defense = topBy(
+    withStats,
+    (row) => row.stats.defSacks > 0 || row.stats.defInts > 0 || row.stats.defTackles > 0,
+    (row) => row.stats.defSacks * 12 + row.stats.defInts * 12 + row.stats.defTackles * 0.4
   );
 
   return (
@@ -92,56 +117,52 @@ export default async function LeagueTeamPage({
         <p className="mt-2 text-sm text-[var(--muted-foreground)]">
           Coach {coach} · {formatRecord(team.wins, team.losses, team.ties)} ·{" "}
           {team.ovr} OVR · {team.players.length} players
+          {weekIndex != null ? ` · season through Week ${displayWeek(weekIndex)}` : ""}
         </p>
       </div>
       <LeagueNav active="rosters" />
 
       {weekIndex != null ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Week {displayWeek(weekIndex)} lines</CardTitle>
-            <CardDescription>
-              Player stats from the latest weekly export.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <MiniStat
-              title="Passing"
-              rows={passing.map(
-                (row) =>
-                  `${row.fullName || playerName(row.player)} — ${row.passYds} yds, ${row.passTDs} TD, ${row.passInts} INT`
-              )}
-            />
-            <MiniStat
-              title="Rushing"
-              rows={rushing.map(
-                (row) =>
-                  `${row.fullName || playerName(row.player)} — ${row.rushYds} yds, ${row.rushTDs} TD`
-              )}
-            />
-            <MiniStat
-              title="Receiving"
-              rows={receiving.map(
-                (row) =>
-                  `${row.fullName || playerName(row.player)} — ${row.recCatches} rec, ${row.recYds} yds, ${row.recTDs} TD`
-              )}
-            />
-            <MiniStat
-              title="Defense"
-              rows={defense.map(
-                (row) =>
-                  `${row.fullName || playerName(row.player)} — ${row.defSacks} sacks, ${row.defInts} INT, ${row.defTackles} tkl`
-              )}
-            />
-          </CardContent>
-        </Card>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <LeaderCard
+            title="Passing"
+            rows={passing.map((row) => ({
+              name: playerName(row.player),
+              line: rosterSeasonLine("QB", row.stats),
+            }))}
+          />
+          <LeaderCard
+            title="Rushing"
+            rows={rushing.map((row) => ({
+              name: playerName(row.player),
+              line: rosterSeasonLine(row.player.position, row.stats),
+            }))}
+          />
+          <LeaderCard
+            title="Receiving"
+            rows={receiving.map((row) => ({
+              name: playerName(row.player),
+              line: rosterSeasonLine("WR", row.stats),
+            }))}
+          />
+          <LeaderCard
+            title="Defense"
+            rows={defense.map((row) => ({
+              name: playerName(row.player),
+              line: rosterSeasonLine(row.player.position, row.stats),
+            }))}
+          />
+        </div>
       ) : null}
 
       {groups.map((group) => (
         <Card key={group.label}>
           <CardHeader>
             <CardTitle>{group.label}</CardTitle>
-            <CardDescription>{group.players.length} players</CardDescription>
+            <CardDescription>
+              {group.players.length} players
+              {weekIndex != null ? " · season totals on each row" : ""}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -151,34 +172,56 @@ export default async function LeagueTeamPage({
                   <TableHead>Player</TableHead>
                   <TableHead>Pos</TableHead>
                   <TableHead>OVR</TableHead>
-                  <TableHead>Age</TableHead>
-                  <TableHead>Ht/Wt</TableHead>
-                  <TableHead>Dev</TableHead>
-                  <TableHead>Cap</TableHead>
+                  <TableHead className="min-w-[14rem]">Season</TableHead>
+                  <TableHead className="hidden md:table-cell">Age</TableHead>
+                  <TableHead className="hidden lg:table-cell">Dev</TableHead>
+                  <TableHead className="hidden lg:table-cell">Cap</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {group.players.map((player) => (
-                  <TableRow key={player.id}>
-                    <TableCell>{player.jerseyNum || "—"}</TableCell>
-                    <TableCell className="font-medium">
-                      {playerName(player)}
-                      {player.isOnIR ? (
-                        <Badge variant="hotseat" className="ml-2">
-                          IR
-                        </Badge>
-                      ) : null}
-                    </TableCell>
-                    <TableCell>{player.position}</TableCell>
-                    <TableCell>{player.overall}</TableCell>
-                    <TableCell>{player.age}</TableCell>
-                    <TableCell>
-                      {formatHeight(player.height)} / {player.weight || "—"}
-                    </TableCell>
-                    <TableCell>{devTraitLabel(player.devTrait) || "—"}</TableCell>
-                    <TableCell>{formatSalary(player.contractSalary)}</TableCell>
-                  </TableRow>
-                ))}
+                {group.players.map((player) => {
+                  const stats = byId.get(player.rosterId);
+                  const line = stats ? rosterSeasonLine(player.position, stats) : "—";
+                  const hasLine = line !== "—";
+                  return (
+                    <TableRow key={player.id}>
+                      <TableCell className="tabular-nums">
+                        {player.jerseyNum || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <p className="font-medium">
+                          {playerName(player)}
+                          {player.isOnIR ? (
+                            <Badge variant="hotseat" className="ml-2">
+                              IR
+                            </Badge>
+                          ) : null}
+                        </p>
+                      </TableCell>
+                      <TableCell>{player.position}</TableCell>
+                      <TableCell className="tabular-nums">{player.overall}</TableCell>
+                      <TableCell
+                        className={cn(
+                          "whitespace-nowrap text-xs sm:text-sm",
+                          hasLine
+                            ? "text-[var(--foreground)]"
+                            : "text-[var(--muted-foreground)]"
+                        )}
+                      >
+                        {line}
+                      </TableCell>
+                      <TableCell className="hidden tabular-nums md:table-cell">
+                        {player.age}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {devTraitLabel(player.devTrait) || "—"}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {formatSalary(player.contractSalary)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </CardContent>
@@ -188,18 +231,43 @@ export default async function LeagueTeamPage({
   );
 }
 
-function MiniStat({ title, rows }: { title: string; rows: string[] }) {
+function topBy(
+  rows: Array<{ player: RosterPlayer; stats: PlayerStatSums }>,
+  eligible: (row: { player: RosterPlayer; stats: PlayerStatSums }) => boolean,
+  metric: (row: { player: RosterPlayer; stats: PlayerStatSums }) => number,
+  take = 5
+) {
+  return rows
+    .filter(eligible)
+    .sort((a, b) => metric(b) - metric(a))
+    .slice(0, take);
+}
+
+function LeaderCard({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: Array<{ name: string; line: string }>;
+}) {
   if (rows.length === 0) return null;
   return (
-    <div>
-      <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-        {title}
-      </p>
-      <ul className="space-y-1 text-sm">
-        {rows.slice(0, 8).map((row) => (
-          <li key={row}>{row}</li>
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>Season leaders</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {rows.map((row, index) => (
+          <div key={`${title}-${row.name}`} className="flex items-baseline justify-between gap-3 text-sm">
+            <p className="min-w-0 truncate">
+              <span className="text-[var(--muted-foreground)]">{index + 1}.</span>{" "}
+              <span className="font-medium">{row.name}</span>
+            </p>
+            <p className="shrink-0 text-xs text-[var(--muted-foreground)]">{row.line}</p>
+          </div>
         ))}
-      </ul>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

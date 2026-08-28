@@ -29,7 +29,10 @@ export async function getMaddenTeam(abbr: string) {
     where: { abbr: { equals: abbr, mode: "insensitive" } },
     include: {
       ...teamInclude,
-      players: { orderBy: [{ overall: "desc" }, { lastName: "asc" }] },
+      players: {
+        orderBy: [{ overall: "desc" }, { lastName: "asc" }],
+        include: { stats: true },
+      },
     },
   });
 }

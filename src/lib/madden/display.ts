@@ -93,3 +93,137 @@ export function racePhaseLabel(week: number) {
   if (week <= 12) return "Midseason";
   return "Stretch-run";
 }
+
+export type PlayerStatSums = {
+  passYds: number;
+  passTDs: number;
+  passInts: number;
+  passAtt: number;
+  passComp: number;
+  rushYds: number;
+  rushTDs: number;
+  rushAtt: number;
+  recYds: number;
+  recTDs: number;
+  recCatches: number;
+  defSacks: number;
+  defInts: number;
+  defTackles: number;
+  kickPts: number;
+  games: number;
+};
+
+export function emptyStatSums(): PlayerStatSums {
+  return {
+    passYds: 0,
+    passTDs: 0,
+    passInts: 0,
+    passAtt: 0,
+    passComp: 0,
+    rushYds: 0,
+    rushTDs: 0,
+    rushAtt: 0,
+    recYds: 0,
+    recTDs: 0,
+    recCatches: 0,
+    defSacks: 0,
+    defInts: 0,
+    defTackles: 0,
+    kickPts: 0,
+    games: 0,
+  };
+}
+
+export function sumPlayerStats(
+  rows: Array<{
+    weekIndex: number;
+    passYds: number;
+    passTDs: number;
+    passInts: number;
+    passAtt: number;
+    passComp: number;
+    rushYds: number;
+    rushTDs: number;
+    rushAtt: number;
+    recYds: number;
+    recTDs: number;
+    recCatches: number;
+    defSacks: number;
+    defInts: number;
+    defTackles: number;
+    kickPts: number;
+  }>
+): PlayerStatSums {
+  const sums = emptyStatSums();
+  const weeks = new Set<number>();
+  for (const row of rows) {
+    weeks.add(row.weekIndex);
+    sums.passYds += row.passYds;
+    sums.passTDs += row.passTDs;
+    sums.passInts += row.passInts;
+    sums.passAtt += row.passAtt;
+    sums.passComp += row.passComp;
+    sums.rushYds += row.rushYds;
+    sums.rushTDs += row.rushTDs;
+    sums.rushAtt += row.rushAtt;
+    sums.recYds += row.recYds;
+    sums.recTDs += row.recTDs;
+    sums.recCatches += row.recCatches;
+    sums.defSacks += row.defSacks;
+    sums.defInts += row.defInts;
+    sums.defTackles += row.defTackles;
+    sums.kickPts += row.kickPts;
+  }
+  sums.games = weeks.size;
+  return sums;
+}
+
+export function rosterSeasonLine(position: string, stats: PlayerStatSums) {
+  const pos = position.toUpperCase();
+  const group = positionGroup(pos);
+  const parts: string[] = [];
+
+  if (pos === "QB") {
+    if (stats.passAtt > 0) {
+      parts.push(`${stats.passComp}/${stats.passAtt}`);
+      parts.push(`${formatStat(stats.passYds)} yds`);
+      parts.push(`${stats.passTDs} TD`);
+      parts.push(`${stats.passInts} INT`);
+    }
+    if (stats.rushYds >= 40) parts.push(`${formatStat(stats.rushYds)} rush`);
+  } else if (pos === "HB" || pos === "FB") {
+    if (stats.rushYds > 0 || stats.rushTDs > 0) {
+      parts.push(`${formatStat(stats.rushYds)} rush`);
+      parts.push(`${stats.rushTDs} TD`);
+    }
+    if (stats.recCatches > 0) {
+      parts.push(`${stats.recCatches} rec`);
+      if (stats.recYds >= 40) parts.push(`${formatStat(stats.recYds)} yds`);
+    }
+  } else if (pos === "WR" || pos === "TE") {
+    if (stats.recCatches > 0 || stats.recYds > 0) {
+      parts.push(`${stats.recCatches} rec`);
+      parts.push(`${formatStat(stats.recYds)} yds`);
+      parts.push(`${stats.recTDs} TD`);
+    }
+    if (stats.rushYds >= 40) parts.push(`${formatStat(stats.rushYds)} rush`);
+  } else if (group === "Defense") {
+    if (stats.defSacks > 0 || stats.defInts > 0 || stats.defTackles > 0) {
+      parts.push(`${formatSacks(stats.defSacks)} sacks`);
+      parts.push(`${stats.defInts} INT`);
+      parts.push(`${formatStat(stats.defTackles)} tkl`);
+    }
+  } else if (pos === "K" || pos === "P") {
+    if (stats.kickPts > 0) parts.push(`${stats.kickPts} pts`);
+  } else {
+    if (stats.passAtt > 0) parts.push(`${formatStat(stats.passYds)} pass`);
+    if (stats.rushYds > 0) parts.push(`${formatStat(stats.rushYds)} rush`);
+    if (stats.recCatches > 0) parts.push(`${stats.recCatches} rec`);
+    if (stats.defSacks > 0 || stats.defInts > 0) {
+      parts.push(`${formatSacks(stats.defSacks)} sacks`);
+    }
+    if (stats.kickPts > 0) parts.push(`${stats.kickPts} pts`);
+  }
+
+  return parts.length > 0 ? parts.join(" · ") : "—";
+}

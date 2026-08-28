@@ -56,7 +56,7 @@ export default async function LeagueTeamsPage() {
         </h1>
         <p className="mt-2 text-sm text-[var(--muted-foreground)]">
           Every franchise the Companion App sent. Open a club for the full
-          roster and this week’s player lines.
+          roster and each player’s season stats.
         </p>
       </div>
       <LeagueNav active="rosters" />
