@@ -5,31 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit";
 import { maddenUndeclaredForceWinXpReason } from "@/lib/xp";
 import { isMaddenSimulated } from "@/lib/madden/game-status";
-
-function canonAbbr(abbr: string) {
-  const aliases: Record<string, string> = {
-    AZ: "ARI",
-    ARZ: "ARI",
-    WSH: "WAS",
-    JAC: "JAX",
-  };
-  const up = abbr.toUpperCase();
-  return aliases[up] ?? up;
-}
-
-async function franchiseIdForTeam(team: {
-  franchiseId: string | null;
-  abbr: string;
-}) {
-  if (team.franchiseId) return team.franchiseId;
-  const abbr = canonAbbr(team.abbr);
-  if (!abbr || abbr === "UNK") return null;
-  const franchise = await prisma.franchise.findUnique({
-    where: { abbreviation: abbr },
-    select: { id: true },
-  });
-  return franchise?.id ?? null;
-}
+import { franchiseIdForMaddenTeam } from "@/lib/madden/franchises";
 
 async function matchupHasSiteTicket(
   seasonId: string,
@@ -62,7 +38,8 @@ async function matchupHasSiteTicket(
  * When a schedule export shows a CPU-simmed game (Madden status 3) and nobody
  * filed that matchup on the site, treat it as an undeclared force win: game-played
  * XP for the winning coach only, no win bonus, no opponent XP.
- * Human-played games (status 2) are left to the usual score submission.
+ * Human-played games (status 2) are auto-filed from the same export when the
+ * site still has that matchup open.
  */
 export async function awardUndeclaredForceWinXp(scheduleIds: string[]) {
   if (scheduleIds.length === 0) return 0;
@@ -92,8 +69,8 @@ export async function awardUndeclaredForceWinXp(scheduleIds: string[]) {
     if (!isMaddenSimulated(game.status)) continue;
     if (game.homeScore === game.awayScore) continue;
 
-    const homeFranchiseId = await franchiseIdForTeam(game.homeTeam);
-    const awayFranchiseId = await franchiseIdForTeam(game.awayTeam);
+    const homeFranchiseId = await franchiseIdForMaddenTeam(game.homeTeam);
+    const awayFranchiseId = await franchiseIdForMaddenTeam(game.awayTeam);
     if (!homeFranchiseId || !awayFranchiseId) continue;
 
     const week = game.weekIndex + 1;

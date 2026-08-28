@@ -12,6 +12,7 @@ import {
   teamIdOf,
 } from "@/lib/madden/parse";
 import { awardUndeclaredForceWinXp } from "@/lib/madden/undeclared-force-win-xp";
+import { syncMaddenScoresToOpenGames } from "@/lib/madden/sync-scores";
 
 async function franchiseByAbbr() {
   const franchises = await prisma.franchise.findMany({
@@ -304,7 +305,7 @@ async function indexTeamWeekStats(payload: unknown) {
   }
 }
 
-async function indexSchedule(payload: unknown) {
+async function indexSchedule(payload: unknown, weekType: string | null = null) {
   const scheduleIds: string[] = [];
   for (const row of payloadList(payload, "gameScheduleInfoList")) {
     const scheduleId = str(row, "scheduleId") || String(row.scheduleId ?? "");
@@ -343,6 +344,11 @@ async function indexSchedule(payload: unknown) {
   } catch (error) {
     console.error("Failed to award undeclared force-win XP", error);
   }
+  try {
+    await syncMaddenScoresToOpenGames(scheduleIds, { weekType });
+  } catch (error) {
+    console.error("Failed to sync Madden scores to open games", error);
+  }
 }
 
 export async function indexMaddenDump(dump: {
@@ -350,6 +356,7 @@ export async function indexMaddenDump(dump: {
   kind: MaddenExportKind;
   teamId: string | null;
   dataType: string | null;
+  weekType?: string | null;
   success: boolean | null;
   payload: unknown;
 }) {
@@ -366,7 +373,7 @@ export async function indexMaddenDump(dump: {
   else if (dump.kind === MaddenExportKind.TEAM_ROSTER) {
     await indexRoster(dump.payload, dump.teamId);
   } else if (dump.kind === MaddenExportKind.SCHEDULE || dump.dataType === "schedules") {
-    await indexSchedule(dump.payload);
+    await indexSchedule(dump.payload, dump.weekType ?? null);
   } else if (
     dump.kind === MaddenExportKind.TEAM_STATS ||
     dump.dataType === "team" ||
@@ -393,6 +400,7 @@ export async function indexPendingMaddenDumps(take = 40) {
       kind: true,
       teamId: true,
       dataType: true,
+      weekType: true,
       success: true,
       payload: true,
     },

@@ -146,8 +146,10 @@ export default async function GameDetailPage({
           )}
           {game.filedByCommissioner ? (
             <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
-              Commissioner filed this result. It counts for standings and
-              Coaching Reputation.
+              {game.notes?.includes("Madden Companion")
+                ? "Posted from the Madden Companion export so the board did not wait on a coach submission."
+                : "Commissioner filed this result."}{" "}
+              It counts for standings and Coaching Reputation.
               {game.skipXp
                 ? " Coaches did not earn XP."
                 : " Coaches earned XP as if they had submitted."}
@@ -212,11 +214,18 @@ export default async function GameDetailPage({
             <CardTitle>Your Sim Score</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-[var(--muted-foreground)]">
-            You rated {game.opponentTeam.abbreviation} {game.opponentSimScore}/5 with
-            the result. Waiting on {game.opponentTeam.abbreviation}
-            {game.userTeamSimScore == null
-              ? " to submit yours."
-              : ` — they rated you ${game.userTeamSimScore}/5.`}
+            {game.opponentSimScore == null
+              ? `No Sim Score was filed with this result. Waiting on ${game.opponentTeam.abbreviation}${
+                  game.userTeamSimScore == null
+                    ? " to rate you from this page."
+                    : ` — they rated you ${game.userTeamSimScore}/5.`
+                }`
+              : `You rated ${game.opponentTeam.abbreviation} ${game.opponentSimScore}/5 with
+            the result. Waiting on ${game.opponentTeam.abbreviation}${
+                game.userTeamSimScore == null
+                  ? " to submit yours."
+                  : ` — they rated you ${game.userTeamSimScore}/5.`
+              }`}
           </CardContent>
         </Card>
       ) : null}
