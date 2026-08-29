@@ -125,6 +125,9 @@ function SlateRow({
       <p className="mt-1 text-xs text-[var(--muted-foreground)]">
         {row.away.name} at {row.home.name}
         {row.status === "missing" && !isCommissioner ? " · waiting on a score" : ""}
+        {row.status === "approved" || row.status === "pending"
+          ? " · recap & box score"
+          : ""}
       </p>
       {isCommissioner && row.status === "missing" && seasonNumber != null ? (
         <div className="mt-3">

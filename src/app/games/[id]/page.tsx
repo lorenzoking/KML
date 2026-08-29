@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ForceWinScoreForm } from "@/components/forms/force-win-score-form";
+import { GameBoxScoreCard } from "@/components/games/game-box-score";
 import { SimScoreForm } from "@/components/forms/sim-score-form";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -13,11 +14,12 @@ import {
 } from "@/components/ui/card";
 import { getSessionUser, isCommissioner } from "@/lib/auth";
 import { GAME_TYPE_LABELS, forceWinReasonLabel, forceWinXpBlurb } from "@/lib/constants";
+import { formatLeagueDate } from "@/lib/datetime";
 import { formatMatchupScore, hasFinalScores } from "@/lib/game-score";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
+import { getGameBoxScore } from "@/lib/madden/box-score";
 import { prisma } from "@/lib/prisma";
 import { formatBothSimScores } from "@/lib/sim-score";
-import { formatLeagueDate } from "@/lib/datetime";
 
 export default async function GameDetailPage({
   params,
@@ -79,6 +81,16 @@ export default async function GameDetailPage({
 
   const ratedTeam =
     membership?.franchiseId === game.opponentTeamId ? game.userTeam : game.opponentTeam;
+
+  const boxScore = await getGameBoxScore({
+    week: game.week,
+    userTeamId: game.userTeamId,
+    opponentTeamId: game.opponentTeamId,
+    userAbbr: game.userTeam.abbreviation,
+    opponentAbbr: game.opponentTeam.abbreviation,
+    userName: game.userTeam.name,
+    opponentName: game.opponentTeam.name,
+  });
 
   return (
     <div className="space-y-6">
@@ -160,6 +172,8 @@ export default async function GameDetailPage({
           ) : null}
         </CardContent>
       </Card>
+
+      <GameBoxScoreCard box={boxScore} />
 
       {canPostForceWinScore ? (
         <Card className="border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]">
