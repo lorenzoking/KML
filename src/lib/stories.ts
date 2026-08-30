@@ -26,6 +26,8 @@ const STORY_ASSETS = {
   week4Primetime: "/stories/wk4/primetime.png",
   week4Potw: "/stories/wk4/potw.png",
   week5Primetime: "/stories/wk5/primetime.png",
+  week7Primetime: "/stories/wk7/primetime.png",
+  week7PowerRankings: "/stories/wk7/power-rankings.png",
 } as const;
 
 const DEFAULT_STORIES = [
@@ -1042,9 +1044,329 @@ Lock your picks. Submit the scores. Let the desk argue.
 This is KML. This is primetime. Every game matters.
 
 Compete. Conquer. Be legendary.`,
-    isFeatured: true,
+    isFeatured: false,
     sortOrder: -70,
     week: 5,
+  },
+  {
+    slug: "season-1-week-7-primetime",
+    category: StoryCategory.GAME_OF_WEEK,
+    title: "KML Primetime Week 7: two unbeatens, one Hot Seat, four games that change the table",
+    eyebrow: "Games of the week · Primetime slate",
+    summary:
+      "Ren’s 6–0 Patriots meet Jaylen Stowe’s 5–1 Bears. Lefty’s other perfect record draws Javon on the Hot Seat. Curry hunts a get-right against Chance. Petey’s chalk gets Trent’s crown. Anybody can win. Legends are made in primetime.",
+    body: `![KML Primetime Week 7](${STORY_ASSETS.week7Primetime})
+
+**Anybody can win. But legends are made in primetime. KML.**
+
+Two unbeatens are still standing. One coach is already on the Hot Seat. The last 4–0 is already dead. Week 7 is not a soft middle-of-the-schedule Sunday. It is the first week the table can split in half.
+
+This is KML. This is primetime. Every game matters.
+
+## What Week 6 stamped
+
+The board closed 14–0. The Companion tape is in. Here is what actually traveled.
+
+**Ren stayed perfect.** New England dropped **45–17** on the Jets. **Drake Maye** went **352 yards, four touchdowns, zero picks, 150.6 rating**. He is the season passing leader at **2,033 yards and 22 touchdowns**. Ren is **6–0**, **93 Elite** — the only Elite reputation on the board.
+
+**Lefty stayed perfect with him.** Philadelphia beat Carolina **37–20**. **Saquon Barkley** ran for **201 and two scores**. The Eagles are **6–0**, **247–121**, and Lefty sits at **92 Stable** — one point from joining Ren in Elite.
+
+**Jaylen Stowe survived the shootout.** Chicago 39–36 over Atlanta. **Bijan Robinson** went for **217 and two** and still lost. The Bears are **5–1** and they just earned the Game of the Week.
+
+**Chance took primetime.** Green Bay 38–31 over Dallas. **Jordan Love** went **338 and four, no picks**. **Josh Jacobs** added 137. Javon is now **2–4** and **74 Hot Seat**.
+
+**Petey put 40 on 0–6 Denver.** **Jaxon Smith-Njigba** went **7 catches, 191 yards, three touchdowns**. He is the season receiving leader at **824 yards and eight scores**. The Morning Show chalk is **4–2**.
+
+The rest of the stamp: **Big Al** won a 52–49 war with Tampa. **Trent** beat **Oli** 38–34 — **Patrick Mahomes 365, four scores, no picks**. **Swipe** primetime-dunked Washington 35–16. **Raine** stayed 5–1. **Puddin** is 0–6 on an 86 overall roster.
+
+And the Week 5 scar still sits on the table: **Dooders ended Curry’s 4–0**, 38–28. Detroit is **4–1** and **Pressured at 80**. Week 7 is the get-right.
+
+## Game of the Week — Patriots vs Bears
+
+**The last perfect records collide.**
+
+**Ren’s Patriots (85 OVR)** are **6–0**, **209–103**, and the cleanest two-way start in the league. Maye just carved the Jets. **A.J. Brown** is still the contested-catch WR1 in New England. The reputation ledger already called it: **Elite**.
+
+**Jaylen Stowe’s Bears (84 OVR)** are **5–1** and **Stable at 87**. Cover-athlete juice. Caleb Williams. A club that just outlasted 217 rushing yards and did not blink. The only 5–1 in the NFC just drew the only 6–0 in the AFC.
+
+If Ren leaves Chicago 7–0, the dark-horse toys stop looking like a story and start looking like the favorite. If Stowe takes the 0, the Bears become the first club that can say they beat Elite.
+
+## Why this game matters
+
+- **6–0 vs 5–1:** somebody’s perfect-or-close start ends Sunday
+- **Elite vs the climber:** Ren is the only 93 on the board. Stowe is the team that earned this stage
+- **Maye vs the cover:** the season passing leader against a 5–1 defense that just survived Bijan
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Patriots** | Ren | **Drake Maye** | **Maye’s Week 6** — 352, 4 TD, 0 INT is the new baseline | **A.J. Brown** — 532 yards on the season, the 1-on-1 answer |
+| **Bears** | Jaylen Stowe | **Caleb Williams** | **the 5–1 scar tissue** — they just won 39–36 and asked for this | **Jaylon Johnson** — erase Brown and make Maye work left |
+
+## The other unbeaten — Eagles vs Cowboys
+
+**The other perfect record meets the Hot Seat.**
+
+**Lefty’s Eagles (87 OVR)** are **6–0** and the highest-rated club that is also undefeated. Saquon just went for 201. **Andrew Mukuba** has **five interceptions** on the season. Philadelphia’s point differential is a different sport: **247–121**.
+
+**Javon’s Cowboys (85 OVR · 2–4)** have the toys and not the wins. **Dak Prescott** threw for **454** in the primetime loss to Chance. **George Pickens** had **9-185-1**. The tape says Dallas can score. The ledger says **74 Hot Seat**. One more ugly night against 6–0 and the seat gets hotter.
+
+CeeDee was the Week 5 promise. Week 6 was another one-score loss. Week 7 is Lefty in the building.
+
+## Why this game matters
+
+- **6–0 vs 2–4:** the statement vs the survival game
+- **Hot Seat math:** Javon is the only featured coach already under 75
+- **Saquon vs a leaking start:** 823 yards and 11 scores on the season, and Lefty is one point from Elite
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Eagles** | Lefty | **Jalen Hurts** | **Saquon Barkley** — 201 and 2 is the Week 6 stamp | **Mukuba / Woolen** — five and four INT, the takeaway problem |
+| **Cowboys** | Javon | **Dak Prescott** | **George Pickens** — 9-185 in a loss still moves the chains | **the Hot Seat** — 74 reputation, 2–4, no more quiet weeks |
+
+## NFC North get-right — Lions vs Packers
+
+**The 4–0 is already dead. Now they play each other.**
+
+**Curry’s Lions (85 OVR)** are **4–1** after Arizona ended the last unbeaten in Week 5. **Jahmyr Gibbs** is still the season rushing leader at **852 yards and 11 touchdowns** — and he was on a bye in Week 6. Curry is **Pressured at 80**. This is the first game where Detroit has to answer a loss.
+
+**Chance’s Packers (81 OVR)** are **4–2** and **Stable at 90**. He just took a primetime win over Javon. Love is **1,540 yards, 19 touchdowns, six picks** on the season. Chance has been telling the league he’s the best in it. A win over a Pressured 4–1 Lions club is how that talk becomes a division race.
+
+NFC North. Same building. One of them leaves looking like the North is theirs.
+
+## Why this game matters
+
+- **Get-right vs stack:** Curry needs the answer after 4–0 died. Chance wants two primetime wins in a row
+- **Gibbs vs Love:** the league’s rushing throne against a 4-TD primetime tape
+- **Division math:** 4–1 vs 4–2 in Week 7 is January seeding with a coat of paint
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Lions** | Curry | **Jared Goff** | **Jahmyr Gibbs** — 852 and 11, the season’s best back, fresh off the bye | **the Pressured 80** — a second loss makes 4–0 look like a mirage |
+| **Packers** | Chance | **Jordan Love** | **Love’s primetime** — 338, 4 TD, 0 INT is still warm | **Josh Jacobs** — 137 on Dallas, the downhill answer |
+
+## Chalk vs the crown — Seahawks vs Chiefs
+
+**Morning Show chalk. Crown check.**
+
+**Petey’s Seahawks (84 OVR)** are **4–2** and **Stable at 89**. JSN just dropped 191 and three on Denver. **Sam Darnold** has **1,674 yards** on the season. The chalk does not need 91 overall. It needs this kind of Sunday.
+
+**Trent’s Chiefs (85 OVR)** are **4–1** and coming off Mahomes at **365, four scores, no picks** against Oli. **Kenneth Walker** is second in the league in rushing at **835 yards**. Kansas City is the other 4–1 in the AFC, sitting behind only Ren and Raine.
+
+If Petey takes the crown, “Seahawks in 5” gets loud again. If Mahomes and Walker stack another one, the chalk has to explain a 4–3.
+
+## Why this game matters
+
+- **4–2 vs 4–1:** contender window, not a style-points bye
+- **JSN vs Walker:** season receiving throne vs the second-best back in the league
+- **Reputation vs roster:** Petey’s name was on the first-champion board. Trent has the 4–1 and the crown
+
+## Stars and X-factors
+
+| Side | Coach | QB to watch | Primary X-factor | Secondary juice |
+| --- | --- | --- | --- | --- |
+| **Seahawks** | Petey | **Sam Darnold** | **Jaxon Smith-Njigba** — 7-191-3, and 824 on the season | **the chalk** — this is the game the Morning Show sold in Week 1 |
+| **Chiefs** | Trent | **Patrick Mahomes** | **Mahomes’ 158.3** — 365, 4 TD, 0 INT against Oli | **Kenneth Walker** — 835 yards, the other half of 4–1 |
+
+## Primetime Week 7 cheat sheet
+
+| Window | Matchup | Coaches | Why it’s on the board |
+| --- | --- | --- | --- |
+| GOTW | Patriots–Bears | Ren vs Jaylen Stowe | 6–0 Elite vs 5–1. The last perfect records collide. |
+| Lights | Eagles–Cowboys | Lefty vs Javon | The other 6–0 vs the only Hot Seat. |
+| North | Lions–Packers | Curry vs Chance | Get-right after 4–0 died. Chance is rolling. |
+| Crown | Seahawks–Chiefs | Petey vs Trent | Morning Show chalk vs 4–1 Kansas City. |
+
+## The rest of the board is not quiet
+
+| Matchup | Records | Coaches | The intangible |
+| --- | --- | --- | --- |
+| **Saints vs Steelers** | 4–2 vs 4–2 | Slap vs Big Al | Slap is Pressured at 81. Big Al just won 52–49. |
+| **49ers at Falcons** | 4–2 vs 2–4 | Swipe vs Gotti | Swipe primetime-dunked Washington. Atlanta just lost 39–36. |
+| **Ravens vs Bengals** | 5–1 vs 3–2 | Raine vs Dawson | The other 5–1. Dawson is Pressured at 77. |
+| **Dolphins at Jets** | 3–2 vs 0–6 | Mease vs Jbone | Mease is 3–2 on a 76 overall. The rating still has not caught him. |
+| **Rams at Raiders** | 4–2 vs 2–4 | Jordan Stowe vs Da Truth | Hollywood is Pressured at 81 with the highest remaining overall. |
+| **Broncos at Cardinals** | 0–6 vs 3–3 | Puddin | 86 overall, zero wins. Arizona’s desk is vacant. |
+
+Byes: **Chargers, Bills, Jaguars, Commanders**. Oli’s 269 points stay on the shelf for a week.
+
+## Desk verdict
+
+Week 6 told you **Ren and Lefty can stay perfect**, **Maye is the passing throne**, **Saquon can drop 200**, **JSN can drop 191**, and **Javon’s toys do not save a Hot Seat**.
+
+Week 5 already told you **a 4–0 can die**. Curry is still wearing that one.
+
+Week 7 asks the loud ones:
+
+- Can Ren leave Chicago 7–0, or does Jaylen Stowe become the first coach to beat Elite?
+- Does Lefty walk into Elite at 7–0, or does a Hot Seat Cowboys club finally cash a 454-yard tape?
+- Is Curry’s get-right real against Chance, or does the North tilt to Green Bay?
+- Does Petey’s chalk take the crown, or do Mahomes and Walker make 4–1 look like January?
+
+Lock your picks. Submit the scores. Let the desk argue.
+
+This is KML. This is primetime. Every game matters.
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: true,
+    sortOrder: -80,
+    week: 7,
+  },
+  {
+    slug: "season-1-week-7-power-rankings",
+    category: StoryCategory.LEAGUE,
+    title: "KML Power Rankings Week 7: Lefty is the best team, Ren is the argument",
+    eyebrow: "League desk · Power rankings",
+    summary:
+      "Fourteen Week 6 results, the reputation ledger, season leaders, and point differential. The desk’s first official top 10 of KML Reborn — and the five names that just missed.",
+    body: `![KML Power Rankings Week 7](${STORY_ASSETS.week7PowerRankings})
+
+Record. Tape. Reputation. The desk does not rank vibes.
+
+Week 6 closed 14–0. Two clubs are still unbeaten. One coach is Elite. One is already on the Hot Seat. **Jahmyr Gibbs** still leads the league in rushing on a bye. **Drake Maye** just took the passing throne. **Jaxon Smith-Njigba** took the receiving one.
+
+This is the first official top 10 of KML Reborn.
+
+## How the desk built the board
+
+Standings are the floor, not the ceiling. The stack is:
+
+- **Record and point differential** — 6–0 with a +126 is not the same as 6–0 with a +106
+- **Week 6 Companion tape** — Maye 352/4/0, Saquon 201, JSN 7-191-3, Love 338/4/0, Mahomes 365/4/0
+- **Season leaders** — Maye 2,033/22, Gibbs 852/11, JSN 824/8, Mukuba and Ji’Ayir with five picks
+- **Reputation** — Ren is the only **Elite (93)**. Lefty is **92 Stable**. Javon is **74 Hot Seat**. Puddin is **66**
+- **Roster overalls** from the live export — Rams 88, Eagles 87, everybody else hunting
+
+Last week’s 4–0 is already dead. That counts.
+
+## 1. Lefty · Eagles — 6–0 · +126 · 87 OVR · 92 Stable
+
+**The best team on the board.**
+
+Philadelphia has the record, the differential, and the highest overall of the unbeatens. **247–121**. **Saquon Barkley** just ran for **201 and two**. **Andrew Mukuba** has **five interceptions** on the season. The last five results are WWWWW.
+
+Lefty is one point from Elite. If the Eagles take care of a Hot Seat Cowboys club in primetime, the ledger will catch the tape.
+
+The argument against #1 is a fair one: Ren has the Elite stamp and the stingiest defense. The desk still picked the +126.
+
+## 2. Ren · Patriots — 6–0 · +106 · 85 OVR · 93 Elite
+
+**The argument.**
+
+New England allowed **103 points**. That is the best defense in the league. **Drake Maye** is the passing leader at **2,033 yards and 22 touchdowns** after a **352/4/0, 150.6** demolition of the Jets. Ren is the only coach the reputation board calls **Elite**.
+
+If you rank the user over the spreadsheet, Ren is #1. If you rank the best team, Lefty stays there. Week 7 in Chicago is how this debate gets louder or dies.
+
+## 3. Jaylen Stowe · Bears — 5–1 · +54 · 84 OVR · 87 Stable
+
+**Survived 217. Earned the Game of the Week.**
+
+Chicago just beat Atlanta 39–36 while **Bijan Robinson** went for **217 and two**. That is not a soft 5–1. The Bears are the only 5–1 in the NFC and they drew the only Elite 6–0.
+
+Cover-athlete juice. Caleb Williams. A club that does not blink when the other sideline posts a 200-yard night. A win over Ren makes this a top-two conversation overnight.
+
+## 4. Raine · Ravens — 5–1 · +41 · 85 OVR · 86 Stable
+
+**The quiet 5–1.**
+
+Baltimore does not have a primetime headline this week and still sits behind only two perfect records and the Bears. **Derrick Henry** went **121 and three** in the 35–28 win over Cleveland. Form is WLWWW.
+
+The desk will not invent a problem that is not on the tape. 5–1 is 5–1. The slight dip under Chicago is differential and the Week 6 stage. Raine still has the other half of the 5–1 club in the AFC.
+
+## 5. Curry · Lions — 4–1 · +65 · 85 OVR · 80 Pressured
+
+**Gibbs throne. Still wearing the 4–0 scar.**
+
+Detroit’s differential is better than every 5–1 and every 4–1 except the math that already includes the Arizona loss. **Jahmyr Gibbs** leads the league at **852 yards and 11 touchdowns** and he was on a bye. Curry is **Pressured at 80** because Dooders ended 4–0, 38–28, in Week 5.
+
+That is why they are not third. The talent and the +65 keep them fifth. Week 7 against Chance is the get-right.
+
+## 6. Trent · Chiefs — 4–1 · +27 · 85 OVR · 85 Stable
+
+**Mahomes 365. Walker 835.**
+
+Kansas City just beat **Oli** 38–34. **Patrick Mahomes** went **365, four scores, no picks, 158.3**. **Kenneth Walker** is second in the league in rushing at **835 yards**. The Chiefs are the other 4–1 in the AFC, sitting behind only Ren and Raine in the conference.
+
+The differential is the softest of the top six. The crown and the Week 6 tape put them here anyway. Petey is next on the schedule.
+
+## 7. Oli · Chargers — 4–2 · +71 · 82 OVR · 90 Stable
+
+**269 points. The league’s loudest offense.**
+
+Nobody has scored like Los Angeles. **Justin Herbert** is second in passing at **1,912 yards**. **Omarion Hampton** has **690 and nine**. The +71 is the best differential of any two-loss club.
+
+They just lost to Trent and they are on a bye. The desk will not bury the most explosive offense in Madden 27 for one 38–34. If the Chargers are out of your top 10, you are ranking record and ignoring the scoreboard.
+
+## 8. Petey · Seahawks — 4–2 · +53 · 84 OVR · 89 Stable
+
+**JSN 191. Morning Show chalk.**
+
+**Jaxon Smith-Njigba** went **7-191-3** on 0–6 Denver and leads the league at **824 yards and eight scores**. **Sam Darnold** has **1,674**. Petey was the first-champion chalk in Week 1. The 4–2 is not a collapse. It is a club that just dropped 40 and drew the crown.
+
+A win over Trent and this ranking looks light by Tuesday.
+
+## 9. Chance · Packers — 4–2 · +40 · 81 OVR · 90 Stable
+
+**Primetime 338 and four.**
+
+Chance has been telling the league he’s the best in it. Week 6 was the receipt: **38–31 over Javon**, **Jordan Love 338, four touchdowns, zero picks**, **Josh Jacobs 137**. Love is **1,540 yards, 19 scores, six picks** on the season. Chance sits at **90** — same neighborhood as Oli, better than most of the 4–2 cluster.
+
+The 81 overall is the lowest roster in the top 10. The tape does not care. He plays Curry in primetime.
+
+## 10. Big Al · Steelers — 4–2 · +37 · 84 OVR · 89 Stable
+
+**Four straight. 52–49 war.**
+
+The Morning Show sleeper opened 0–2. The last four are WWWW. Week 6 was a **52–49** win over Tampa. Pittsburgh has scored **221**. **Patrick Queen** has four interceptions on the season. Big Al is **89 Stable** and still hunting the ring the Week 5 desk mentioned.
+
+They play Slap’s 4–2 Saints. A fifth straight and the 10-spot starts looking like a crime.
+
+## First five out
+
+| Rank | Club | Record | Coach | Why they’re here |
+| --- | --- | --- | --- | --- |
+| 11 | **Rams** | 4–2 · +53 · 88 OVR | Jordan Stowe | Best remaining roster. Pressured at 81. The Week 1 hole still follows Hollywood. |
+| 12 | **49ers** | 4–2 · +42 | Swipe | Three straight including a 35–16 primetime dunk. Pressured at 81. |
+| 13 | **Buccaneers** | 4–2 · +42 | Tha Don | Lost the 52–49 war. Still a real 4–2. |
+| 14 | **Saints** | 4–2 · +10 | Slap | Four straight, tiniest differential of the 4–2s, Pressured at 81. |
+| 15 | **Dolphins** | 3–2 · +36 · 76 OVR | Mease | Beating the rating every week. The 76 overall is still the floor. One more win and he’s in the 10. |
+
+## The rest of the noise
+
+**Vacant desks:** Arizona is 3–3 with a +48 after ending Curry’s 4–0. The Giants are 2–4. Neither gets a power-ranking vote without a coach.
+
+**Hot Seat:** Javon is 2–4 with a +14 and a 454-yard tape that does not win. **Jbone** is 0–6. **Puddin** is 0–6 on an **86 overall** with a **66** reputation. That is the worst record-to-roster gap in the league.
+
+**On the rise, not in yet:** Dawson’s Bengals are 3–2 with a −19. Quon is 2–3. The desk is not charitable with negative differentials this week.
+
+## Desk verdict
+
+The table says Eagles, Patriots, Bears, Ravens.
+
+The tape says Maye, Saquon, Gibbs, JSN, Love, Mahomes.
+
+The ledger says Ren is Elite, Lefty is a point away, Curry is Pressured, and Javon is already in the fire.
+
+So the top 10 is not a standings paste. It is the desk’s board after six weeks of actual football.
+
+Week 7 can wreck it in one night:
+
+- If **Jaylen Stowe** beats Elite, the 3-spot is a lie by Monday
+- If **Javon** cashes 454, Lefty’s #1 gets a scar
+- If **Curry** gets right, fifth is too low
+- If **Petey** takes the crown, eighth is a joke
+
+Lock your argument. The board will move when the scores do.
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: false,
+    sortOrder: -78,
+    week: 7,
   },
   {
     slug: "season-1-week-1-preview",

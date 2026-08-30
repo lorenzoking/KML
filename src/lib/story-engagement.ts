@@ -94,7 +94,7 @@ type DefaultPollOption = {
 
 type DefaultPollQuestion = {
   prompt: string;
-  options: [DefaultPollOption, DefaultPollOption];
+  options: DefaultPollOption[];
 };
 
 type DefaultStoryPoll = {
@@ -255,6 +255,71 @@ const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
         options: [
           { label: "Quon · Colts", franchiseAbbr: "IND" },
           { label: "Big Al · Steelers", franchiseAbbr: "PIT" },
+        ],
+      },
+    ],
+  },
+  {
+    storySlug: "season-1-week-7-primetime",
+    key: "week-7-primetime",
+    title: "Week 7 Primetime lock-in",
+    questions: [
+      {
+        prompt: "Game of the Week — Patriots vs Bears",
+        options: [
+          { label: "Ren · Patriots", franchiseAbbr: "NE" },
+          { label: "Jaylen Stowe · Bears", franchiseAbbr: "CHI" },
+        ],
+      },
+      {
+        prompt: "Eagles vs Cowboys",
+        options: [
+          { label: "Lefty · Eagles", franchiseAbbr: "PHI" },
+          { label: "Javon · Cowboys", franchiseAbbr: "DAL" },
+        ],
+      },
+      {
+        prompt: "Lions vs Packers",
+        options: [
+          { label: "Curry · Lions", franchiseAbbr: "DET" },
+          { label: "Chance · Packers", franchiseAbbr: "GB" },
+        ],
+      },
+      {
+        prompt: "Seahawks vs Chiefs",
+        options: [
+          { label: "Petey · Seahawks", franchiseAbbr: "SEA" },
+          { label: "Trent · Chiefs", franchiseAbbr: "KC" },
+        ],
+      },
+    ],
+  },
+  {
+    storySlug: "season-1-week-7-power-rankings",
+    key: "week-7-power-rankings",
+    title: "Week 7 Power Rankings lock-in",
+    questions: [
+      {
+        prompt: "Who is actually #1?",
+        options: [
+          { label: "Lefty · Eagles", franchiseAbbr: "PHI" },
+          { label: "Ren · Patriots", franchiseAbbr: "NE" },
+        ],
+      },
+      {
+        prompt: "Who is ranked too high?",
+        options: [
+          { label: "Curry · Lions", franchiseAbbr: "DET" },
+          { label: "Oli · Chargers", franchiseAbbr: "LAC" },
+          { label: "Chance · Packers", franchiseAbbr: "GB" },
+        ],
+      },
+      {
+        prompt: "First team into the top 10 next week?",
+        options: [
+          { label: "Jordan Stowe · Rams", franchiseAbbr: "LAR" },
+          { label: "Swipe · 49ers", franchiseAbbr: "SF" },
+          { label: "Mease · Dolphins", franchiseAbbr: "MIA" },
         ],
       },
     ],
