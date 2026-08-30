@@ -804,11 +804,19 @@ export async function getCoachPickLean(): Promise<CoachPickLean[]> {
     .sort((a, b) => b.pickRate - a.pickRate || b.pickedToWin - a.pickedToWin);
 }
 
-export async function getOpenPollsNeedingVote(userId: string) {
+export async function getOpenPollsNeedingVote(
+  userId: string,
+  currentWeek?: number
+) {
   const polls = await prisma.storyPoll.findMany({
     where: {
       isOpen: true,
-      story: { isPublished: true },
+      story: {
+        isPublished: true,
+        ...(currentWeek != null
+          ? { OR: [{ week: null }, { week: currentWeek }] }
+          : {}),
+      },
     },
     include: {
       story: { select: { slug: true, title: true, week: true } },
@@ -839,9 +847,12 @@ export async function getOpenPollsNeedingVote(userId: string) {
     .filter((poll) => poll.remaining > 0);
 }
 
-export async function safeGetOpenPollsNeedingVote(userId: string) {
+export async function safeGetOpenPollsNeedingVote(
+  userId: string,
+  currentWeek?: number
+) {
   try {
-    return await getOpenPollsNeedingVote(userId);
+    return await getOpenPollsNeedingVote(userId, currentWeek);
   } catch (error) {
     if (!isMissingEngagementTable(error)) {
       console.error("getOpenPollsNeedingVote failed:", error);

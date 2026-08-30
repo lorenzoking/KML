@@ -145,7 +145,7 @@ export default async function DashboardPage({
           take: 4,
         })
       : Promise.resolve([]),
-    safeGetOpenPollsNeedingVote(user.id),
+    safeGetOpenPollsNeedingVote(user.id, settings.currentWeek),
     settings.carouselOpen
       ? prisma.carouselVacancy.count({
           where: { seasonId: season.id, isOpen: true },
@@ -189,7 +189,7 @@ export default async function DashboardPage({
     : 0;
 
   const pendingThisWeek = pendingMine.filter(
-    (game) => game.id !== weekGame?.id
+    (game) => game.week === settings.currentWeek && game.id !== weekGame?.id
   );
   const recentOnly = recentApproved.filter((game) => game.id !== weekGame?.id).slice(0, 3);
   const outstandingSim = membership
@@ -201,16 +201,12 @@ export default async function DashboardPage({
         .filter(
           (row): row is typeof row & { outstanding: NonNullable<typeof row.outstanding> } =>
             Boolean(
-              !row.game.isForceWin &&
+              row.game.week === settings.currentWeek &&
+                !row.game.isForceWin &&
                 row.outstanding &&
                 !row.outstanding.alreadySubmitted
             )
         )
-        .sort((a, b) => {
-          const aNow = a.game.week === settings.currentWeek ? 0 : 1;
-          const bNow = b.game.week === settings.currentWeek ? 0 : 1;
-          return aNow - bNow || a.game.week - b.game.week;
-        })
     : [];
 
   const latestRep =
@@ -326,14 +322,11 @@ export default async function DashboardPage({
   for (const { game, outstanding } of outstandingSim) {
     const rated =
       outstanding.ratedTeamId === game.userTeamId ? game.userTeam : game.opponentTeam;
-    const thisWeek = game.week === settings.currentWeek;
     toDos.push({
       href: `/games/${game.id}`,
       icon: Star,
       iconClassName: "bg-amber-500 text-white",
-      title: thisWeek
-        ? "Submit opponent Sim Score"
-        : "Sim Score needed",
+      title: "Submit opponent Sim Score",
       subtitle: `Week ${game.week}: rate ${rated.abbreviation} · ${formatMatchupScore(game)}`,
     });
   }
