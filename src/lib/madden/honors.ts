@@ -1,9 +1,13 @@
-import { StoryCategory, MaddenStatCategory } from "@/generated/prisma/client";
+import { StoryCategory } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { formatSacks, playerName } from "@/lib/madden/display";
+import {
+  formatSacks,
+  isQuarterback,
+  isRunningBack,
+} from "@/lib/madden/display";
 import { canonAbbr } from "@/lib/madden/franchises";
 import { isMaddenFinal } from "@/lib/madden/game-status";
-import { getLeaders, getWeekGames } from "@/lib/madden/query";
+import { getWeekGames, getWeekPlayerTotals, type WeekPlayerTotal } from "@/lib/madden/query";
 import { nflGamesInWeek } from "@/lib/nfl-schedule-2026";
 
 export type HonorsPlayer = {
@@ -11,6 +15,7 @@ export type HonorsPlayer = {
   fullName: string;
   shortName: string;
   lastName: string;
+  position: string;
   teamAbbr: string;
   coachName: string | null;
   category: "PASSING" | "RUSHING" | "RECEIVING" | "DEFENSE";
@@ -47,8 +52,6 @@ export type HonorsBoard = {
   defense: HonorsPlayer[];
 };
 
-type LeaderRow = Awaited<ReturnType<typeof getLeaders>>[number];
-
 export function autoHonorsSlug(week: number) {
   return `madden-week-${week}-stat-honors`;
 }
@@ -62,32 +65,105 @@ export function honorsOgPath(week: number, stamp?: string) {
   return stamp ? `${path}?v=${encodeURIComponent(stamp)}` : path;
 }
 
-function coachOfTeam(team: LeaderRow["team"]) {
-  return team.franchise?.memberships[0]?.user.name || team.userName || null;
+function scrimmageYards(row: WeekPlayerTotal) {
+  return row.rushYds + row.recYds;
+}
+
+function scrimmageTDs(row: WeekPlayerTotal) {
+  return row.rushTDs + row.recTDs;
+}
+
+/** Same weights as the League award races — rush, rec, and pass all count. */
+function offensiveValue(row: WeekPlayerTotal) {
+  return (
+    row.passYds / 25 +
+    row.passTDs * 4 -
+    row.passInts * 2 +
+    row.rushYds / 10 +
+    row.rushTDs * 6 +
+    row.recYds / 10 +
+    row.recTDs * 6 +
+    row.recCatches * 0.4
+  );
+}
+
+function skillValue(row: WeekPlayerTotal) {
+  return (
+    row.rushYds / 10 +
+    row.rushTDs * 6 +
+    row.recYds / 10 +
+    row.recTDs * 6 +
+    row.recCatches * 0.5
+  );
+}
+
+function defensiveValue(row: WeekPlayerTotal) {
+  return row.defSacks * 12 + row.defInts * 12 + row.defTackles * 0.4;
+}
+
+function rushBoardValue(row: WeekPlayerTotal) {
+  if (isRunningBack(row.position)) {
+    return scrimmageYards(row) + scrimmageTDs(row) * 20;
+  }
+  return row.rushYds + row.rushTDs * 20;
+}
+
+function sortBy<T>(rows: T[], value: (row: T) => number) {
+  return [...rows].sort((a, b) => value(b) - value(a));
+}
+
+function passingLine(row: WeekPlayerTotal) {
+  const pass = `${row.passYds} yds, ${row.passTDs} TD`;
+  return row.rushYds >= 20 ? `${pass} · ${row.rushYds} rush` : pass;
+}
+
+function rushingLine(row: WeekPlayerTotal) {
+  if (row.recCatches > 0 || row.recYds > 0) {
+    return `${row.rushYds} rush, ${row.recCatches} for ${row.recYds} · ${scrimmageYards(row)} yds, ${scrimmageTDs(row)} TD`;
+  }
+  return `${row.rushYds} yds, ${row.rushTDs} TD`;
+}
+
+function receivingLine(row: WeekPlayerTotal) {
+  const rec = `${row.recCatches} for ${row.recYds}, ${row.recTDs} TD`;
+  return row.rushYds >= 15 ? `${rec} · ${row.rushYds} rush` : rec;
+}
+
+function defenseLine(row: WeekPlayerTotal) {
+  return `${formatSacks(row.defSacks)} sacks, ${row.defInts} INT, ${row.defTackles} tkl`;
+}
+
+function stampCategory(row: WeekPlayerTotal): HonorsPlayer["category"] {
+  if (isQuarterback(row.position) || row.passYds >= row.rushYds + row.recYds) {
+    return "PASSING";
+  }
+  if (isRunningBack(row.position) || row.rushYds >= row.recYds) {
+    return "RUSHING";
+  }
+  return "RECEIVING";
+}
+
+function stampLine(row: WeekPlayerTotal, category: HonorsPlayer["category"]) {
+  if (category === "PASSING") return passingLine(row);
+  if (category === "RUSHING") return rushingLine(row);
+  if (category === "RECEIVING") return receivingLine(row);
+  return defenseLine(row);
 }
 
 function toPlayer(
-  row: LeaderRow,
+  row: WeekPlayerTotal,
   category: HonorsPlayer["category"]
 ): HonorsPlayer {
-  const line =
-    category === "PASSING"
-      ? `${row.passYds} yds, ${row.passTDs} TD`
-      : category === "RUSHING"
-        ? `${row.rushYds} yds, ${row.rushTDs} TD`
-        : category === "RECEIVING"
-          ? `${row.recCatches} for ${row.recYds}, ${row.recTDs} TD`
-          : `${formatSacks(row.defSacks)} sacks, ${row.defInts} INT, ${row.defTackles} tkl`;
-
   return {
     rosterId: row.rosterId,
     fullName: row.fullName,
-    shortName: playerName(row.player) || row.fullName,
-    lastName: row.player.lastName || row.fullName.split(" ").at(-1) || row.fullName,
-    teamAbbr: canonAbbr(row.team.franchise?.abbreviation || row.team.abbr),
-    coachName: coachOfTeam(row.team),
+    shortName: row.fullName,
+    lastName: row.lastName || row.fullName.split(" ").at(-1) || row.fullName,
+    position: row.position,
+    teamAbbr: canonAbbr(row.teamAbbr),
+    coachName: row.coachName,
     category,
-    line,
+    line: stampLine(row, category),
     passYds: row.passYds,
     passTDs: row.passTDs,
     passInts: row.passInts,
@@ -132,36 +208,66 @@ export function honorsMentionsForAbbr(board: HonorsBoard, abbr: string) {
 
 export async function buildHonorsBoard(weekIndex: number): Promise<HonorsBoard> {
   const week = weekIndex + 1;
-  const [games, passingRows, rushingRows, receivingRows, defenseRows] =
-    await Promise.all([
-      getWeekGames(weekIndex),
-      getLeaders(weekIndex, MaddenStatCategory.PASSING, 5),
-      getLeaders(weekIndex, MaddenStatCategory.RUSHING, 5),
-      getLeaders(weekIndex, MaddenStatCategory.RECEIVING, 5),
-      getLeaders(weekIndex, MaddenStatCategory.DEFENSE, 5),
-    ]);
+  const [games, totals] = await Promise.all([
+    getWeekGames(weekIndex),
+    getWeekPlayerTotals(weekIndex),
+  ]);
 
-  const passing = passingRows.map((row) => toPlayer(row, "PASSING"));
-  const rushing = rushingRows.map((row) => toPlayer(row, "RUSHING"));
-  const receiving = receivingRows.map((row) => toPlayer(row, "RECEIVING"));
-  const defense = defenseRows.map((row) => toPlayer(row, "DEFENSE"));
-  const pass = passingRows[0] ?? null;
-  const rush = rushingRows[0] ?? null;
-  const rec = receiving[0] ?? null;
-  const opoyRow =
-    rush && rush.rushYds >= (pass?.passYds ?? 0) / 3 ? rush : pass;
-  const opoy = opoyRow
-    ? toPlayer(opoyRow, opoyRow.category === "RUSHING" ? "RUSHING" : "PASSING")
-    : null;
-  const dpoy = defense[0] ?? null;
-  const recHeater =
-    rec && rec.rosterId !== opoy?.rosterId ? rec : receiving[1] ?? null;
+  const passers = sortBy(
+    totals.filter((row) => row.passAtt > 0),
+    (row) => row.passYds + row.passTDs * 20
+  );
+  const rushers = sortBy(
+    totals.filter(
+      (row) =>
+        row.rushYds > 0 ||
+        (isRunningBack(row.position) && (row.recYds > 0 || row.recCatches > 0))
+    ),
+    rushBoardValue
+  );
+  const receivers = sortBy(
+    totals.filter((row) => row.recCatches > 0 || row.recYds > 0),
+    (row) => row.recYds + row.recTDs * 20
+  );
+  const defenders = sortBy(
+    totals.filter((row) => row.defSacks > 0 || row.defInts > 0 || row.defTackles > 0),
+    defensiveValue
+  );
+  const offense = sortBy(
+    totals.filter(
+      (row) =>
+        row.passYds > 0 || row.rushYds > 0 || row.recYds > 0 || row.recCatches > 0
+    ),
+    offensiveValue
+  );
+
+  const opoyRow = offense[0] ?? null;
+  const dpoyRow = defenders[0] ?? null;
+  const recRow =
+    sortBy(
+      totals.filter(
+        (row) =>
+          row.rosterId !== opoyRow?.rosterId &&
+          !isQuarterback(row.position) &&
+          skillValue(row) > 0
+      ),
+      skillValue
+    )[0] ?? null;
+
+  const opoy = opoyRow ? toPlayer(opoyRow, stampCategory(opoyRow)) : null;
+  const dpoy = dpoyRow ? toPlayer(dpoyRow, "DEFENSE") : null;
+  const rec = recRow ? toPlayer(recRow, stampCategory(recRow)) : null;
+  const passing = passers.slice(0, 3).map((row) => toPlayer(row, "PASSING"));
+  const rushing = rushers.slice(0, 3).map((row) => toPlayer(row, "RUSHING"));
+  const receiving = receivers.slice(0, 3).map((row) => toPlayer(row, "RECEIVING"));
+  const defense = defenders.slice(0, 3).map((row) => toPlayer(row, "DEFENSE"));
+
   const finalCount = games.filter((game) => isMaddenFinal(game.status)).length;
   const expected = Math.max(nflGamesInWeek(week), games.length);
   const stamp = [
     opoy?.rosterId ?? "x",
     dpoy?.rosterId ?? "x",
-    recHeater?.rosterId ?? "x",
+    rec?.rosterId ?? "x",
     finalCount,
   ].join("-");
 
@@ -173,11 +279,11 @@ export async function buildHonorsBoard(weekIndex: number): Promise<HonorsBoard> 
     stamp,
     opoy,
     dpoy,
-    rec: recHeater,
-    passing: passing.slice(0, 3),
-    rushing: rushing.slice(0, 3),
-    receiving: receiving.slice(0, 3),
-    defense: defense.slice(0, 3),
+    rec,
+    passing,
+    rushing,
+    receiving,
+    defense,
   };
 }
 
@@ -185,6 +291,43 @@ function teamLine(player: HonorsPlayer) {
   return player.coachName
     ? `**${player.teamAbbr}** · ${player.shortName} (${player.coachName})`
     : `**${player.teamAbbr}** · ${player.shortName}`;
+}
+
+function opoyTable(player: HonorsPlayer) {
+  if (player.category === "PASSING") {
+    const rush =
+      player.rushYds >= 20
+        ? `
+| Rush |
+| --- |
+| ${player.rushYds} yards, ${player.rushTDs} TD |`
+        : "";
+    return `| Pass | TDs / INT | Rating |
+| --- | --- | --- |
+| **${player.passYds} yards** (${player.passComp}/${player.passAtt}) | ${player.passTDs} / ${player.passInts} | ${player.passerRating.toFixed(1)} |${rush}`;
+  }
+
+  if (player.recCatches > 0 || player.recYds > 0) {
+    return `| Rush | Rec | Scrimmage |
+| --- | --- | --- |
+| **${player.rushYds}** on ${player.rushAtt} (${player.rushTDs} TD) | ${player.recCatches} for **${player.recYds}** (${player.recTDs} TD) | **${player.rushYds + player.recYds} yds**, ${player.rushTDs + player.recTDs} TD |`;
+  }
+
+  return `| Rush | TDs |
+| --- | --- |
+| **${player.rushYds} yards** on ${player.rushAtt} carries | ${player.rushTDs} |`;
+}
+
+function heaterCopy(player: HonorsPlayer) {
+  if (player.category === "RUSHING" || isRunningBack(player.position)) {
+    return player.line;
+  }
+  if (player.recCatches > 0 || player.recYds > 0) {
+    return player.rushYds >= 15
+      ? `${player.recCatches} catches, **${player.recYds} yards**, ${player.recTDs} TD · ${player.rushYds} rush.`
+      : `${player.recCatches} catches, **${player.recYds} yards**, ${player.recTDs} TD.`;
+  }
+  return `${player.line}.`;
 }
 
 export function renderHonorsArticle(board: HonorsBoard) {
@@ -199,19 +342,8 @@ export function renderHonorsArticle(board: HonorsBoard) {
     .join(". ");
   const tapeNote =
     board.expected > 0 && board.finalCount < board.expected
-      ? `${board.finalCount} of ${board.expected} finals are on the tape. This chapter rewrites when the next Companion dump lands — later games can still take the stamp.`
-      : "These honors are pulled straight from the Madden 27 weekly export — not a panel vote.";
-
-  const opoyTable =
-    opoy?.category === "RUSHING"
-      ? `| Rush | TDs |
-| --- | --- |
-| **${opoy.rushYds} yards** on ${opoy.rushAtt} carries | ${opoy.rushTDs} |`
-      : opoy
-        ? `| Pass | TDs / INT | Rating |
-| --- | --- | --- |
-| **${opoy.passYds} yards** (${opoy.passComp}/${opoy.passAtt}) | ${opoy.passTDs} / ${opoy.passInts} | ${opoy.passerRating.toFixed(1)} |`
-        : "";
+      ? `${board.finalCount} of ${board.expected} finals are on the tape. This chapter rewrites when the next Companion dump lands — later games can still take the stamp. Backs are scored on rushing and receiving.`
+      : "These honors are pulled straight from the Madden 27 weekly export — not a panel vote. Rush and receiving both count for backs.";
 
   const body = `![Week ${week} honors](${honorsOgPath(week, board.stamp)})
 
@@ -223,7 +355,7 @@ ${
   opoy
     ? `${teamLine(opoy)}
 
-${opoyTable}`
+${opoyTable(opoy)}`
     : "No offensive line jumped the rest of the board."
 }
 
@@ -233,7 +365,7 @@ ${
 
 ${teamLine(rec)}
 
-${rec.recCatches} catches, **${rec.recYds} yards**, ${rec.recTDs} TD.`
+${heaterCopy(rec)}`
     : ""
 }
 
@@ -264,7 +396,7 @@ ${defense
   .map((row) => `- Defense: **${row.fullName}**, ${row.teamAbbr} — ${row.line}`)
   .join("\n")}
 
-Hand-written honors stay locked. This chapter is generated from the Companion export and updates as more games hit the tape.`;
+Hand-written honors stay locked. This chapter is generated from the Companion export and updates as more games hit the tape. Backs are scored on rushing **and** receiving.`;
 
   return {
     slug: autoHonorsSlug(week),

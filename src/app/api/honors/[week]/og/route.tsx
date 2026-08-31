@@ -18,6 +18,8 @@ export async function GET(
   }
 
   const board = await buildHonorsBoard(week - 1);
+  const { persistHonorsBoard } = await import("@/lib/madden/stories");
+  await persistHonorsBoard(board);
   const tapeLabel =
     board.expected > 0 && board.finalCount < board.expected
       ? `${board.finalCount} / ${board.expected} in`

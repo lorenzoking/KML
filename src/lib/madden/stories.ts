@@ -8,6 +8,7 @@ import {
   buildHonorsBoard,
   isAutoHonorsSlug,
   renderHonorsArticle,
+  type HonorsBoard,
 } from "@/lib/madden/honors";
 import {
   getLeaders,
@@ -163,8 +164,10 @@ Full leaders and every roster live under **League** in the nav. This chapter upd
   });
 }
 
-async function stampWeekHonors(weekIndex: number, seasonId: string | null) {
-  const board = await buildHonorsBoard(weekIndex);
+export async function persistHonorsBoard(
+  board: HonorsBoard,
+  seasonId?: string | null
+) {
   if (!board.opoy && !board.dpoy) return;
 
   const existing = await prisma.leagueStory.findFirst({
@@ -185,7 +188,7 @@ async function stampWeekHonors(weekIndex: number, seasonId: string | null) {
       body: article.body,
       category: StoryCategory.PLAYER_OF_WEEK,
       week: board.week,
-      seasonId,
+      seasonId: seasonId ?? undefined,
       isPublished: true,
       isFeatured: false,
       sortOrder: 30 + board.week,
@@ -198,10 +201,14 @@ async function stampWeekHonors(weekIndex: number, seasonId: string | null) {
       body: article.body,
       category: StoryCategory.PLAYER_OF_WEEK,
       week: board.week,
-      seasonId,
+      seasonId: seasonId ?? undefined,
       isPublished: true,
       isFeatured: false,
       sortOrder: 30 + board.week,
     },
   });
+}
+
+async function stampWeekHonors(weekIndex: number, seasonId: string | null) {
+  await persistHonorsBoard(await buildHonorsBoard(weekIndex), seasonId);
 }

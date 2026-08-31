@@ -159,6 +159,118 @@ export async function getLeaders(
   });
 }
 
+const weekTeamInclude = {
+  franchise: {
+    select: {
+      abbreviation: true,
+      primaryColor: true,
+      memberships: {
+        where: { isActive: true, user: { deletedAt: null } },
+        include: { user: { select: { name: true } } },
+        take: 1,
+      },
+    },
+  },
+} as const;
+
+export type WeekPlayerTotal = {
+  rosterId: string;
+  fullName: string;
+  firstName: string;
+  lastName: string;
+  position: string;
+  teamAbbr: string;
+  coachName: string | null;
+  passYds: number;
+  passTDs: number;
+  passInts: number;
+  passAtt: number;
+  passComp: number;
+  passerRating: number;
+  rushYds: number;
+  rushTDs: number;
+  rushAtt: number;
+  recYds: number;
+  recTDs: number;
+  recCatches: number;
+  defSacks: number;
+  defInts: number;
+  defTackles: number;
+};
+
+/** Merge every Companion category row for a week so a back’s rush + rec live on one card. */
+export async function getWeekPlayerTotals(weekIndex: number): Promise<WeekPlayerTotal[]> {
+  const stats = await prisma.maddenPlayerStat.findMany({
+    where: { weekIndex, team: { NOT: { abbr: "UNK" } } },
+    include: {
+      player: true,
+      team: { include: weekTeamInclude },
+    },
+  });
+
+  const byPlayer = new Map<string, WeekPlayerTotal>();
+  for (const row of stats) {
+    const current = byPlayer.get(row.rosterId);
+    const rosterName = `${row.player.firstName} ${row.player.lastName}`.trim();
+    const fullName = rosterName || row.fullName;
+    const teamAbbr = row.team.franchise?.abbreviation || row.team.abbr;
+    const coachName =
+      row.team.franchise?.memberships[0]?.user.name || row.team.userName || null;
+
+    if (!current) {
+      byPlayer.set(row.rosterId, {
+        rosterId: row.rosterId,
+        fullName,
+        firstName: row.player.firstName,
+        lastName: row.player.lastName,
+        position: row.player.position,
+        teamAbbr,
+        coachName,
+        passYds: row.passYds,
+        passTDs: row.passTDs,
+        passInts: row.passInts,
+        passAtt: row.passAtt,
+        passComp: row.passComp,
+        passerRating: row.passerRating,
+        rushYds: row.rushYds,
+        rushTDs: row.rushTDs,
+        rushAtt: row.rushAtt,
+        recYds: row.recYds,
+        recTDs: row.recTDs,
+        recCatches: row.recCatches,
+        defSacks: row.defSacks,
+        defInts: row.defInts,
+        defTackles: row.defTackles,
+      });
+      continue;
+    }
+
+    current.passYds += row.passYds;
+    current.passTDs += row.passTDs;
+    current.passInts += row.passInts;
+    current.passAtt += row.passAtt;
+    current.passComp += row.passComp;
+    current.rushYds += row.rushYds;
+    current.rushTDs += row.rushTDs;
+    current.rushAtt += row.rushAtt;
+    current.recYds += row.recYds;
+    current.recTDs += row.recTDs;
+    current.recCatches += row.recCatches;
+    current.defSacks += row.defSacks;
+    current.defInts += row.defInts;
+    current.defTackles += row.defTackles;
+    if (row.passAtt > 0) current.passerRating = row.passerRating;
+    current.fullName = fullName;
+    current.firstName = row.player.firstName;
+    current.lastName = row.player.lastName;
+    current.position = row.player.position;
+    current.teamAbbr = teamAbbr;
+    current.coachName = coachName;
+  }
+
+  return [...byPlayer.values()];
+}
+
 export async function getTeamWeekStats(
   maddenTeamId: string,
   weekIndex: number

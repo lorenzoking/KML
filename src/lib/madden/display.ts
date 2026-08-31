@@ -64,6 +64,11 @@ export function isQuarterback(position: string) {
   return position.toUpperCase() === "QB";
 }
 
+export function isRunningBack(position: string) {
+  const pos = position.toUpperCase();
+  return pos === "HB" || pos === "FB" || pos === "RB";
+}
+
 export function isRookie(yearsPro: number, position: string) {
   return yearsPro === 0 && position.toUpperCase() !== "UNK";
 }
