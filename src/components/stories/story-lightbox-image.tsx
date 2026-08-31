@@ -64,6 +64,7 @@ export function StoryLightboxImage({
           height={fill ? undefined : height}
           priority={priority}
           sizes={sizes}
+          unoptimized={src.startsWith("/api/")}
           className={previewClassName}
         />
         <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-black/70 px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-white opacity-90 group-hover:opacity-100">
@@ -98,6 +99,7 @@ export function StoryLightboxImage({
                   sizes="100vw"
                   className="object-contain"
                   priority
+                  unoptimized={src.startsWith("/api/")}
                 />
               </div>
               {caption ? (

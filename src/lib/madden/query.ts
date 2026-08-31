@@ -140,7 +140,17 @@ export async function getLeaders(
       player: true,
       team: {
         include: {
-          franchise: { select: { primaryColor: true } },
+          franchise: {
+            select: {
+              abbreviation: true,
+              primaryColor: true,
+              memberships: {
+                where: { isActive: true, user: { deletedAt: null } },
+                include: { user: { select: { name: true } } },
+                take: 1,
+              },
+            },
+          },
         },
       },
     },

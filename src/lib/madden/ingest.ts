@@ -17,6 +17,7 @@ export function revalidateMaddenPages() {
   revalidatePath("/league/teams", "layout");
   revalidatePath("/games", "layout");
   revalidatePath("/storylines");
+  revalidatePath("/dashboard");
   revalidatePath("/admin/madden");
   revalidatePath("/");
 }

@@ -8,6 +8,10 @@ import { cn, formatRecord } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { extractStoryCoverImage } from "@/components/stories/story-body";
+import {
+  getHonorsNudgeForAbbr,
+  joinHonorNames,
+} from "@/lib/madden/honors";
 import { isCommissioner, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
@@ -97,7 +101,7 @@ export default async function DashboardPage({
     override: coachProfile?.hotSeatStatusOverride,
   });
 
-  const [weekGame, pendingCount, myLiveGames, recentApproved, openPolls, openVacancies, scheduledThisWeek, missingScores] =
+  const [weekGame, pendingCount, myLiveGames, recentApproved, openPolls, openVacancies, scheduledThisWeek, missingScores, honorsNudge] =
     await Promise.all([
     membership
       ? prisma.gameSubmission.findFirst({
@@ -161,6 +165,12 @@ export default async function DashboardPage({
     commissionerUi
       ? safeGetMissingScheduledGames(season.id, 1, settings.currentWeek)
       : Promise.resolve([]),
+    membership
+      ? getHonorsNudgeForAbbr(
+          membership.franchise.abbreviation,
+          settings.currentWeek
+        )
+      : Promise.resolve(null),
   ]);
 
   const featured =
@@ -306,6 +316,18 @@ export default async function DashboardPage({
           ? weekGame.opponentTeam.abbreviation
           : weekGame.userTeam.abbreviation
       } — after the week advances`,
+    });
+  }
+
+  if (membership && honorsNudge) {
+    toDos.push({
+      href: `/storylines/${honorsNudge.slug}`,
+      icon: Trophy,
+      iconClassName: "bg-[var(--primary)] text-[var(--primary-foreground)]",
+      title: "Your player made honors",
+      subtitle: honorsNudge.playerNames.length
+        ? `Week ${honorsNudge.week} · ${joinHonorNames(honorsNudge.playerNames)}`
+        : `Week ${honorsNudge.week} honors named a ${membership.franchise.abbreviation} player`,
     });
   }
 
@@ -578,6 +600,7 @@ export default async function DashboardPage({
                   alt={featuredCover.alt}
                   fill
                   priority
+                  unoptimized={featuredCover.src.startsWith("/api/")}
                   className="object-cover object-top transition duration-500 group-hover:scale-[1.02]"
                   sizes="(max-width: 768px) 100vw, 672px"
                 />
@@ -616,6 +639,7 @@ export default async function DashboardPage({
                   src={honorsCover.src}
                   alt={honorsCover.alt}
                   fill
+                  unoptimized={honorsCover.src.startsWith("/api/")}
                   className="object-cover object-top transition duration-500 group-hover:scale-[1.03]"
                   sizes="180px"
                 />

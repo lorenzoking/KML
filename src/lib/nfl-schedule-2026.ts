@@ -283,6 +283,10 @@ export const NFL_2026_GAMES: NflScheduleGame[] = [
   { week: 18, home: "WAS", away: "DAL" },
 ];
 
+export function nflGamesInWeek(week: number) {
+  return NFL_2026_GAMES.filter((game) => game.week === week).length;
+}
+
 /** Bye week by franchise abbreviation. */
 export const NFL_2026_BYES: Record<string, number> = {
   ARI: 14,

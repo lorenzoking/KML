@@ -1,11 +1,18 @@
 import { StoryCategory, MaddenStatCategory } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason } from "@/lib/league";
-import { displayWeek, playerName } from "@/lib/madden/display";
+import { displayWeek } from "@/lib/madden/display";
+import { isMaddenFinal } from "@/lib/madden/game-status";
+import {
+  autoHonorsSlug,
+  buildHonorsBoard,
+  isAutoHonorsSlug,
+  renderHonorsArticle,
+} from "@/lib/madden/honors";
 import {
   getLeaders,
   getWeekGames,
-  latestStatWeek,
+  listStatWeeks,
 } from "@/lib/madden/query";
 
 function coachOf(team: {
@@ -16,9 +23,8 @@ function coachOf(team: {
 }
 
 export async function generateMaddenStories() {
-  const weekIndex = await latestStatWeek();
-  if (weekIndex == null) return;
-  const week = displayWeek(weekIndex);
+  const weeks = await listStatWeeks();
+  if (weeks.length === 0) return;
 
   let seasonId: string | null = null;
   try {
@@ -28,6 +34,14 @@ export async function generateMaddenStories() {
     seasonId = null;
   }
 
+  for (const weekIndex of weeks.slice(0, 3)) {
+    await stampWeekTape(weekIndex, seasonId);
+    await stampWeekHonors(weekIndex, seasonId);
+  }
+}
+
+async function stampWeekTape(weekIndex: number, seasonId: string | null) {
+  const week = displayWeek(weekIndex);
   const [games, passing, rushing, receiving, defense] = await Promise.all([
     getWeekGames(weekIndex),
     getLeaders(weekIndex, MaddenStatCategory.PASSING, 5),
@@ -36,7 +50,7 @@ export async function generateMaddenStories() {
     getLeaders(weekIndex, MaddenStatCategory.DEFENSE, 5),
   ]);
 
-  const played = games.filter((game) => game.status >= 2);
+  const played = games.filter((game) => isMaddenFinal(game.status));
   if (played.length === 0 && passing.length === 0) return;
 
   const shootout = [...played].sort(
@@ -147,107 +161,47 @@ Full leaders and every roster live under **League** in the nav. This chapter upd
       sortOrder: 40 + week,
     },
   });
+}
 
-  const existingHonors = await prisma.leagueStory.findFirst({
-    where: { week, category: StoryCategory.PLAYER_OF_WEEK },
-    select: { id: true, slug: true },
+async function stampWeekHonors(weekIndex: number, seasonId: string | null) {
+  const board = await buildHonorsBoard(weekIndex);
+  if (!board.opoy && !board.dpoy) return;
+
+  const existing = await prisma.leagueStory.findFirst({
+    where: { week: board.week, category: StoryCategory.PLAYER_OF_WEEK },
+    select: { slug: true },
   });
-  if (existingHonors) return;
-  if (!pass && !rush && !def) return;
+  if (existing && !isAutoHonorsSlug(existing.slug)) return;
 
-  const honorsSlug = `madden-week-${week}-stat-honors`;
-  const opoy = rush && rush.rushYds >= (pass?.passYds ?? 0) / 3 ? rush : pass;
-  const dpoy = def;
-  const titleBits = [opoy?.fullName, dpoy?.fullName].filter(Boolean).join(" and ");
-  const honorsTitle = `Week ${week} honors: ${titleBits || "the tape spoke"}`;
-  const honorsSummary = [
-    opoy
-      ? `${opoy.fullName} (${opoy.team.abbr}) led the week`
-      : null,
-    dpoy ? `${dpoy.fullName} wrecked the other sideline` : null,
-  ]
-    .filter(Boolean)
-    .join(". ");
+  const article = renderHonorsArticle(board);
+  const slug = existing?.slug ?? autoHonorsSlug(board.week);
 
-  const honorsBody = `These honors are pulled straight from the Madden 27 weekly export — not a panel vote. If the numbers say it, the desk prints it.
-
-## Offensive stamp${opoy ? ` — ${opoy.fullName}` : ""}
-
-${
-  opoy
-    ? `**${opoy.team.abbr}** · ${playerName(opoy.player) || opoy.fullName}
-
-${
-  opoy.category === "RUSHING"
-    ? `| Rush | TDs |
-| --- | --- |
-| **${opoy.rushYds} yards** on ${opoy.rushAtt} carries | ${opoy.rushTDs} |`
-    : `| Pass | TDs / INT | Rating |
-| --- | --- | --- |
-| **${opoy.passYds} yards** (${opoy.passComp}/${opoy.passAtt}) | ${opoy.passTDs} / ${opoy.passInts} | ${opoy.passerRating.toFixed(1)} |`
-}`
-    : "No offensive line jumped the rest of the board."
-}
-
-${
-  rec && rec.rosterId !== opoy?.rosterId
-    ? `## The other heater — ${rec.fullName}
-
-**${rec.team.abbr}** · ${rec.recCatches} catches, **${rec.recYds} yards**, ${rec.recTDs} TD.`
-    : ""
-}
-
-## Defensive stamp${dpoy ? ` — ${dpoy.fullName}` : ""}
-
-${
-  dpoy
-    ? `**${dpoy.team.abbr}** · ${playerName(dpoy.player) || dpoy.fullName}
-
-| Sacks | INT | Tackles |
-| --- | --- | --- |
-| **${dpoy.defSacks}** | ${dpoy.defInts} | ${dpoy.defTackles} |`
-    : "No defender separated enough to print."
-}
-
-## The rest of the board
-
-${passing
-  .slice(0, 3)
-  .map(
-    (row) =>
-      `- Pass: **${row.fullName}**, ${row.team.abbr} — ${row.passYds} yds, ${row.passTDs} TD`
-  )
-  .join("\n")}
-${rushing
-  .slice(0, 3)
-  .map(
-    (row) =>
-      `- Rush: **${row.fullName}**, ${row.team.abbr} — ${row.rushYds} yds, ${row.rushTDs} TD`
-  )
-  .join("\n")}
-${receiving
-  .slice(0, 3)
-  .map(
-    (row) =>
-      `- Rec: **${row.fullName}**, ${row.team.abbr} — ${row.recCatches}/${row.recYds}/${row.recTDs}`
-  )
-  .join("\n")}
-
-This chapter is generated from the Companion export. Hand-written honors stay locked; this only fills a week the desk has not stamped yet.`;
-
-  await prisma.leagueStory.create({
-    data: {
-      slug: honorsSlug,
-      title: honorsTitle,
-      eyebrow: `Honors desk · Week ${week}`,
-      summary: honorsSummary || `Week ${week} statistical honors from the Companion export.`,
-      body: honorsBody,
+  await prisma.leagueStory.upsert({
+    where: { slug },
+    update: {
+      title: article.title,
+      eyebrow: article.eyebrow,
+      summary: article.summary,
+      body: article.body,
       category: StoryCategory.PLAYER_OF_WEEK,
-      week,
+      week: board.week,
       seasonId,
       isPublished: true,
       isFeatured: false,
-      sortOrder: 30 + week,
+      sortOrder: 30 + board.week,
+    },
+    create: {
+      slug,
+      title: article.title,
+      eyebrow: article.eyebrow,
+      summary: article.summary,
+      body: article.body,
+      category: StoryCategory.PLAYER_OF_WEEK,
+      week: board.week,
+      seasonId,
+      isPublished: true,
+      isFeatured: false,
+      sortOrder: 30 + board.week,
     },
   });
 }

@@ -199,6 +199,7 @@ function StorylineCard({
               alt={cover.alt}
               fill
               priority={highlight}
+              unoptimized={cover.src.startsWith("/api/")}
               className="object-cover object-top"
               sizes={
                 highlight
