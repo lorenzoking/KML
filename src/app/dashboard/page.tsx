@@ -314,7 +314,7 @@ export default async function DashboardPage({
       href: "/games?tab=week#submit-result",
       icon: Send,
       iconClassName: "bg-[var(--primary)] text-[var(--primary-foreground)]",
-      title: "Submit this week's score",
+      title: "Submit this week's Sim Score",
       subtitle: `Week ${settings.currentWeek}: ${scheduledIsHome ? "vs" : "@"} ${scheduledOpp.abbreviation}`,
     });
   }
@@ -497,12 +497,12 @@ export default async function DashboardPage({
               {scheduledIsHome ? "vs" : "@"} {scheduledOpp.abbreviation}
             </p>
             <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted-foreground)]">
-              {scheduledOpp.name}. Play it, then drop the score so the desk can
-              lock the week.
+              {scheduledOpp.name}. Play it, then drop the Sim Score. The
+              Companion export posts the final score and XP.
             </p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
               <Button asChild className="h-12 rounded-2xl">
-                <Link href="/games?tab=week#submit-result">Submit result</Link>
+                <Link href="/games?tab=week#submit-result">Submit Sim Score</Link>
               </Button>
               <Button asChild variant="outline" className="h-12 rounded-2xl">
                 <Link
@@ -517,11 +517,11 @@ export default async function DashboardPage({
           <div className="rounded-[1.6rem] border border-[color-mix(in_srgb,var(--primary)_30%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_8%,var(--surface-raised))] px-5 py-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)]">
             <p className="text-[17px] font-semibold">Your game isn’t in yet</p>
             <p className="mt-1 text-[14px] leading-relaxed text-[var(--muted-foreground)]">
-              Play this week, then drop the score. That’s the only result the
-              desk needs from you right now.
+              Play this week, then drop the Sim Score. Final score and XP come
+              from the Companion export.
             </p>
             <Button asChild className="mt-4 h-12 w-full rounded-2xl">
-              <Link href="/games?tab=week#submit-result">Submit result</Link>
+              <Link href="/games?tab=week#submit-result">Submit Sim Score</Link>
             </Button>
           </div>
         ) : (

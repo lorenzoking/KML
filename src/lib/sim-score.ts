@@ -31,7 +31,7 @@ export function myOutstandingSimScore(
   if (myFranchiseId === game.userTeamId) {
     return {
       ratedTeamId: game.opponentTeamId,
-      alreadySubmitted: true,
+      alreadySubmitted: game.opponentSimScore != null,
     };
   }
   if (myFranchiseId === game.opponentTeamId) {

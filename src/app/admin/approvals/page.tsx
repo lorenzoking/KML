@@ -56,14 +56,16 @@ export default async function ApprovalsPage() {
           Pending approvals
         </h2>
         <p className="text-sm text-[var(--muted-foreground)]">
-          Approve to create official results. Played games award XP; simulated
-          games update standings only (no coach XP). Force wins award game-played
-          XP based on the reason: both coaches if the game cut out, or only the
-          available coach if the opponent could not play. The CPU score can wait
-          until after the week advances. If the desk has to file a
-          score for coaches, use the form below — reputation still applies, and
-          you choose whether coaches get XP. Primetime is taken from the checkbox or the official
-          Primetime poll slate.
+          Approve to create official results. Played Madden games award XP to
+          both coaches from the Companion export. Simulated leftover games
+          update standings and give play XP only to the winner if nobody filed
+          a force win. Coaches submit Sim Scores, not the box score. Force
+          wins award game-played XP based on the reason: both coaches if the
+          game cut out, or only the available coach if the opponent could not
+          play. If the desk has to file a score for coaches, use the form
+          below — reputation still applies, and you choose whether coaches get
+          XP. Primetime is taken from the checkbox or the official Primetime
+          poll slate.
         </p>
       </div>
 

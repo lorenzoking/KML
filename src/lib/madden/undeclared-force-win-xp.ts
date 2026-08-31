@@ -1,11 +1,11 @@
 import { revalidatePath } from "next/cache";
 import { SubmissionStatus } from "@/generated/prisma/client";
-import { getActiveSeason } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit";
 import { maddenUndeclaredForceWinXpReason } from "@/lib/xp";
-import { isMaddenSimulated } from "@/lib/madden/game-status";
+import { maddenResultKind } from "@/lib/madden/game-status";
 import { franchiseIdForMaddenTeam } from "@/lib/madden/franchises";
+import { getMaddenWeekContext } from "@/lib/madden/week-context";
 
 async function matchupHasSiteTicket(
   seasonId: string,
@@ -35,23 +35,20 @@ async function matchupHasSiteTicket(
 }
 
 /**
- * When a schedule export shows a CPU-simmed game (Madden status 3) and nobody
- * filed that matchup on the site, treat it as an undeclared force win: game-played
- * XP for the winning coach only, no win bonus, no opponent XP.
- * Human-played games (status 2) are auto-filed from the same export when the
- * site still has that matchup open.
+ * Leftover CPU sims (Madden status 3 after the week is closed) with no site
+ * ticket: game-played XP for the winning coach only.
  */
 export async function awardUndeclaredForceWinXp(scheduleIds: string[]) {
   if (scheduleIds.length === 0) return 0;
 
-  let season: Awaited<ReturnType<typeof getActiveSeason>>["season"];
-  let settings: Awaited<ReturnType<typeof getActiveSeason>>["settings"];
+  let ctx: Awaited<ReturnType<typeof getMaddenWeekContext>>;
   try {
-    ({ season, settings } = await getActiveSeason());
+    ctx = await getMaddenWeekContext();
   } catch (error) {
     console.error("Undeclared force-win XP skipped — no active season", error);
     return 0;
   }
+  const { season, settings } = ctx;
 
   const games = await prisma.maddenGame.findMany({
     where: {
@@ -66,14 +63,25 @@ export async function awardUndeclaredForceWinXp(scheduleIds: string[]) {
   let granted = 0;
 
   for (const game of games) {
-    if (!isMaddenSimulated(game.status)) continue;
+    const week = game.weekIndex + 1;
+    if (
+      maddenResultKind({
+        status: game.status,
+        homeScore: game.homeScore,
+        awayScore: game.awayScore,
+        week,
+        currentWeek: ctx.currentWeek,
+        currentWeekStillOpen: ctx.currentWeekStillOpen,
+      }) !== "simulated"
+    ) {
+      continue;
+    }
     if (game.homeScore === game.awayScore) continue;
 
     const homeFranchiseId = await franchiseIdForMaddenTeam(game.homeTeam);
     const awayFranchiseId = await franchiseIdForMaddenTeam(game.awayTeam);
     if (!homeFranchiseId || !awayFranchiseId) continue;
 
-    const week = game.weekIndex + 1;
     if (await matchupHasSiteTicket(season.id, week, homeFranchiseId, awayFranchiseId)) {
       continue;
     }

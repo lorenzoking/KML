@@ -412,18 +412,19 @@ export default async function GamesPage({
           <div className="space-y-6 lg:col-span-2">
             <Card id="submit-result" className="scroll-mt-24 animate-rise">
               <CardHeader>
-                <CardTitle>Submit result</CardTitle>
+                <CardTitle>Submit Sim Score</CardTitle>
                 <CardDescription>
-                  Season {settings.currentSeason} · Week {settings.currentWeek}. If
-                  the game cut out or your opponent could not play, mark a force
-                  win and pick the reason.
+                  Season {settings.currentSeason} · Week {settings.currentWeek}.
+                  Rate your opponent — Madden scores and coach XP come from the
+                  Companion export. If the game cut out or your opponent could
+                  not play, mark a force win instead.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {!user ? (
                   <EmptyState
                     title="Sign in to submit"
-                    description="Coaches submit scores after their game, or a force win if the game cut out or the opponent could not play. Commissioners approve before they count."
+                    description="Coaches submit a Sim Score after they play. Game scores and XP come from the Madden Companion export. Use a force win if the game cut out or the opponent could not play."
                   />
                 ) : !user.isActive ? (
                   <EmptyState title="Account inactive" />

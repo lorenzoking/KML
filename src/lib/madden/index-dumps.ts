@@ -12,6 +12,7 @@ import {
   teamIdOf,
 } from "@/lib/madden/parse";
 import { awardUndeclaredForceWinXp } from "@/lib/madden/undeclared-force-win-xp";
+import { ensurePlayedGameXp } from "@/lib/madden/played-game-xp";
 import { syncMaddenScoresToOpenGames } from "@/lib/madden/sync-scores";
 
 async function franchiseByAbbr() {
@@ -348,6 +349,11 @@ async function indexSchedule(payload: unknown, weekType: string | null = null) {
     await syncMaddenScoresToOpenGames(scheduleIds, { weekType });
   } catch (error) {
     console.error("Failed to sync Madden scores to open games", error);
+  }
+  try {
+    await ensurePlayedGameXp(scheduleIds);
+  } catch (error) {
+    console.error("Failed to award played-game XP from Madden", error);
   }
 }
 

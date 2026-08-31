@@ -54,20 +54,6 @@ export const gameSubmissionSchema = z
       return;
     }
 
-    if (data.userScore == null) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Your score is required.",
-        path: ["userScore"],
-      });
-    }
-    if (data.opponentScore == null) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Opponent score is required.",
-        path: ["opponentScore"],
-      });
-    }
     if (data.opponentSimScore == null) {
       ctx.addIssue({
         code: "custom",

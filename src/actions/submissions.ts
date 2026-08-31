@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
 import { gameSubmissionSchema, simScoreSubmissionSchema, forceWinScoreSchema } from "@/lib/validations";
 import { writeAuditLog } from "@/lib/audit";
+import { findMaddenScoreForMatchup } from "@/lib/madden/matchup-score";
 
 export async function submitGameResult(formData: FormData) {
   const user = await requireUser();
@@ -76,6 +77,17 @@ export async function submitGameResult(formData: FormData) {
     };
   }
 
+  const maddenScore =
+    data.userScore == null || data.opponentScore == null
+      ? await findMaddenScoreForMatchup({
+          week: data.week,
+          userTeamId: membership.franchiseId,
+          opponentTeamId: data.opponentTeamId,
+        })
+      : null;
+  const userScore = data.userScore ?? maddenScore?.userScore ?? null;
+  const opponentScore = data.opponentScore ?? maddenScore?.opponentScore ?? null;
+
   const submission = await prisma.gameSubmission.create({
     data: {
       seasonId: targetSeason.id,
@@ -84,8 +96,8 @@ export async function submitGameResult(formData: FormData) {
       submitterId: user.id,
       userTeamId: membership.franchiseId,
       opponentTeamId: data.opponentTeamId,
-      userScore: data.userScore ?? null,
-      opponentScore: data.opponentScore ?? null,
+      userScore,
+      opponentScore,
       opponentSimScore: data.isForceWin ? null : (data.opponentSimScore ?? null),
       isForceWin: data.isForceWin,
       forceWinReason: data.isForceWin ? (data.forceWinReason ?? null) : null,
@@ -102,8 +114,8 @@ export async function submitGameResult(formData: FormData) {
     entityId: submission.id,
     metadata: {
       week: data.week,
-      userScore: data.userScore ?? null,
-      opponentScore: data.opponentScore ?? null,
+      userScore,
+      opponentScore,
       opponentSimScore: data.isForceWin ? null : (data.opponentSimScore ?? null),
       isForceWin: data.isForceWin,
       forceWinReason: data.isForceWin ? (data.forceWinReason ?? null) : null,
@@ -162,30 +174,31 @@ export async function submitGameSimScore(formData: FormData) {
     return { error: "Only the two teams in this game can submit a Sim Score." };
   }
 
-  if (isUserTeam) {
-    return {
-      error:
-        "You already submitted your opponent’s Sim Score with the result. The other team rates you from this game page.",
-    };
-  }
-
   if (submission.isForceWin) {
     return { error: "Force wins do not use Sim Scores. The CPU sim score can be posted after the week advances." };
   }
 
-  if (submission.userTeamSimScore != null) {
+  if (isUserTeam && submission.opponentSimScore != null) {
+    return { error: "You already submitted a Sim Score for this opponent." };
+  }
+
+  if (isOpponentTeam && submission.userTeamSimScore != null) {
     return { error: "You already submitted a Sim Score for this opponent." };
   }
 
   await prisma.$transaction(async (tx) => {
     await tx.gameSubmission.update({
       where: { id: submission.id },
-      data: { userTeamSimScore: parsed.data.simScore },
+      data: isUserTeam
+        ? { opponentSimScore: parsed.data.simScore }
+        : { userTeamSimScore: parsed.data.simScore },
     });
     if (submission.result) {
       await tx.gameResult.update({
         where: { id: submission.result.id },
-        data: { userTeamSimScore: parsed.data.simScore },
+        data: isUserTeam
+          ? { opponentSimScore: parsed.data.simScore }
+          : { userTeamSimScore: parsed.data.simScore },
       });
     }
   });
@@ -197,8 +210,10 @@ export async function submitGameSimScore(formData: FormData) {
     entityId: submission.id,
     metadata: {
       simScore: parsed.data.simScore,
-      ratedTeamId: submission.userTeamId,
-      ratedTeam: submission.userTeam.abbreviation,
+      ratedTeamId: isUserTeam ? submission.opponentTeamId : submission.userTeamId,
+      ratedTeam: isUserTeam
+        ? submission.opponentTeam.abbreviation
+        : submission.userTeam.abbreviation,
     },
   });
 

@@ -59,9 +59,9 @@ export function SubmissionForm({
             setSuccess(
               forceWin
                 ? forceWinReason === "GAME_CUT_OUT"
-                  ? "Force win submitted. Both coaches get game-played XP after approval. Add the simulated score after the week advances."
-                  : "Force win submitted. You’ll get game-played XP after approval; the opponent will not. Add the simulated score after the week advances."
-                : "Submission saved as pending."
+                  ? "Force win submitted. Both coaches get game-played XP after approval. The Companion export fills in the CPU score."
+                  : "Force win submitted. You’ll get game-played XP after approval; the opponent will not. The Companion export fills in the CPU score."
+                : "Sim Score submitted. Game score and XP come from the Madden Companion export."
             );
             setForceWin(false);
             setForceWinReason("");
@@ -118,8 +118,9 @@ export function SubmissionForm({
           <option value="OTHER">Other</option>
         </Select>
         <p className="text-xs text-[var(--muted-foreground)]">
-          Choose <strong>Simulated</strong> for CPU sims you actually ran. Force
-          wins use the checkbox below instead.
+          Game scores come from the Companion export. Choose{" "}
+          <strong>Simulated</strong> only if you ran a fair CPU sim. Force wins
+          use the checkbox below instead.
         </p>
       </div>
 
@@ -158,8 +159,8 @@ export function SubmissionForm({
           <span>
             <span className="font-semibold">I received a force win</span>
             <span className="mt-0.5 block text-xs text-[var(--muted-foreground)]">
-              Use this when the game did not finish as a normal user game. The
-              simulated score is posted after the week advances. Force wins never
+              Use this when the game did not finish as a normal user game.
+              Madden scores come from the Companion export. Force wins never
               award win-bonus XP.
             </span>
           </span>
@@ -197,43 +198,24 @@ export function SubmissionForm({
       ) : null}
 
       {forceWin ? null : (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="userScore">Your score</Label>
-              <Input id="userScore" name="userScore" type="number" min={0} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="opponentScore">Opponent score</Label>
-              <Input
-                id="opponentScore"
-                name="opponentScore"
-                type="number"
-                min={0}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="opponentSimScore">Opponent&apos;s Sim Score (1–5)</Label>
-            <Select id="opponentSimScore" name="opponentSimScore" required defaultValue="">
-              <option value="" disabled>
-                Select opponent&apos;s Sim Score
-              </option>
-              <option value="5">5 — Elite sim</option>
-              <option value="4">4 — Strong sim</option>
-              <option value="3">3 — Acceptable</option>
-              <option value="2">2 — Poor (counts toward Bad Sim for them)</option>
-              <option value="1">1 — Very poor (counts toward Bad Sim for them)</option>
-            </Select>
-            <p className="text-xs text-[var(--muted-foreground)]">
-              Enter the Madden Sim Score for your opponent&apos;s play — not your own. Scores of
-              2 or lower feed KML Bad Sim Reputation rules for that coach. They will submit a
-              Sim Score for you by opening this game after it&apos;s posted.
-            </p>
-          </div>
-        </>
+        <div className="space-y-2">
+          <Label htmlFor="opponentSimScore">Opponent&apos;s Sim Score (1–5)</Label>
+          <Select id="opponentSimScore" name="opponentSimScore" required defaultValue="">
+            <option value="" disabled>
+              Select opponent&apos;s Sim Score
+            </option>
+            <option value="5">5 — Elite sim</option>
+            <option value="4">4 — Strong sim</option>
+            <option value="3">3 — Acceptable</option>
+            <option value="2">2 — Poor (counts toward Bad Sim for them)</option>
+            <option value="1">1 — Very poor (counts toward Bad Sim for them)</option>
+          </Select>
+          <p className="text-xs text-[var(--muted-foreground)]">
+            Rate your opponent&apos;s Madden play — not your own. The final score
+            and coach XP come from the Companion export. Scores of 2 or lower
+            feed KML Bad Sim Reputation rules for that coach.
+          </p>
+        </div>
       )}
 
       <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 px-3 py-3">
@@ -284,7 +266,7 @@ export function SubmissionForm({
       ) : null}
 
       <SubmitButton disabled={pending} pendingText="Submitting...">
-        {forceWin ? "Submit force win" : "Submit for approval"}
+        {forceWin ? "Submit force win" : "Submit Sim Score"}
       </SubmitButton>
     </form>
   );

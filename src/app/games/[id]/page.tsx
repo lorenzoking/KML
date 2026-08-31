@@ -66,9 +66,10 @@ export default async function GameDetailPage({
     !game.isForceWin &&
     Boolean(user?.isActive) &&
     involved &&
-    membership?.franchiseId === game.opponentTeamId &&
     (game.status === "PENDING" || game.status === "APPROVED") &&
-    game.userTeamSimScore == null;
+    ((membership?.franchiseId === game.userTeamId && game.opponentSimScore == null) ||
+      (membership?.franchiseId === game.opponentTeamId &&
+        game.userTeamSimScore == null));
 
   const canPostForceWinScore =
     game.isForceWin &&
@@ -180,8 +181,9 @@ export default async function GameDetailPage({
           <CardHeader>
             <CardTitle>Post simulated score</CardTitle>
             <CardDescription>
-              After the week advances, enter the CPU score. {game.userTeam.abbreviation}{" "}
-              must be ahead.
+              After the week advances, the Companion export fills in the CPU
+              score. You can still enter it here if needed.{" "}
+              {game.userTeam.abbreviation} must be ahead.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -210,36 +212,15 @@ export default async function GameDetailPage({
             />
           </CardContent>
         </Card>
-      ) : !game.isForceWin &&
-        involved &&
-        membership?.franchiseId === game.opponentTeamId &&
-        game.userTeamSimScore != null ? (
+      ) : !game.isForceWin && involved && membership ? (
         <Card>
           <CardHeader>
             <CardTitle>Your Sim Score</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-[var(--muted-foreground)]">
-            You rated {game.userTeam.abbreviation} {game.userTeamSimScore}/5.
-          </CardContent>
-        </Card>
-      ) : !game.isForceWin && involved && membership?.franchiseId === game.userTeamId ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Sim Score</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-[var(--muted-foreground)]">
-            {game.opponentSimScore == null
-              ? `No Sim Score was filed with this result. Waiting on ${game.opponentTeam.abbreviation}${
-                  game.userTeamSimScore == null
-                    ? " to rate you from this page."
-                    : ` — they rated you ${game.userTeamSimScore}/5.`
-                }`
-              : `You rated ${game.opponentTeam.abbreviation} ${game.opponentSimScore}/5 with
-            the result. Waiting on ${game.opponentTeam.abbreviation}${
-                game.userTeamSimScore == null
-                  ? " to submit yours."
-                  : ` — they rated you ${game.userTeamSimScore}/5.`
-              }`}
+            {membership.franchiseId === game.userTeamId
+              ? `You rated ${game.opponentTeam.abbreviation} ${game.opponentSimScore}/5.`
+              : `You rated ${game.userTeam.abbreviation} ${game.userTeamSimScore}/5.`}
           </CardContent>
         </Card>
       ) : null}

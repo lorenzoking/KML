@@ -4,13 +4,13 @@ import {
   Role,
   SubmissionStatus,
 } from "@/generated/prisma/client";
-import { getActiveSeason } from "@/lib/league";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit";
 import { hasFinalScores } from "@/lib/game-score";
 import { approvePendingSubmission } from "@/lib/game-approval";
 import { franchiseIdForMaddenTeam } from "@/lib/madden/franchises";
-import { isMaddenFinal, isMaddenSimulated } from "@/lib/madden/game-status";
+import { maddenResultKind } from "@/lib/madden/game-status";
+import { getMaddenWeekContext } from "@/lib/madden/week-context";
 import {
   autoFileSides,
   scoresForSiteSubmitter,
@@ -261,13 +261,14 @@ export async function syncMaddenScoresToOpenGames(
   if (scheduleIds.length === 0) return 0;
   if (!shouldSyncCompanionWeekType(options?.weekType)) return 0;
 
-  let season: Awaited<ReturnType<typeof getActiveSeason>>["season"];
+  let ctx: Awaited<ReturnType<typeof getMaddenWeekContext>>;
   try {
-    ({ season } = await getActiveSeason());
+    ctx = await getMaddenWeekContext();
   } catch (error) {
     console.error("Madden score sync skipped — no active season", error);
     return 0;
   }
+  const { season } = ctx;
 
   const games = await prisma.maddenGame.findMany({
     where: { scheduleId: { in: scheduleIds } },
@@ -281,13 +282,21 @@ export async function syncMaddenScoresToOpenGames(
   let updated = 0;
 
   for (const game of games) {
-    if (!isMaddenFinal(game.status)) continue;
+    const week = game.weekIndex + 1;
+    const kind = maddenResultKind({
+      status: game.status,
+      homeScore: game.homeScore,
+      awayScore: game.awayScore,
+      week,
+      currentWeek: ctx.currentWeek,
+      currentWeekStillOpen: ctx.currentWeekStillOpen,
+    });
+    if (kind === "unplayed") continue;
 
     const homeFranchiseId = await franchiseIdForMaddenTeam(game.homeTeam);
     const awayFranchiseId = await franchiseIdForMaddenTeam(game.awayTeam);
     if (!homeFranchiseId || !awayFranchiseId) continue;
 
-    const week = game.weekIndex + 1;
     const scheduled = await prisma.scheduledGame.findFirst({
       where: {
         seasonId: season.id,
@@ -338,7 +347,7 @@ export async function syncMaddenScoresToOpenGames(
       awayFranchiseId,
       homeScore: game.homeScore,
       awayScore: game.awayScore,
-      simulated: isMaddenSimulated(game.status),
+      simulated: kind === "simulated",
       isPrimetime: scheduled.isPrimetime,
       actorId,
     });
