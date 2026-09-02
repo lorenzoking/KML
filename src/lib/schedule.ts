@@ -11,6 +11,7 @@ type FranchiseRef = {
   id: string;
   name: string;
   abbreviation: string;
+  primaryColor?: string;
 };
 
 type SubmissionLike = {

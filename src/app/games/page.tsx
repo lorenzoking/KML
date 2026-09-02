@@ -6,21 +6,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, ReputationBadge } from "@/components/status-badge";
 import { SubmissionForm } from "@/components/forms/submission-form";
 import { GamesTabs } from "@/components/games/games-tabs";
+import {
+  BoardHero,
+  GamesHero,
+  GamesLiveStrip,
+  TeamMark,
+  teamColor,
+} from "@/components/games/scoreboard";
 import { getSessionUser, isCommissioner } from "@/lib/auth";
+import { formatLeagueDate } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import {
   getActiveSeason,
@@ -28,6 +28,7 @@ import {
   getUserMembership,
   listSeasons,
 } from "@/lib/league";
+import { getMaddenLivePulse } from "@/lib/madden/query";
 import { sumXp } from "@/lib/xp";
 import {
   computeReputationScore,
@@ -39,12 +40,20 @@ import { ScrollToHash } from "@/components/games/scroll-to-hash";
 import { WeekSlate } from "@/components/games/week-slate";
 import { TeamSchedule } from "@/components/games/team-schedule";
 import { SimScoreForm } from "@/components/forms/sim-score-form";
+import { MaddenLiveRefresh } from "@/components/league/madden-live-refresh";
 import {
   buildTeamSchedule,
   buildWeekSlate,
   NFL_REGULAR_SEASON_WEEKS,
   safeEnsureSeasonSchedule,
 } from "@/lib/schedule";
+
+const franchiseSelect = {
+  id: true,
+  name: true,
+  abbreviation: true,
+  primaryColor: true,
+} as const;
 
 export default async function GamesPage({
   searchParams,
@@ -65,10 +74,11 @@ export default async function GamesPage({
       : params.tab === "schedule"
         ? "schedule"
         : "week";
-  const [user, active, seasons] = await Promise.all([
+  const [user, active, seasons, pulse] = await Promise.all([
     getSessionUser(),
     getActiveSeason(),
     listSeasons(),
+    getMaddenLivePulse(),
   ]);
   const { settings, season: activeSeason } = active;
   const commissionerUi = user ? await isCommissioner(user) : false;
@@ -92,7 +102,7 @@ export default async function GamesPage({
 
   const franchisesPromise = prisma.franchise.findMany({
     orderBy: { sortOrder: "asc" },
-    select: { id: true, name: true, abbreviation: true },
+    select: franchiseSelect,
   });
 
   const weekDataPromise =
@@ -139,8 +149,8 @@ export default async function GamesPage({
           prisma.scheduledGame.findMany({
             where: { seasonId: season.id, week: selectedWeek },
             include: {
-              homeTeam: { select: { id: true, name: true, abbreviation: true } },
-              awayTeam: { select: { id: true, name: true, abbreviation: true } },
+              homeTeam: { select: franchiseSelect },
+              awayTeam: { select: franchiseSelect },
             },
           }),
         ])
@@ -152,8 +162,8 @@ export default async function GamesPage({
           prisma.scheduledGame.findMany({
             where: { seasonId: season.id },
             include: {
-              homeTeam: { select: { id: true, name: true, abbreviation: true } },
-              awayTeam: { select: { id: true, name: true, abbreviation: true } },
+              homeTeam: { select: franchiseSelect },
+              awayTeam: { select: franchiseSelect },
             },
             orderBy: { week: "asc" },
           }),
@@ -329,24 +339,117 @@ export default async function GamesPage({
     season.id === activeSeason.id &&
     Boolean(membership);
 
+  const liveLabel =
+    pulse.pending > 0
+      ? `Indexing ${pulse.pending} new dump${pulse.pending === 1 ? "" : "s"} from Madden…`
+      : pulse.indexedAt
+        ? `Companion live · ${formatLeagueDate(pulse.indexedAt, "MMM d, h:mm a")}`
+        : "Waiting on the next Companion export";
+  const weekFinals = weekSlate.filter((row) => row.status === "approved").length;
+  const weekOpen = weekSlate.filter((row) => row.status === "missing").length;
+  const weekPrimetime = weekSlate.filter((row) => row.isPrimetime).length;
+  const colorByFranchise = Object.fromEntries(
+    franchises.map((franchise) => [franchise.id, franchise.primaryColor])
+  );
+  const playedSchedule = teamScheduleRows.filter(
+    (row) => !row.bye && row.myScore != null && row.oppScore != null
+  );
+  const scheduleWins = playedSchedule.filter(
+    (row) => !row.bye && row.myScore! > row.oppScore!
+  ).length;
+  const scheduleLosses = playedSchedule.filter(
+    (row) => !row.bye && row.myScore! < row.oppScore!
+  ).length;
+  const scheduleTies = playedSchedule.filter(
+    (row) => !row.bye && row.myScore === row.oppScore
+  ).length;
+  const standingsLeader = standings[0];
+  const gamesCounted =
+    standings.reduce(
+      (sum, row) => sum + row.wins + row.losses + row.ties,
+      0
+    ) / 2;
+
+  const filterControlClass =
+    "h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-base shadow-sm sm:h-10 sm:w-auto sm:text-sm";
+
   return (
     <div className="space-y-6">
       {tab === "week" ? <ScrollToHash id="submit-result" /> : null}
-      <div className="grid gap-4 sm:flex sm:flex-wrap sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold uppercase tracking-[0.04em] sm:text-3xl sm:tracking-[0.06em]">
-            Games
-          </h1>
-          <p className="text-sm text-[var(--muted-foreground)]">
-            Weekly results, team schedules, and score submission in one place.
-          </p>
-        </div>
+      <MaddenLiveRefresh stamp={pulse.stamp} pending={pulse.pending} />
+
+      {tab === "week" ? (
+        <GamesHero
+          week={selectedWeek}
+          seasonNumber={season.number}
+          isCurrentWeek={
+            season.id === activeSeason.id && selectedWeek === settings.currentWeek
+          }
+          finals={weekFinals}
+          open={weekOpen}
+          primetime={weekPrimetime}
+          liveLabel={liveLabel}
+        />
+      ) : tab === "schedule" ? (
+        <BoardHero
+          kicker={`Season ${season.number} · 17 games + bye`}
+          title={selectedTeam?.name ?? "Team schedule"}
+          subtitle="The 2026 NFL slate. Open games still need a score on the board."
+          color={selectedTeam?.primaryColor}
+          watermark={selectedTeam?.abbreviation}
+          tiles={[
+            {
+              label: "Record",
+              value:
+                scheduleTies > 0
+                  ? `${scheduleWins}–${scheduleLosses}–${scheduleTies}`
+                  : `${scheduleWins}–${scheduleLosses}`,
+            },
+            { label: "Played", value: String(playedSchedule.length) },
+            {
+              label: "Open",
+              value: String(
+                teamScheduleRows.filter((row) => !row.bye && row.status === "missing")
+                  .length
+              ),
+            },
+          ]}
+        />
+      ) : (
+        <BoardHero
+          kicker={`Season ${season.number} · approved results only`}
+          title="Standings"
+          subtitle="Wins, scoring, XP, and reputation from the commissioner-approved board."
+          color={
+            standingsLeader
+              ? colorByFranchise[standingsLeader.franchiseId]
+              : undefined
+          }
+          watermark={standingsLeader?.abbreviation}
+          tiles={[
+            {
+              label: "Front",
+              value: standingsLeader?.abbreviation ?? "—",
+            },
+            { label: "Games", value: String(Math.round(gamesCounted)) },
+            {
+              label: "Lead",
+              value: standingsLeader
+                ? `${standingsLeader.wins}–${standingsLeader.losses}`
+                : "—",
+            },
+          ]}
+        />
+      )}
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <GamesLiveStrip label={liveLabel} />
         {canSubmit ? (
-          <Button asChild className="w-full sm:w-auto">
+          <Button asChild size="sm">
             {tab === "week" ? (
-              <a href="#submit-result">Submit your result</a>
+              <a href="#submit-result">Submit Sim Score</a>
             ) : (
-              <Link href="/games?tab=week#submit-result">Submit your result</Link>
+              <Link href="/games?tab=week#submit-result">Submit Sim Score</Link>
             )}
           </Button>
         ) : null}
@@ -354,83 +457,109 @@ export default async function GamesPage({
 
       <GamesTabs active={tab} query={tabQuery} />
 
-      <Card>
-        <CardContent className="pt-4 sm:pt-5">
-          <form className="grid gap-2 sm:flex sm:flex-wrap">
-            <input type="hidden" name="tab" value={tab} />
+      <form className="flex flex-wrap gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-3">
+        <input type="hidden" name="tab" value={tab} />
+        <select
+          name="season"
+          defaultValue={String(season.number)}
+          className={filterControlClass}
+        >
+          {seasons.map((s) => (
+            <option key={s.id} value={s.number}>
+              Season {s.number}
+              {s.status === "ARCHIVED" ? " (archived)" : ""}
+            </option>
+          ))}
+        </select>
+        {tab === "week" ? (
+          <select
+            name="week"
+            defaultValue={String(selectedWeek)}
+            className={filterControlClass}
+          >
+            {Array.from({ length: 22 }, (_, i) => i + 1).map((week) => (
+              <option key={week} value={week}>
+                Week {week}
+                {season.id === activeSeason.id && week === settings.currentWeek
+                  ? " (current)"
+                  : ""}
+              </option>
+            ))}
+          </select>
+        ) : tab === "schedule" ? (
+          <select
+            name="team"
+            defaultValue={selectedTeamAbbr}
+            className={filterControlClass}
+          >
+            {franchises.map((franchise) => (
+              <option key={franchise.id} value={franchise.abbreviation}>
+                {franchise.abbreviation} · {franchise.name}
+                {membership?.franchiseId === franchise.id ? " (you)" : ""}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <>
+            <input
+              name="q"
+              defaultValue={params.q}
+              placeholder="Search team"
+              className={filterControlClass}
+            />
             <select
-              name="season"
-              defaultValue={String(season.number)}
-              className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-base shadow-sm sm:h-10 sm:w-auto sm:text-sm"
+              name="conference"
+              defaultValue={params.conference ?? ""}
+              className={filterControlClass}
             >
-              {seasons.map((s) => (
-                <option key={s.id} value={s.number}>
-                  Season {s.number}
-                  {s.status === "ARCHIVED" ? " (archived)" : ""}
-                </option>
-              ))}
+              <option value="">All conferences</option>
+              <option value="AFC">AFC</option>
+              <option value="NFC">NFC</option>
             </select>
-            {tab === "week" ? (
-              <select
-                name="week"
-                defaultValue={String(selectedWeek)}
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-base shadow-sm sm:h-10 sm:w-auto sm:text-sm"
-              >
-                {Array.from({ length: 22 }, (_, i) => i + 1).map((week) => (
-                  <option key={week} value={week}>
-                    Week {week}
-                    {season.id === activeSeason.id &&
-                    week === settings.currentWeek
-                      ? " (current)"
-                      : ""}
-                  </option>
-                ))}
-              </select>
-            ) : tab === "schedule" ? (
-              <select
-                name="team"
-                defaultValue={selectedTeamAbbr}
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-base shadow-sm sm:h-10 sm:w-auto sm:text-sm"
-              >
-                {franchises.map((franchise) => (
-                  <option key={franchise.id} value={franchise.abbreviation}>
-                    {franchise.abbreviation} · {franchise.name}
-                    {membership?.franchiseId === franchise.id ? " (you)" : ""}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <>
-                <input
-                  name="q"
-                  defaultValue={params.q}
-                  placeholder="Search team"
-                  className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-base shadow-sm sm:h-10 sm:w-auto sm:text-sm"
-                />
-                <select
-                  name="conference"
-                  defaultValue={params.conference ?? ""}
-                  className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-3 text-base shadow-sm sm:h-10 sm:w-auto sm:text-sm"
-                >
-                  <option value="">All conferences</option>
-                  <option value="AFC">AFC</option>
-                  <option value="NFC">NFC</option>
-                </select>
-              </>
-            )}
-            <button
-              type="submit"
-              className="h-11 w-full rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-[var(--primary-foreground)] shadow-sm transition hover:brightness-110 sm:h-10 sm:w-auto"
-            >
-              Apply
-            </button>
-          </form>
-        </CardContent>
-      </Card>
+          </>
+        )}
+        <button
+          type="submit"
+          className="h-11 w-full rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-[var(--primary-foreground)] shadow-sm transition hover:brightness-110 sm:h-10 sm:w-auto"
+        >
+          Apply
+        </button>
+      </form>
 
       {tab === "week" ? (
-        <div className="grid gap-6 lg:grid-cols-5">
-          <div className="space-y-6 lg:col-span-2">
+        <div className="space-y-8">
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
+                  Scoreboard
+                </p>
+                <h2 className="font-[family-name:var(--font-display)] text-2xl uppercase tracking-wide">
+                  Week {selectedWeek} slate
+                </h2>
+              </div>
+              {commissionerUi && missingThisWeek > 0 ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/admin/season">Missing results</Link>
+                </Button>
+              ) : null}
+            </div>
+            {weekSlate.length > 0 ? (
+              <WeekSlate
+                rows={weekSlate}
+                myTeamId={myTeamId}
+                isCommissioner={commissionerUi}
+                seasonNumber={season.number}
+              />
+            ) : (
+              <EmptyState
+                title="No scheduled games this week"
+                description="Playoff or extra games still show after a coach submits."
+              />
+            )}
+          </section>
+
+          <div className="grid gap-6 lg:grid-cols-2">
             <Card id="submit-result" className="scroll-mt-24 animate-rise">
               <CardHeader>
                 <CardTitle>
@@ -540,29 +669,33 @@ export default async function GamesPage({
             {user ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Your recent submissions</CardTitle>
+                  <CardTitle>Your recent tape</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {myHistory.length === 0 ? (
                     <EmptyState title="No submissions yet" />
                   ) : (
-                    <ul className="space-y-3">
+                    <ul className="space-y-2">
                       {myHistory.map((s) => (
                         <li key={s.id}>
                           <Link
                             href={`/games/${s.id}`}
-                            className="block rounded-lg border border-[var(--border)] px-3 py-2 text-sm transition-colors hover:bg-[var(--muted)]"
+                            className="surface-hover flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)] px-3 py-2.5"
                           >
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="font-medium">
-                                S{s.season.number} W{s.week}:{" "}
-                                {formatMatchupScore(s)}
-                              </span>
-                              <StatusBadge status={s.status} />
+                            <TeamMark
+                              abbr={s.userTeam.abbreviation}
+                              color={s.userTeam.primaryColor}
+                              size="sm"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate font-[family-name:var(--font-display)] uppercase tracking-wide">
+                                S{s.season.number} W{s.week} · {formatMatchupScore(s)}
+                              </p>
+                              <p className="truncate text-xs text-[var(--muted-foreground)]">
+                                {formatBothSimScores(s)}
+                              </p>
                             </div>
-                            <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-                              {formatBothSimScores(s)}
-                            </p>
+                            <StatusBadge status={s.status} />
                           </Link>
                         </li>
                       ))}
@@ -572,68 +705,16 @@ export default async function GamesPage({
               </Card>
             ) : null}
           </div>
-
-          <div className="space-y-6 lg:col-span-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  Week {selectedWeek} slate · Season {season.number}
-                </CardTitle>
-                <CardDescription>
-                  {weekSlate.length > 0
-                    ? `${weekSlate.length} scheduled games · ${missingThisWeek} still need a score.`
-                    : "Official scores appear after commissioner approval."}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {weekSlate.length > 0 ? (
-                  <>
-                    <WeekSlate
-                      rows={weekSlate}
-                      myTeamId={myTeamId}
-                      isCommissioner={commissionerUi}
-                      seasonNumber={season.number}
-                    />
-                    {commissionerUi && missingThisWeek > 0 ? (
-                      <Button asChild variant="outline" size="sm">
-                        <Link href="/admin/season">Missing results</Link>
-                      </Button>
-                    ) : null}
-                  </>
-                ) : (
-                  <EmptyState
-                    title="No scheduled games this week"
-                    description="Playoff or extra games still show after a coach submits."
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </div>
         </div>
       ) : tab === "schedule" ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {selectedTeam
-                ? `${selectedTeam.name} schedule`
-                : "Team schedule"}
-            </CardTitle>
-            <CardDescription>
-              2026 NFL regular season · 17 games + one bye. Open games still
-              need a submitted score.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {teamScheduleRows.length === 0 ? (
-              <EmptyState
-                title="Schedule not loaded"
-                description="The 2026 NFL slate will appear here after the database migration runs."
-              />
-            ) : (
-              <TeamSchedule rows={teamScheduleRows} />
-            )}
-          </CardContent>
-        </Card>
+        teamScheduleRows.length === 0 ? (
+          <EmptyState
+            title="Schedule not loaded"
+            description="The 2026 NFL slate will appear here after the database migration runs."
+          />
+        ) : (
+          <TeamSchedule rows={teamScheduleRows} />
+        )
       ) : (
         <>
           {standings.every((s) => s.wins + s.losses + s.ties === 0) ? (
@@ -643,76 +724,87 @@ export default async function GamesPage({
             />
           ) : null}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Season {season.number} standings</CardTitle>
-              <CardDescription>
-                Derived from approved, non-voided results only.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>#</TableHead>
-                    <TableHead>Team</TableHead>
-                    <TableHead>Coach</TableHead>
-                    <TableHead>W</TableHead>
-                    <TableHead>L</TableHead>
-                    <TableHead>PF</TableHead>
-                    <TableHead>PA</TableHead>
-                    <TableHead>Form</TableHead>
-                    <TableHead>XP</TableHead>
-                    <TableHead>Rep</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {standings.map((row, idx) => {
-                    const coach = coachByFranchise[row.franchiseId];
-                    return (
-                      <TableRow key={row.franchiseId}>
-                        <TableCell>{idx + 1}</TableCell>
-                        <TableCell>
-                          <Link
-                            href={`/games?tab=schedule&season=${season.number}&team=${row.abbreviation}`}
-                            className="hover:text-[var(--primary)]"
-                          >
-                            <div className="font-medium">{row.name}</div>
-                            <div className="text-xs text-[var(--muted-foreground)]">
-                              {row.conference} {row.division}
-                            </div>
-                          </Link>
-                        </TableCell>
-                        <TableCell>{coach?.name ?? "—"}</TableCell>
-                        <TableCell>{row.wins}</TableCell>
-                        <TableCell>{row.losses}</TableCell>
-                        <TableCell>{row.pointsFor}</TableCell>
-                        <TableCell>{row.pointsAgainst}</TableCell>
-                        <TableCell>
-                          {row.form ? (
-                            <Badge variant="outline">{row.form}</Badge>
-                          ) : (
-                            "—"
-                          )}
-                        </TableCell>
-                        <TableCell>{coach?.xp ?? 0}</TableCell>
-                        <TableCell>
-                          {coach ? (
-                            <ReputationBadge
-                              label={coach.label}
-                              score={coach.score}
-                            />
-                          ) : (
-                            "—"
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <ol className="stagger space-y-2">
+            {standings.map((row, idx) => {
+              const coach = coachByFranchise[row.franchiseId];
+              const hex = teamColor(colorByFranchise[row.franchiseId]);
+              return (
+                <li key={row.franchiseId}>
+                  <Link
+                    href={`/games?tab=schedule&season=${season.number}&team=${row.abbreviation}`}
+                    className="surface-hover block overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)]"
+                  >
+                    <div className="flex items-stretch gap-3 p-3 sm:p-4">
+                      <span
+                        className="w-1.5 self-stretch rounded-full"
+                        style={{ background: hex }}
+                      />
+                      <span className="w-6 shrink-0 text-sm tabular-nums text-[var(--muted-foreground)]">
+                        {idx + 1}
+                      </span>
+                      <TeamMark
+                        abbr={row.abbreviation}
+                        color={colorByFranchise[row.franchiseId]}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-[family-name:var(--font-display)] text-xl uppercase tracking-wide">
+                          {row.abbreviation}
+                        </p>
+                        <p className="truncate text-xs text-[var(--muted-foreground)]">
+                          {row.name} · {row.conference} {row.division}
+                          {coach ? ` · ${coach.name}` : ""}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="font-[family-name:var(--font-display)] text-2xl tabular-nums text-[var(--primary)]">
+                          {row.wins}–{row.losses}
+                          {row.ties ? `–${row.ties}` : ""}
+                        </p>
+                        <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+                          PF {row.pointsFor} · PA {row.pointsAgainst}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 border-t border-[var(--border)] px-3 py-2 sm:px-4">
+                      {row.form ? (
+                        <span className="flex gap-1">
+                          {row.form.split("").map((letter, formIdx) => (
+                            <span
+                              key={`${row.franchiseId}-${formIdx}`}
+                              className={
+                                letter === "W"
+                                  ? "font-[family-name:var(--font-display)] text-[var(--primary)]"
+                                  : letter === "L"
+                                    ? "font-[family-name:var(--font-display)] text-rose-300"
+                                    : "font-[family-name:var(--font-display)] text-[var(--muted-foreground)]"
+                              }
+                            >
+                              {letter}
+                            </span>
+                          ))}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[var(--muted-foreground)]">
+                          No form yet
+                        </span>
+                      )}
+                      <span className="ml-auto flex flex-wrap items-center gap-2 text-xs text-[var(--muted-foreground)]">
+                        <Badge variant="outline">XP {coach?.xp ?? 0}</Badge>
+                        {coach ? (
+                          <ReputationBadge
+                            label={coach.label}
+                            score={coach.score}
+                          />
+                        ) : (
+                          "—"
+                        )}
+                      </span>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
         </>
       )}
     </div>

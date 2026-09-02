@@ -166,6 +166,14 @@ h3,
   .stagger > *:nth-child(6) { animation-delay: 225ms; }
   .stagger > *:nth-child(7) { animation-delay: 270ms; }
   .stagger > *:nth-child(8) { animation-delay: 315ms; }
+  .stagger > *:nth-child(9) { animation-delay: 360ms; }
+  .stagger > *:nth-child(10) { animation-delay: 405ms; }
+  .stagger > *:nth-child(11) { animation-delay: 450ms; }
+  .stagger > *:nth-child(12) { animation-delay: 495ms; }
+  .stagger > *:nth-child(13) { animation-delay: 540ms; }
+  .stagger > *:nth-child(14) { animation-delay: 585ms; }
+  .stagger > *:nth-child(15) { animation-delay: 630ms; }
+  .stagger > *:nth-child(16) { animation-delay: 675ms; }
 
   .surface-hover {
     transition:

@@ -1,8 +1,6 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { StatusBadge } from "@/components/status-badge";
 import { CommissionerFileMissingGameForm } from "@/components/forms/commissioner-file-missing-game-form";
+import { MatchupCard } from "@/components/games/scoreboard";
 import type { WeekSlateRow } from "@/lib/schedule";
 
 export function WeekSlate({
@@ -18,36 +16,63 @@ export function WeekSlate({
 }) {
   if (rows.length === 0) return null;
 
-  const missing = rows.filter((row) => row.status === "missing");
-  const pending = rows.filter((row) => row.status === "pending");
-  const approved = rows.filter((row) => row.status === "approved");
+  const ordered = [...rows].sort((a, b) => {
+    const aMine = myTeamId === a.home.id || myTeamId === a.away.id;
+    const bMine = myTeamId === b.home.id || myTeamId === b.away.id;
+    if (aMine !== bMine) return aMine ? -1 : 1;
+    const rank = { missing: 0, pending: 1, approved: 2 };
+    return (
+      rank[a.status] - rank[b.status] ||
+      Number(b.isPrimetime) - Number(a.isPrimetime)
+    );
+  });
+
+  const missing = ordered.filter((row) => row.status === "missing");
+  const pending = ordered.filter((row) => row.status === "pending");
+  const approved = ordered.filter((row) => row.status === "approved");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {missing.length > 0 ? (
-        <SlateGroup title="Not submitted" hint={`${missing.length} still open`}>
+        <SlateGroup title="Upcoming" hint={`${missing.length} still open`}>
           {missing.map((row) => (
-            <SlateRow
-              key={row.scheduledId}
-              row={row}
-              myTeamId={myTeamId}
-              isCommissioner={isCommissioner}
-              seasonNumber={seasonNumber}
-            />
+            <li key={row.scheduledId}>
+              <MatchupCard
+                row={row}
+                myTeamId={myTeamId}
+                footer={
+                  isCommissioner && seasonNumber != null ? (
+                    <CommissionerFileMissingGameForm
+                      seasonNumber={seasonNumber}
+                      week={row.week}
+                      homeTeamId={row.home.id}
+                      awayTeamId={row.away.id}
+                      homeAbbr={row.home.abbreviation}
+                      awayAbbr={row.away.abbreviation}
+                      isPrimetime={row.isPrimetime}
+                    />
+                  ) : undefined
+                }
+              />
+            </li>
           ))}
         </SlateGroup>
       ) : null}
       {pending.length > 0 ? (
-        <SlateGroup title="Pending approval">
+        <SlateGroup title="In review" hint={`${pending.length} pending`}>
           {pending.map((row) => (
-            <SlateRow key={row.scheduledId} row={row} myTeamId={myTeamId} />
+            <li key={row.scheduledId}>
+              <MatchupCard row={row} myTeamId={myTeamId} />
+            </li>
           ))}
         </SlateGroup>
       ) : null}
       {approved.length > 0 ? (
-        <SlateGroup title="Official results">
+        <SlateGroup title="Final" hint={`${approved.length} in the books`}>
           {approved.map((row) => (
-            <SlateRow key={row.scheduledId} row={row} myTeamId={myTeamId} />
+            <li key={row.scheduledId}>
+              <MatchupCard row={row} myTeamId={myTeamId} />
+            </li>
           ))}
         </SlateGroup>
       ) : null}
@@ -65,98 +90,18 @@ function SlateGroup({
   children: ReactNode;
 }) {
   return (
-    <div className="space-y-3">
+    <section className="space-y-3">
       <div className="flex items-baseline justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+        <h2 className="font-[family-name:var(--font-display)] text-sm font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
           {title}
-        </p>
+        </h2>
         {hint ? (
-          <p className="text-xs text-[var(--muted-foreground)]">{hint}</p>
+          <p className="text-xs uppercase tracking-[0.12em] text-[var(--muted-foreground)]">
+            {hint}
+          </p>
         ) : null}
       </div>
-      <ul className="space-y-3">{children}</ul>
-    </div>
+      <ul className="stagger grid gap-3 md:grid-cols-2">{children}</ul>
+    </section>
   );
-}
-
-function SlateRow({
-  row,
-  myTeamId,
-  isCommissioner = false,
-  seasonNumber,
-}: {
-  row: WeekSlateRow;
-  myTeamId?: string;
-  isCommissioner?: boolean;
-  seasonNumber?: number;
-}) {
-  const mine =
-    myTeamId === row.home.id || myTeamId === row.away.id;
-  const inner = (
-    <div
-      className={`rounded-lg border px-4 py-3 ${
-        row.status === "missing"
-          ? "border-dashed border-[var(--border)]"
-          : "border-[var(--border)]"
-      } ${mine ? "bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]" : ""}`}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className={row.status === "approved" ? "text-lg font-semibold tracking-wide" : "font-medium"}>
-          {row.away.abbreviation} @ {row.home.abbreviation}
-          {row.homeScore != null && row.awayScore != null
-            ? ` · ${row.away.abbreviation} ${row.awayScore}–${row.homeScore} ${row.home.abbreviation}`
-            : row.isForceWin
-              ? " · force win (score pending)"
-              : ""}
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          {row.isPrimetime ? <Badge variant="elite">Primetime</Badge> : null}
-          {row.isForceWin ? <Badge variant="outline">Force win</Badge> : null}
-          {mine ? <Badge variant="outline">You</Badge> : null}
-          {row.status === "approved" ? (
-            <StatusBadge status="APPROVED" />
-          ) : row.status === "pending" ? (
-            <StatusBadge status="PENDING" />
-          ) : (
-            <Badge variant="outline">Not in</Badge>
-          )}
-        </div>
-      </div>
-      <p className="mt-1 text-xs text-[var(--muted-foreground)]">
-        {row.away.name} at {row.home.name}
-        {row.status === "missing" && !isCommissioner ? " · waiting on a score" : ""}
-        {row.status === "approved" || row.status === "pending"
-          ? " · recap & box score"
-          : ""}
-      </p>
-      {isCommissioner && row.status === "missing" && seasonNumber != null ? (
-        <div className="mt-3">
-          <CommissionerFileMissingGameForm
-            seasonNumber={seasonNumber}
-            week={row.week}
-            homeTeamId={row.home.id}
-            awayTeamId={row.away.id}
-            homeAbbr={row.home.abbreviation}
-            awayAbbr={row.away.abbreviation}
-            isPrimetime={row.isPrimetime}
-          />
-        </div>
-      ) : null}
-    </div>
-  );
-
-  if (row.submissionId) {
-    return (
-      <li>
-        <Link
-          href={`/games/${row.submissionId}`}
-          className="block transition-colors hover:bg-[var(--muted)]"
-        >
-          {inner}
-        </Link>
-      </li>
-    );
-  }
-
-  return <li>{inner}</li>;
 }

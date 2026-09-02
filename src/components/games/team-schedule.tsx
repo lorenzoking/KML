@@ -1,21 +1,23 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { TeamMark } from "@/components/games/scoreboard";
 import type { TeamScheduleRow } from "@/lib/schedule";
+import { cn } from "@/lib/utils";
 
 export function TeamSchedule({ rows }: { rows: TeamScheduleRow[] }) {
   return (
-    <ol className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)]">
+    <ol className="stagger space-y-2">
       {rows.map((row) => {
         if (row.bye) {
           return (
             <li
               key={row.week}
-              className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+              className="flex items-center gap-3 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3"
             >
-              <span className="w-14 shrink-0 text-[var(--muted-foreground)]">
+              <span className="w-10 shrink-0 font-[family-name:var(--font-display)] text-sm uppercase tracking-wide text-[var(--muted-foreground)]">
                 W{row.week}
               </span>
-              <span className="flex-1 font-medium">Bye</span>
+              <span className="flex-1 text-sm font-medium">Bye week</span>
               <Badge variant="outline">Bye</Badge>
             </li>
           );
@@ -30,33 +32,41 @@ export function TeamSchedule({ rows }: { rows: TeamScheduleRow[] }) {
                 : "T"
             : null;
         const inner = (
-          <div className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-            <span className="w-14 shrink-0 text-[var(--muted-foreground)]">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <span className="w-10 shrink-0 font-[family-name:var(--font-display)] text-sm uppercase tracking-wide text-[var(--muted-foreground)]">
               W{row.week}
             </span>
-            <span className="min-w-0 flex-1 font-medium">
-              {row.isHome ? "vs" : "@"} {row.opponent.abbreviation}
-              <span className="ml-2 font-normal text-[var(--muted-foreground)]">
+            <TeamMark
+              abbr={row.opponent.abbreviation}
+              color={row.opponent.primaryColor}
+              size="sm"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-[family-name:var(--font-display)] text-lg uppercase tracking-wide">
+                {row.isHome ? "vs" : "@"} {row.opponent.abbreviation}
+              </p>
+              <p className="truncate text-xs text-[var(--muted-foreground)]">
                 {row.opponent.name}
-              </span>
-            </span>
-            <span className="flex shrink-0 flex-wrap items-center gap-2">
+              </p>
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1">
               {row.isPrimetime ? (
-                <Badge variant="elite">PT</Badge>
+                <Badge variant="elite" className="text-[10px]">
+                  PT
+                </Badge>
               ) : null}
               {result ? (
-                <Badge
-                  variant={
-                    result === "W"
-                      ? "approved"
-                      : result === "L"
-                        ? "rejected"
-                        : "outline"
-                  }
+                <p
+                  className={cn(
+                    "font-[family-name:var(--font-display)] text-xl tabular-nums",
+                    result === "W" && "text-[var(--primary)]",
+                    result === "L" && "text-rose-300",
+                    result === "T" && "text-[var(--muted-foreground)]"
+                  )}
                 >
                   {row.isForceWin ? "FW " : ""}
                   {result} {row.myScore}–{row.oppScore}
-                </Badge>
+                </p>
               ) : row.isForceWin ? (
                 <Badge variant="pending">Force win</Badge>
               ) : row.status === "pending" ? (
@@ -64,7 +74,7 @@ export function TeamSchedule({ rows }: { rows: TeamScheduleRow[] }) {
               ) : (
                 <Badge variant="outline">Open</Badge>
               )}
-            </span>
+            </div>
           </div>
         );
 
@@ -73,7 +83,7 @@ export function TeamSchedule({ rows }: { rows: TeamScheduleRow[] }) {
             <li key={row.week}>
               <Link
                 href={`/games/${row.submissionId}`}
-                className="block transition-colors hover:bg-[var(--muted)]"
+                className="surface-hover block overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)]"
               >
                 {inner}
               </Link>
@@ -82,7 +92,10 @@ export function TeamSchedule({ rows }: { rows: TeamScheduleRow[] }) {
         }
 
         return (
-          <li key={row.week} className={row.status === "missing" ? "opacity-90" : ""}>
+          <li
+            key={row.week}
+            className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)]"
+          >
             {inner}
           </li>
         );
@@ -90,4 +103,3 @@ export function TeamSchedule({ rows }: { rows: TeamScheduleRow[] }) {
     </ol>
   );
 }
-

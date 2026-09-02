@@ -1,11 +1,4 @@
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Table,
@@ -15,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TeamMark, teamColor } from "@/components/games/scoreboard";
 import {
   hasBoxScoreLines,
   type BoxScoreLine,
@@ -29,138 +23,152 @@ export function GameBoxScoreCard({ box }: { box: GameBoxScore | null }) {
   );
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Box score</CardTitle>
-        <CardDescription>
+    <section className="space-y-4">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
+          Companion tape
+        </p>
+        <h2 className="mt-1 font-[family-name:var(--font-display)] text-2xl uppercase tracking-wide sm:text-3xl">
+          Box score
+        </h2>
+        <p className="mt-1 max-w-2xl text-sm text-[var(--muted-foreground)]">
           Weekly lines from the Madden Companion export. The board score is
           official; these stats attach when player and team stats are exported
           for the week.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {box?.maddenScore ? (
-          <p className="text-sm text-[var(--muted-foreground)]">
-            Companion score{" "}
-            <span className="font-medium text-[var(--foreground)]">
-              {box.maddenScore.awayAbbr} {box.maddenScore.awayScore}–
-              {box.maddenScore.homeScore} {box.maddenScore.homeAbbr}
-            </span>
-          </p>
-        ) : null}
-        {!box || !hasLines ? (
-          <EmptyState
-            title="Stats have not landed yet"
-            description="Export weekly player stats from the Companion App after this game is played. The score still posts from the board."
-          />
-        ) : (
-          <div className="grid gap-6 lg:grid-cols-2">
-            {box.sides.map((side) => (
-              <TeamBox key={side.abbr} side={side} />
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </p>
+      </div>
+
+      {box?.maddenScore ? (
+        <p className="rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3 text-sm text-[var(--muted-foreground)]">
+          Companion score{" "}
+          <span className="font-[family-name:var(--font-display)] text-lg uppercase tracking-wide text-[var(--foreground)]">
+            {box.maddenScore.awayAbbr} {box.maddenScore.awayScore}–
+            {box.maddenScore.homeScore} {box.maddenScore.homeAbbr}
+          </span>
+        </p>
+      ) : null}
+
+      {!box || !hasLines ? (
+        <EmptyState
+          title="Stats have not landed yet"
+          description="Export weekly player stats from the Companion App after this game is played. The score still posts from the board."
+        />
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {box.sides.map((side) => (
+            <TeamBox key={side.abbr} side={side} />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
 function TeamBox({ side }: { side: BoxScoreSide }) {
+  const hex = teamColor(side.color);
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-semibold tracking-wide">
-          <Link
-            href={`/league/teams/${side.abbr}`}
-            className="hover:text-[var(--primary)]"
-          >
-            {side.abbr}
-          </Link>
-          <span className="ml-2 text-sm font-normal text-[var(--muted-foreground)]">
+    <div className="overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)]">
+      <div
+        className="flex items-center gap-3 border-b border-[var(--border)] px-4 py-4"
+        style={{
+          background: `linear-gradient(135deg, color-mix(in srgb, ${hex} 34%, transparent), transparent 70%)`,
+        }}
+      >
+        <TeamMark abbr={side.abbr} color={side.color} />
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
             {side.name}
-          </span>
-        </h2>
+          </p>
+          <h3 className="font-[family-name:var(--font-display)] text-2xl uppercase tracking-wide">
+            <Link
+              href={`/league/teams/${side.abbr}`}
+              className="hover:text-[var(--primary)]"
+            >
+              {side.abbr}
+            </Link>
+          </h3>
+        </div>
+        <div
+          className="ml-auto h-1 w-12 rounded-full"
+          style={{ background: hex }}
+        />
       </div>
-      {side.totals ? (
-        <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs sm:grid-cols-3">
-          <StatChip label="Pass yds" value={formatStat(side.totals.offPassYds)} />
-          <StatChip label="Rush yds" value={formatStat(side.totals.offRushYds)} />
-          <StatChip
-            label="Pass TD"
-            value={formatStat(side.totals.offPassTDs)}
-          />
-          <StatChip
-            label="Rush TD"
-            value={formatStat(side.totals.offRushTDs)}
-          />
-          <StatChip
-            label="Def yds"
-            value={formatStat(side.totals.defTotalYds)}
-          />
-          <StatChip label="Sacks" value={formatSacks(side.totals.defSacks)} />
-        </dl>
-      ) : null}
-      <StatTable
-        title="Passing"
-        headers={["Player", "C/Att", "Yds", "TD", "INT", "Rt"]}
-        rows={side.passing.map((row) => [
-          playerCell(row),
-          `${row.passComp}/${row.passAtt}`,
-          formatStat(row.passYds),
-          formatStat(row.passTDs),
-          formatStat(row.passInts),
-          row.passerRating.toFixed(1),
-        ])}
-      />
-      <StatTable
-        title="Rushing"
-        headers={["Player", "Att", "Yds", "TD"]}
-        rows={side.rushing.map((row) => [
-          playerCell(row),
-          formatStat(row.rushAtt),
-          formatStat(row.rushYds),
-          formatStat(row.rushTDs),
-        ])}
-      />
-      <StatTable
-        title="Receiving"
-        headers={["Player", "Rec", "Yds", "TD"]}
-        rows={side.receiving.map((row) => [
-          playerCell(row),
-          formatStat(row.recCatches),
-          formatStat(row.recYds),
-          formatStat(row.recTDs),
-        ])}
-      />
-      <StatTable
-        title="Defense"
-        headers={["Player", "Tkl", "Sacks", "INT"]}
-        rows={side.defense.map((row) => [
-          playerCell(row),
-          formatStat(row.defTackles),
-          formatSacks(row.defSacks),
-          formatStat(row.defInts),
-        ])}
-      />
-      <StatTable
-        title="Kicking"
-        headers={["Player", "Pts"]}
-        rows={side.kicking.map((row) => [
-          playerCell(row),
-          formatStat(row.kickPts),
-        ])}
-      />
+
+      <div className="space-y-5 p-4">
+        {side.totals ? (
+          <dl className="stagger grid grid-cols-3 gap-2">
+            <StatChip label="Pass yds" value={formatStat(side.totals.offPassYds)} />
+            <StatChip label="Rush yds" value={formatStat(side.totals.offRushYds)} />
+            <StatChip label="Pass TD" value={formatStat(side.totals.offPassTDs)} />
+            <StatChip label="Rush TD" value={formatStat(side.totals.offRushTDs)} />
+            <StatChip label="Def yds" value={formatStat(side.totals.defTotalYds)} />
+            <StatChip label="Sacks" value={formatSacks(side.totals.defSacks)} />
+          </dl>
+        ) : null}
+        <StatTable
+          title="Passing"
+          headers={["Player", "C/Att", "Yds", "TD", "INT", "Rt"]}
+          rows={side.passing.map((row) => [
+            playerCell(row),
+            `${row.passComp}/${row.passAtt}`,
+            formatStat(row.passYds),
+            formatStat(row.passTDs),
+            formatStat(row.passInts),
+            row.passerRating.toFixed(1),
+          ])}
+        />
+        <StatTable
+          title="Rushing"
+          headers={["Player", "Att", "Yds", "TD"]}
+          rows={side.rushing.map((row) => [
+            playerCell(row),
+            formatStat(row.rushAtt),
+            formatStat(row.rushYds),
+            formatStat(row.rushTDs),
+          ])}
+        />
+        <StatTable
+          title="Receiving"
+          headers={["Player", "Rec", "Yds", "TD"]}
+          rows={side.receiving.map((row) => [
+            playerCell(row),
+            formatStat(row.recCatches),
+            formatStat(row.recYds),
+            formatStat(row.recTDs),
+          ])}
+        />
+        <StatTable
+          title="Defense"
+          headers={["Player", "Tkl", "Sacks", "INT"]}
+          rows={side.defense.map((row) => [
+            playerCell(row),
+            formatStat(row.defTackles),
+            formatSacks(row.defSacks),
+            formatStat(row.defInts),
+          ])}
+        />
+        <StatTable
+          title="Kicking"
+          headers={["Player", "Pts"]}
+          rows={side.kicking.map((row) => [
+            playerCell(row),
+            formatStat(row.kickPts),
+          ])}
+        />
+      </div>
     </div>
   );
 }
 
 function StatChip({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-2 border-b border-[var(--border)] py-1">
-      <dt className="uppercase tracking-wide text-[var(--muted-foreground)]">
+    <div className="rounded-2xl border border-[var(--border)] bg-black/20 px-3 py-2">
+      <dt className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
         {label}
       </dt>
-      <dd className="tabular-nums font-medium">{value}</dd>
+      <dd className="mt-1 font-[family-name:var(--font-display)] text-xl tabular-nums text-[var(--primary)]">
+        {value}
+      </dd>
     </div>
   );
 }
@@ -182,7 +190,7 @@ function StatTable({
   if (rows.length === 0) return null;
   return (
     <div>
-      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted-foreground)]">
+      <p className="mb-2 font-[family-name:var(--font-display)] text-xs font-semibold uppercase tracking-[0.16em] text-[var(--primary)]">
         {title}
       </p>
       <Table>

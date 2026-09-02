@@ -39,6 +39,7 @@ export type BoxScoreTeamTotals = {
 export type BoxScoreSide = {
   abbr: string;
   name: string;
+  color?: string;
   totals: BoxScoreTeamTotals | null;
   passing: BoxScoreLine[];
   rushing: BoxScoreLine[];
@@ -139,7 +140,8 @@ function sideFromRows(
         defTotalYds: number;
         defSacks: number;
       }
-    | undefined
+    | undefined,
+  color?: string
 ): BoxScoreSide {
   const mine = stats.filter((row) => row.maddenTeamId === maddenTeamId);
   const passing = mine
@@ -188,6 +190,7 @@ function sideFromRows(
   return {
     abbr,
     name,
+    color,
     totals: meaningfulTotals,
     passing,
     rushing,
@@ -216,6 +219,8 @@ export async function getGameBoxScore(input: {
   opponentAbbr: string;
   userName: string;
   opponentName: string;
+  userColor?: string;
+  opponentColor?: string;
 }): Promise<GameBoxScore | null> {
   const weekIndex = input.week - 1;
   const [userTeam, opponentTeam] = await Promise.all([
@@ -273,14 +278,16 @@ export async function getGameBoxScore(input: {
     input.userName,
     userTeam?.maddenTeamId ?? "",
     playerStats,
-    userTeam ? totalsByTeam.get(userTeam.maddenTeamId) : undefined
+    userTeam ? totalsByTeam.get(userTeam.maddenTeamId) : undefined,
+    input.userColor
   );
   const opponentSide = sideFromRows(
     input.opponentAbbr,
     input.opponentName,
     opponentTeam?.maddenTeamId ?? "",
     playerStats,
-    opponentTeam ? totalsByTeam.get(opponentTeam.maddenTeamId) : undefined
+    opponentTeam ? totalsByTeam.get(opponentTeam.maddenTeamId) : undefined,
+    input.opponentColor
   );
 
   if (!hasBoxScoreLines(userSide) && !hasBoxScoreLines(opponentSide) && !maddenGame) {

@@ -2,6 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ForceWinScoreForm } from "@/components/forms/force-win-score-form";
 import { GameBoxScoreCard } from "@/components/games/game-box-score";
+import {
+  GameScoreHero,
+  RecapFacts,
+  teamColor,
+} from "@/components/games/scoreboard";
 import { SimScoreForm } from "@/components/forms/sim-score-form";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +20,7 @@ import {
 import { getSessionUser, isCommissioner } from "@/lib/auth";
 import { GAME_TYPE_LABELS, forceWinReasonLabel, forceWinXpBlurb } from "@/lib/constants";
 import { formatLeagueDate } from "@/lib/datetime";
-import { formatMatchupScore, hasFinalScores } from "@/lib/game-score";
+import { hasFinalScores } from "@/lib/game-score";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
 import { getGameBoxScore } from "@/lib/madden/box-score";
 import { prisma } from "@/lib/prisma";
@@ -24,6 +29,7 @@ import {
   myOutstandingSimScore,
 } from "@/lib/sim-score";
 import { ScrollToHash } from "@/components/games/scroll-to-hash";
+import { Badge } from "@/components/ui/badge";
 
 export default async function GameDetailPage({
   params,
@@ -97,6 +103,35 @@ export default async function GameDetailPage({
   const ratedTeam =
     membership?.franchiseId === game.opponentTeamId ? game.userTeam : game.opponentTeam;
 
+  const scheduled = await prisma.scheduledGame.findFirst({
+    where: {
+      seasonId: game.seasonId,
+      week: game.week,
+      OR: [
+        { homeTeamId: game.userTeamId, awayTeamId: game.opponentTeamId },
+        { homeTeamId: game.opponentTeamId, awayTeamId: game.userTeamId },
+      ],
+    },
+    include: {
+      homeTeam: true,
+      awayTeam: true,
+    },
+  });
+
+  const homeTeam = scheduled?.homeTeam ?? game.userTeam;
+  const awayTeam = scheduled?.awayTeam ?? game.opponentTeam;
+  const homeIsUser = homeTeam.id === game.userTeamId;
+  const homeScore = hasFinalScores(game)
+    ? homeIsUser
+      ? game.userScore
+      : game.opponentScore
+    : null;
+  const awayScore = hasFinalScores(game)
+    ? homeIsUser
+      ? game.opponentScore
+      : game.userScore
+    : null;
+
   const boxScore = await getGameBoxScore({
     week: game.week,
     userTeamId: game.userTeamId,
@@ -105,29 +140,81 @@ export default async function GameDetailPage({
     opponentAbbr: game.opponentTeam.abbreviation,
     userName: game.userTeam.name,
     opponentName: game.opponentTeam.name,
+    userColor: game.userTeam.primaryColor,
+    opponentColor: game.opponentTeam.primaryColor,
   });
+
+  const orderedBox = boxScore
+    ? {
+        ...boxScore,
+        sides: [
+          boxScore.sides.find((side) => side.abbr === awayTeam.abbreviation) ??
+            boxScore.sides[0],
+          boxScore.sides.find((side) => side.abbr === homeTeam.abbreviation) ??
+            boxScore.sides[1],
+        ] as typeof boxScore.sides,
+      }
+    : null;
+
+  const statusLabel =
+    game.status === "APPROVED"
+      ? "Final"
+      : game.status === "PENDING"
+        ? "Pending"
+        : game.status === "VOIDED"
+          ? "Voided"
+          : "Rejected";
+
+  const recapFacts = [
+    { label: "Type", value: GAME_TYPE_LABELS[game.gameType] ?? game.gameType },
+    {
+      label: "Filed",
+      value: formatLeagueDate(game.createdAt, "MMM d, yyyy"),
+    },
+    {
+      label: "By",
+      value: game.submitter.name?.trim() || "Unnamed coach",
+    },
+    {
+      label: "XP",
+      value: game.isForceWin
+        ? game.forceWinReason === "GAME_CUT_OUT"
+          ? "Both play XP"
+          : "Winner play XP"
+        : game.skipXp || game.gameType === "SIMULATED"
+          ? "No XP"
+          : "Play + win",
+    },
+  ];
 
   return (
     <div className="space-y-6">
       {canSubmitSim ? <ScrollToHash id="sim-score" /> : null}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
-            Season {game.season.number} · Week {game.week}
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold uppercase tracking-[0.04em] sm:text-3xl">
-            {formatMatchupScore(game)}
-          </h1>
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            {game.userTeam.name} vs {game.opponentTeam.name}
-          </p>
-        </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Button asChild variant="outline" size="sm">
           <Link href={`/games?tab=week&season=${game.season.number}&week=${game.week}`}>
-            Back to week
+            ← Week {game.week}
           </Link>
         </Button>
+        <StatusBadge status={game.status} />
       </div>
+
+      <GameScoreHero
+        week={game.week}
+        seasonNumber={game.season.number}
+        awayAbbr={awayTeam.abbreviation}
+        awayName={awayTeam.name}
+        awayColor={teamColor(awayTeam.primaryColor)}
+        awayScore={awayScore}
+        homeAbbr={homeTeam.abbreviation}
+        homeName={homeTeam.name}
+        homeColor={teamColor(homeTeam.primaryColor)}
+        homeScore={homeScore}
+        statusLabel={statusLabel}
+        primetime={game.isPrimetime}
+        forceWin={game.isForceWin}
+      />
 
       {canSubmitSim ? (
         <Card
@@ -159,41 +246,29 @@ export default async function GameDetailPage({
         </Card>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <CardTitle>Game recap</CardTitle>
-            <StatusBadge status={game.status} />
-          </div>
-          <CardDescription>
-            {GAME_TYPE_LABELS[game.gameType]}
-            {game.isForceWin ? " · Force win" : ""}
-            {game.isForceWin && forceWinReasonLabel(game.forceWinReason)
-              ? ` · ${forceWinReasonLabel(game.forceWinReason)}`
-              : ""}
-            {game.isPrimetime ? " · Primetime" : ""}
-            {game.isForceWin
-              ? game.forceWinReason === "GAME_CUT_OUT"
-                ? " · both coaches play XP"
-                : " · play XP for available coach"
-              : game.skipXp || game.gameType === "SIMULATED"
-                ? " · no XP"
-                : ""}
-            {game.filedByCommissioner ? " · desk filed" : ""}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <p>
-            Submitted by {game.submitter.name?.trim() || "Unnamed coach"} ·{" "}
-            {formatLeagueDate(game.createdAt, "MMM d, yyyy")}
-          </p>
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="font-[family-name:var(--font-display)] text-2xl uppercase tracking-wide">
+            Recap
+          </h2>
+          {game.isPrimetime ? <Badge variant="elite">Primetime</Badge> : null}
+          {game.isForceWin ? <Badge variant="outline">Force win</Badge> : null}
+          {game.filedByCommissioner ? (
+            <Badge variant="outline">Desk filed</Badge>
+          ) : null}
+        </div>
+        <RecapFacts facts={recapFacts} />
+        <div className="space-y-3 rounded-3xl border border-[var(--border)] bg-[var(--surface-raised)] p-5 text-sm">
           {game.isForceWin ? (
-            <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
+            <p className="rounded-2xl border border-[var(--border)] bg-black/20 px-4 py-3">
               {forceWinXpBlurb(
                 game.forceWinReason,
                 game.userTeam.abbreviation,
                 game.opponentTeam.abbreviation
-              )}{" "}
+              )}
+              {forceWinReasonLabel(game.forceWinReason)
+                ? ` ${forceWinReasonLabel(game.forceWinReason)}.`
+                : ""}{" "}
               The CPU score, once posted, counts in standings only — no win bonus
               and no Sim Score.
             </p>
@@ -203,7 +278,7 @@ export default async function GameDetailPage({
             </p>
           )}
           {game.filedByCommissioner ? (
-            <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
+            <p className="rounded-2xl border border-[var(--border)] bg-black/20 px-4 py-3">
               {game.notes?.includes("Madden Companion")
                 ? "Posted from the Madden Companion export so the board did not wait on a coach submission."
                 : "Commissioner filed this result."}{" "}
@@ -216,10 +291,10 @@ export default async function GameDetailPage({
           {game.notes ? (
             <p className="text-[var(--muted-foreground)]">Notes: {game.notes}</p>
           ) : null}
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <GameBoxScoreCard box={boxScore} />
+      <GameBoxScoreCard box={orderedBox} />
 
       {canPostForceWinScore ? (
         <Card className="border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]">
