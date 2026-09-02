@@ -19,7 +19,11 @@ import { formatMatchupScore, hasFinalScores } from "@/lib/game-score";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
 import { getGameBoxScore } from "@/lib/madden/box-score";
 import { prisma } from "@/lib/prisma";
-import { formatBothSimScores } from "@/lib/sim-score";
+import {
+  formatBothSimScores,
+  myOutstandingSimScore,
+} from "@/lib/sim-score";
+import { ScrollToHash } from "@/components/games/scroll-to-hash";
 
 export default async function GameDetailPage({
   params,
@@ -71,6 +75,16 @@ export default async function GameDetailPage({
       (membership?.franchiseId === game.opponentTeamId &&
         game.userTeamSimScore == null));
 
+  const mySim = membership
+    ? myOutstandingSimScore(game, membership.franchiseId)
+    : null;
+  const mySubmittedScore =
+    membership?.franchiseId === game.userTeamId
+      ? game.opponentSimScore
+      : membership?.franchiseId === game.opponentTeamId
+        ? game.userTeamSimScore
+        : null;
+
   const canPostForceWinScore =
     game.isForceWin &&
     !hasFinalScores(game) &&
@@ -95,6 +109,7 @@ export default async function GameDetailPage({
 
   return (
     <div className="space-y-6">
+      {canSubmitSim ? <ScrollToHash id="sim-score" /> : null}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
@@ -113,6 +128,36 @@ export default async function GameDetailPage({
           </Link>
         </Button>
       </div>
+
+      {canSubmitSim ? (
+        <Card
+          id="sim-score"
+          className="scroll-mt-24 border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]"
+        >
+          <CardHeader>
+            <CardTitle>Submit opponent Sim Score</CardTitle>
+            <CardDescription>
+              Rate {ratedTeam.name}. This does not change the final score.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SimScoreForm
+              submissionId={game.id}
+              opponentName={ratedTeam.name}
+              opponentAbbr={ratedTeam.abbreviation}
+            />
+          </CardContent>
+        </Card>
+      ) : !game.isForceWin && involved && membership && mySim?.alreadySubmitted ? (
+        <Card id="sim-score" className="scroll-mt-24">
+          <CardHeader>
+            <CardTitle>Your Sim Score</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-[var(--muted-foreground)]">
+            You rated {ratedTeam.abbreviation} {mySubmittedScore}/5.
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>
@@ -192,35 +237,6 @@ export default async function GameDetailPage({
               userAbbr={game.userTeam.abbreviation}
               opponentAbbr={game.opponentTeam.abbreviation}
             />
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {canSubmitSim ? (
-        <Card className="border-[color-mix(in_srgb,var(--primary)_35%,var(--border))]">
-          <CardHeader>
-            <CardTitle>Submit opponent Sim Score</CardTitle>
-            <CardDescription>
-              Rate {ratedTeam.name}. This does not change the final score.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <SimScoreForm
-              submissionId={game.id}
-              opponentName={ratedTeam.name}
-              opponentAbbr={ratedTeam.abbreviation}
-            />
-          </CardContent>
-        </Card>
-      ) : !game.isForceWin && involved && membership ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Sim Score</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-[var(--muted-foreground)]">
-            {membership.franchiseId === game.userTeamId
-              ? `You rated ${game.opponentTeam.abbreviation} ${game.opponentSimScore}/5.`
-              : `You rated ${game.userTeam.abbreviation} ${game.userTeamSimScore}/5.`}
           </CardContent>
         </Card>
       ) : null}

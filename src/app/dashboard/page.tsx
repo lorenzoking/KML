@@ -29,7 +29,7 @@ import {
   buildDashboardPulse,
   coachHonorific,
 } from "@/lib/coach/dashboard-pulse";
-import { myOutstandingSimScore } from "@/lib/sim-score";
+import { outstandingSimScoresForCoach } from "@/lib/sim-score";
 import { formatMatchupScore, hasFinalScores } from "@/lib/game-score";
 import { ensureDefaultLeagueStories, getPublishedStories } from "@/lib/stories";
 import { safeGetOpenPollsNeedingVote } from "@/lib/story-engagement";
@@ -203,20 +203,11 @@ export default async function DashboardPage({
   );
   const recentOnly = recentApproved.filter((game) => game.id !== weekGame?.id).slice(0, 3);
   const outstandingSim = membership
-    ? myLiveGames
-        .map((game) => ({
-          game,
-          outstanding: myOutstandingSimScore(game, membership.franchiseId),
-        }))
-        .filter(
-          (row): row is typeof row & { outstanding: NonNullable<typeof row.outstanding> } =>
-            Boolean(
-              row.game.week === settings.currentWeek &&
-                !row.game.isForceWin &&
-                row.outstanding &&
-                !row.outstanding.alreadySubmitted
-            )
-        )
+    ? outstandingSimScoresForCoach(
+        myLiveGames,
+        membership.franchiseId,
+        settings.currentWeek
+      )
     : [];
 
   const latestRep =
@@ -344,11 +335,12 @@ export default async function DashboardPage({
   for (const { game, outstanding } of outstandingSim) {
     const rated =
       outstanding.ratedTeamId === game.userTeamId ? game.userTeam : game.opponentTeam;
+    const thisWeek = game.week === settings.currentWeek;
     toDos.push({
-      href: `/games/${game.id}`,
+      href: `/games/${game.id}#sim-score`,
       icon: Star,
       iconClassName: "bg-amber-500 text-white",
-      title: "Submit opponent Sim Score",
+      title: thisWeek ? "Submit opponent Sim Score" : "Sim Score needed",
       subtitle: `Week ${game.week}: rate ${rated.abbreviation} · ${formatMatchupScore(game)}`,
     });
   }
@@ -777,7 +769,7 @@ function WeekMatchup({
 
   return (
     <Link
-      href={`/games/${game.id}`}
+      href={needsSim ? `/games/${game.id}#sim-score` : `/games/${game.id}`}
       className={cn(
         "block overflow-hidden rounded-[1.6rem] border px-5 py-5 shadow-[0_8px_28px_rgba(0,0,0,0.06)] transition-transform active:scale-[0.99]",
         needsSim

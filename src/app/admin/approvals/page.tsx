@@ -15,7 +15,7 @@ import { CommissionerFileGameForm } from "@/components/forms/commissioner-file-g
 import { prisma } from "@/lib/prisma";
 import { GAME_TYPE_LABELS, forceWinReasonLabel, forceWinXpBlurb } from "@/lib/constants";
 import { getActiveSeason } from "@/lib/league";
-import { formatBothSimScores } from "@/lib/sim-score";
+import { formatBothSimScores, teamsOwingSimScore } from "@/lib/sim-score";
 import { formatMatchupScore, hasFinalScores } from "@/lib/game-score";
 import { formatLeagueDate } from "@/lib/datetime";
 
@@ -132,29 +132,32 @@ export default async function ApprovalsPage() {
                       ? " The simulated score will count in standings, not for a win bonus."
                       : " The simulated score can be posted after the week advances."}
                   </p>
-                ) : s.opponentSimScore != null &&
-                (s.opponentSimScore <= 2 ||
-                (s.userTeamSimScore != null && s.userTeamSimScore <= 2)) ? (
-                  <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
-                    Low Sim Score
-                    {s.opponentSimScore <= 2
-                      ? ` (${s.opponentTeam.abbreviation} ${s.opponentSimScore}/5)`
-                      : ""}
-                    {s.userTeamSimScore != null && s.userTeamSimScore <= 2
-                      ? ` (${s.userTeam.abbreviation} ${s.userTeamSimScore}/5)`
-                      : ""}{" "}
-                    — may count toward Bad Sim Reputation for that coach if the
-                    pattern continues.
-                    {s.userTeamSimScore == null
-                      ? ` ${s.opponentTeam.abbreviation} has not submitted a Sim Score yet.`
-                      : ""}
-                  </p>
-                ) : s.userTeamSimScore == null ? (
-                  <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
-                    {s.opponentTeam.abbreviation} has not submitted a Sim Score for{" "}
-                    {s.userTeam.abbreviation} yet. They can add it from the game page.
-                  </p>
-                ) : null}
+                ) : (
+                  <>
+                    {teamsOwingSimScore(s).length > 0 ? (
+                      <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
+                        Waiting on Sim Score from{" "}
+                        {teamsOwingSimScore(s).join(" and ")}. They can submit
+                        from Needs You or the game page.
+                      </p>
+                    ) : null}
+                    {s.opponentSimScore != null &&
+                    (s.opponentSimScore <= 2 ||
+                      (s.userTeamSimScore != null && s.userTeamSimScore <= 2)) ? (
+                      <p className="rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm">
+                        Low Sim Score
+                        {s.opponentSimScore <= 2
+                          ? ` (${s.opponentTeam.abbreviation} ${s.opponentSimScore}/5)`
+                          : ""}
+                        {s.userTeamSimScore != null && s.userTeamSimScore <= 2
+                          ? ` (${s.userTeam.abbreviation} ${s.userTeamSimScore}/5)`
+                          : ""}{" "}
+                        — may count toward Bad Sim Reputation for that coach if the
+                        pattern continues.
+                      </p>
+                    ) : null}
+                  </>
+                )}
                 {s.notes ? (
                   <p className="text-sm text-[var(--muted-foreground)]">
                     Notes: {s.notes}
