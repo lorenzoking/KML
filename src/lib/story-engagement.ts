@@ -333,7 +333,7 @@ const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
         prompt: "Championship window or championship gamble?",
         options: [
           { label: "Window — Simmons was worth it", franchiseAbbr: "SF" },
-          { label: "Gamble — Swipe overpaid", franchiseAbbr: "TEN" },
+          { label: "Gamble — Swipe overpaid 20-for-10", franchiseAbbr: "TEN" },
         ],
       },
     ],

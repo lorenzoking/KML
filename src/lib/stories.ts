@@ -1372,27 +1372,30 @@ Compete. Conquer. Be legendary.`,
   {
     slug: "season-1-week-8-swipe-simmons-trade",
     category: StoryCategory.FEATURE,
-    title: "Under fire: Swipe trades a haul for Jeff Simmons",
-    eyebrow: "KML Morning Show · Trade desk",
+    title: "Deadline day: Swipe spends 20 points on Jeffery Simmons",
+    eyebrow: "KML Morning Show · Trade deadline",
     summary:
-      "Stephen A. called it unnecessary. Shannon said he spent capital like Madden points. San Francisco sent a 2026 1st, a 2027 2nd, and a 2026 4th to Tennessee for DT Jeff Simmons — and the desk is asking if that’s a championship window or a championship gamble.",
+      "Trade deadline hit and Swipe went all-in. San Francisco sent a 2026 1st (10), a 2027 2nd (7), and a 2026 4th (3) — 20 trade points — to Tennessee for DT Jeffery Simmons (10). Curry flipped a 2027 5th (2) to Washington for Daron Payne (7). Stephen A. already called the first one unnecessary.",
     body: `![KML Morning Show — Under fire Coach Swipe trades a haul for Jeff Simmons](${STORY_ASSETS.week8SwipeTrade})
 
-The KML Morning Show did not ease into Week 8. **Stephen A.** and **Shannon** opened on Coach **Swipe** with the banner already in all caps: **UNDER FIRE.**
+The KML Morning Show did not ease into Week 8. **Trade deadline.** **Stephen A.** and **Shannon** opened on Coach **Swipe** with the banner already in all caps: **UNDER FIRE.**
 
-San Francisco did not need more help. Then Swipe spent a fortune anyway.
+San Francisco did not need more help. Then Swipe spent **20 trade points** on a **10-point** defensive tackle anyway.
 
-## The deal
+## The headline deal — 49ers / Titans
 
-The board printed it clean.
+The board printed the names. The ledger printed the math.
 
-| 49ers receive | Titans receive |
-| --- | --- |
-| **DT Jeff Simmons** | **2026 1st-round pick** |
-| | **2027 2nd-round pick** |
-| | **2026 4th-round pick** |
+| 49ers send | Pts | Titans send | Pts |
+| --- | --- | --- | --- |
+| **2026 1st-round pick** | **10** | **DT Jeffery Simmons** | **10** |
+| **2027 2nd-round pick** | **7** | | |
+| **2026 4th-round pick** | **3** | | |
+| **Total** | **20** | **Total** | **10** |
 
-That is a first, a future second, and a fourth — for one defensive tackle. Elite player. No doubt. The price is what set the desk on fire.
+That is a first, a future second, and a fourth — **double the points** Tennessee put on the table — for one interior wrecker. Elite player. No doubt. The overpay is what set the desk on fire.
+
+Deadline day is when contend clubs pay a tax. Swipe paid it in public.
 
 ## Stephen A.: that was unnecessary
 
@@ -1402,7 +1405,7 @@ The left side of the graphic did not hedge.
 
 Swipe already had the 90-offense toys, **Christian McCaffrey**, and a defense that put **Ji’Ayir Brown** on a Week 4 honors stamp with three pick-sixes. The last power board still had San Francisco **4–2** and **Pressured at 81** after three straight, including a 35–16 primetime dunk on Washington.
 
-A Pressured coach on a **bye week** does not have to swing. Swipe swung anyway. Stephen A.’s point is the simple one: when you already have enough, a haul like that is not adding a missing piece. It is spending the future to look busy.
+A Pressured coach on a **bye week** does not have to empty the draft board at the deadline. Swipe emptied it anyway. Stephen A.’s point is the simple one: when you already have enough, a **20-for-10** is not adding a missing piece. It is spending the future to look busy.
 
 ## Shannon: he spent capital like Madden points
 
@@ -1410,19 +1413,35 @@ Shannon did not come to talk scheme.
 
 **“Bro spent capital like it’s Madden points!”**
 
-A 2026 first is not a dart throw. A 2027 second is not pocket change. **Qon’s Titans** just cashed a contend club’s draft board for a defensive tackle San Francisco could have lived without. Rebuilders dream about that return. Contenders only pay it when they think a ring is on the table **this year**.
+A 10-point first is not a dart throw. A 7-point future second is not pocket change. **Qon’s Titans** just cashed **20 points of draft capital** for a 10-point tackle San Francisco could have lived without. Rebuilders dream about that return. Contenders only pay it when they think a ring is on the table **this year**.
 
 The Morning Show’s own copy said the quiet part: this move **might not move the needle come playoff time** — and it **definitely** sets Swipe up for major backlash if the year does not end with another ring.
 
+## The other deadline deal — Lions / Commanders
+
+Deadline was not a one-trade show.
+
+| Lions send | Pts | Commanders send | Pts |
+| --- | --- | --- | --- |
+| **2027 5th-round pick** | **2** | **DT Daron Payne** (29, 84 OVR) | **7** |
+
+**Curry** just bought a 29-year-old, 84-overall interior starter for a future fifth. **Jerm** just sold a veteran body for two points of draft dust.
+
+That is the other half of deadline day: Detroit adding a win-now tackle on the cheap while Swipe paid a fortune for his. Same position. Very different receipts.
+
+Payne is not Simmons. Simmons is the splash. Payne is the value. The desk can hold both thoughts.
+
 ## Championship window or championship gamble?
 
-That’s the red line on the graphic. That’s the only question that matters.
+That’s the red line on the graphic. That’s still the only question that matters for San Francisco.
 
-**Jeff Simmons** in a 49ers uniform is a splash. Interior wrecker. Win-now identity on a helmet. The desk is not arguing whether Simmons can play. The desk is arguing whether **Swipe just told the league he is all-in** — and whether the ledger will remember the picks if January is quiet.
+**Jeffery Simmons** in a 49ers uniform is a splash. Interior wrecker. Win-now identity on a helmet. The desk is not arguing whether Simmons can play. The desk is arguing whether **Swipe just told the league he is all-in at 20 points for 10** — and whether the ledger will remember the picks if January is quiet.
 
 Great teams make smart moves. Legends make the right ones.
 
 If Simmons wrecks pockets through December, this is a window. If San Francisco is still Pressured and the first-rounder is in Tennessee, this is the gamble Stephen A. already named.
+
+Curry’s Payne grab does not get that speech. A 2-for-7 at the deadline is how you *add* to a window without burning the future.
 
 ## Around the league
 
@@ -1435,15 +1454,17 @@ The ticker did not wait for the trade argument to cool.
 | **Chargers & Rams clash this week** | Respect is on the line in L.A. **Oli** vs **Jordan Stowe**. Only one coach walks away with it. |
 | **Tank Bowl** | **Raiders vs Jets.** Somebody has to win sometime. |
 
-Week 8 is not a quiet bye for the rest of the league. It is Ren still unbeaten, Mease still beating the rating, Hollywood and the Chargers playing for respect, and a Tank Bowl that the ticker refused to dress up.
+Week 8 is not a quiet bye for the rest of the league. It is deadline day, Ren still unbeaten, Mease still beating the rating, Hollywood and the Chargers playing for respect, and a Tank Bowl that the ticker refused to dress up.
 
 ## Desk verdict
 
-Swipe is under fire and he answered with a fortune.
+Trade deadline. Two interior tackles. Two very different GM tapes.
 
-**Jeff Simmons** is the player. The **2026 1st, 2027 2nd, and 2026 4th** are the receipt. **Qon** just got paid to rebuild. The 49ers just told every GM in Discord they are not saving picks for next April.
+**Jeffery Simmons** is the player. The **2026 1st (10), 2027 2nd (7), and 2026 4th (3)** are the receipt — **20 points sent, 10 received.** **Qon** just got paid to rebuild. **Swipe** just told every GM in Discord the 49ers are not saving picks for next April.
 
-The Morning Show already asked it. Now the league votes with its mouth:
+**Daron Payne** is the other stamp. **Curry** sent a 2027 fifth (**2**) to **Jerm** for a 29-year-old 84 (**7**). Same deadline. Cleaner math.
+
+The Morning Show already asked the loud one. Now the league votes with its mouth:
 
 **Championship window — or championship gamble?**
 
