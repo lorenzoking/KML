@@ -196,6 +196,7 @@ export type WeekPlayerTotal = {
   defSacks: number;
   defInts: number;
   defTackles: number;
+  kickPts: number;
 };
 
 /** Merge every Companion category row for a week so a back’s rush + rec live on one card. */
@@ -241,6 +242,7 @@ export async function getWeekPlayerTotals(weekIndex: number): Promise<WeekPlayer
         defSacks: row.defSacks,
         defInts: row.defInts,
         defTackles: row.defTackles,
+        kickPts: row.kickPts,
       });
       continue;
     }
@@ -259,6 +261,7 @@ export async function getWeekPlayerTotals(weekIndex: number): Promise<WeekPlayer
     current.defSacks += row.defSacks;
     current.defInts += row.defInts;
     current.defTackles += row.defTackles;
+    current.kickPts += row.kickPts;
     if (row.passAtt > 0) current.passerRating = row.passerRating;
     current.fullName = fullName;
     current.firstName = row.player.firstName;
@@ -463,4 +466,59 @@ export async function getSeasonLeaders(category: MaddenStatCategory, take = 10) 
   return [...byPlayer.values()]
     .sort((a, b) => metric(b) - metric(a))
     .slice(0, take);
+}
+
+export type TeamStatTotal = {
+  teamAbbr: string;
+  teamName: string;
+  offPassYds: number;
+  offRushYds: number;
+  offPassTDs: number;
+  offRushTDs: number;
+  offPts: number;
+  defTotalYds: number;
+  defSacks: number;
+  defPts: number;
+};
+
+export async function getTeamStatTotals(weekIndex?: number | null) {
+  const stats = await prisma.maddenTeamWeekStat.findMany({
+    where: {
+      ...(weekIndex != null ? { weekIndex } : {}),
+      team: { NOT: { abbr: "UNK" } },
+    },
+    include: {
+      team: { select: { abbr: true, displayName: true, nickName: true } },
+    },
+  });
+
+  const byTeam = new Map<string, TeamStatTotal>();
+  for (const row of stats) {
+    const current = byTeam.get(row.maddenTeamId);
+    if (!current) {
+      byTeam.set(row.maddenTeamId, {
+        teamAbbr: row.team.abbr,
+        teamName: row.team.displayName || row.team.nickName,
+        offPassYds: row.offPassYds,
+        offRushYds: row.offRushYds,
+        offPassTDs: row.offPassTDs,
+        offRushTDs: row.offRushTDs,
+        offPts: row.offPtsPerGame,
+        defTotalYds: row.defTotalYds,
+        defSacks: row.defSacks,
+        defPts: row.defPtsPerGame,
+      });
+      continue;
+    }
+    current.offPassYds += row.offPassYds;
+    current.offRushYds += row.offRushYds;
+    current.offPassTDs += row.offPassTDs;
+    current.offRushTDs += row.offRushTDs;
+    current.offPts += row.offPtsPerGame;
+    current.defTotalYds += row.defTotalYds;
+    current.defSacks += row.defSacks;
+    current.defPts += row.defPtsPerGame;
+  }
+
+  return [...byTeam.values()];
 }

@@ -21,6 +21,7 @@ import { displayWeek, formatSacks, formatStat } from "@/lib/madden/display";
 import {
   ensureMaddenLeague,
   getSeasonPlayerTotals,
+  getTeamStatTotals,
   getWeekPlayerTotals,
   latestStatWeek,
   listStatWeeks,
@@ -31,7 +32,8 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = buildShareMetadata({
   title: "League leaders",
-  description: "Madden 27 passing, rushing, receiving, and defense leaders.",
+  description:
+    "Madden 27 player and team leaders — passing, rushing, receiving, defense, kicking, and team tape.",
   path: "/league/leaders",
 });
 
@@ -61,9 +63,10 @@ export default async function LeagueLeadersPage({
   }
 
   const seasonMode = weekIndex == null;
-  const source = seasonMode
-    ? await getSeasonPlayerTotals()
-    : await getWeekPlayerTotals(weekIndex);
+  const [source, teamSource] = await Promise.all([
+    seasonMode ? getSeasonPlayerTotals() : getWeekPlayerTotals(weekIndex),
+    getTeamStatTotals(seasonMode ? null : weekIndex),
+  ]);
   const totals: LeaderRow[] = source.map((row) => ({
     name: "name" in row ? row.name : row.fullName,
     teamAbbr: row.teamAbbr,
@@ -78,6 +81,7 @@ export default async function LeagueLeadersPage({
     defSacks: row.defSacks,
     defInts: row.defInts,
     defTackles: row.defTackles,
+    kickPts: row.kickPts,
   }));
   const passing = topBy(totals, (row) => row.passYds, (row) => row.passYds > 0);
   const rushing = topBy(totals, (row) => row.rushYds, (row) => row.rushYds > 0);
@@ -90,6 +94,25 @@ export default async function LeagueLeadersPage({
     totals,
     (row) => row.defSacks * 12 + row.defInts * 12 + row.defTackles * 0.4,
     (row) => row.defSacks > 0 || row.defInts > 0 || row.defTackles > 0
+  );
+  const kicking = topBy(totals, (row) => row.kickPts, (row) => row.kickPts > 0);
+  const offenseHasPts = teamSource.some((row) => row.offPts > 0);
+  const defenseHasPts = teamSource.some((row) => row.defPts > 0);
+  const teamOffense = topBy(
+    teamSource,
+    (row) =>
+      offenseHasPts ? row.offPts : row.offPassYds + row.offRushYds,
+    (row) =>
+      row.offPassYds > 0 ||
+      row.offRushYds > 0 ||
+      row.offPts > 0 ||
+      row.offPassTDs > 0 ||
+      row.offRushTDs > 0
+  );
+  const teamDefense = topBy(
+    teamSource,
+    (row) => (defenseHasPts ? -row.defPts : -row.defTotalYds),
+    (row) => row.defTotalYds > 0 || row.defSacks > 0 || row.defPts > 0
   );
 
   return (
@@ -132,6 +155,15 @@ export default async function LeagueLeadersPage({
         ))}
       </div>
 
+      <div>
+        <h2 className="font-[family-name:var(--font-display)] text-2xl uppercase tracking-wide">
+          Players
+        </h2>
+        <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+          Individual Companion lines. Rushing and receiving both print on skill
+          boards.
+        </p>
+      </div>
       <Board
         title="Passing"
         headers={["Player", "Team", "Yds", "TD", "INT", "Rush", "Rush TD"]}
@@ -182,6 +214,46 @@ export default async function LeagueLeadersPage({
           formatStat(row.defTackles),
         ])}
       />
+      <Board
+        title="Kicking"
+        headers={["Player", "Team", "Pts"]}
+        rows={kicking.map((row) => [
+          row.name,
+          row.teamAbbr,
+          formatStat(row.kickPts),
+        ])}
+      />
+
+      <div className="pt-2">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl uppercase tracking-wide">
+          Team tape
+        </h2>
+        <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+          Companion team stats for the same window — scoring first on offense,
+          fewest points allowed on defense.
+        </p>
+      </div>
+      <Board
+        title="Team offense"
+        headers={["Team", "Pass", "Rush", "TDs", "Pts"]}
+        rows={teamOffense.map((row) => [
+          row.teamAbbr,
+          formatStat(row.offPassYds),
+          formatStat(row.offRushYds),
+          formatStat(row.offPassTDs + row.offRushTDs),
+          formatStat(row.offPts, Number.isInteger(row.offPts) ? 0 : 1),
+        ])}
+      />
+      <Board
+        title="Team defense"
+        headers={["Team", "Yds allwd", "Sacks", "Pts allwd"]}
+        rows={teamDefense.map((row) => [
+          row.teamAbbr,
+          formatStat(row.defTotalYds),
+          formatSacks(row.defSacks),
+          formatStat(row.defPts, Number.isInteger(row.defPts) ? 0 : 1),
+        ])}
+      />
     </div>
   );
 }
@@ -200,12 +272,13 @@ type LeaderRow = {
   defSacks: number;
   defInts: number;
   defTackles: number;
+  kickPts: number;
 };
 
-function topBy(
-  rows: LeaderRow[],
-  metric: (row: LeaderRow) => number,
-  eligible: (row: LeaderRow) => boolean,
+function topBy<T>(
+  rows: T[],
+  metric: (row: T) => number,
+  eligible: (row: T) => boolean,
   take = 10
 ) {
   return [...rows]
