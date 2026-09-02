@@ -74,8 +74,9 @@ export default async function LeagueRacesPage() {
       <WeekHeaters week={week} heaters={board.heaters} />
 
       <p className="text-xs text-[var(--muted-foreground)]">
-        Desk formula, not a vote — production plus winning for MVP, skill work
-        for OPOTY, sacks and takeaways for DPOTY, year-zero players for ROY.{" "}
+        Desk formula, not a vote — production plus winning for MVP,
+        from-scrimmage skill work for OPOTY, the full defensive line for DPOTY,
+        year-zero players for ROY.{" "}
         <Link href="/league/leaders" className="text-[var(--primary)]">
           Full leaderboards
         </Link>

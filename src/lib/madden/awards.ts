@@ -1,15 +1,19 @@
 import { MaddenStatCategory } from "@/generated/prisma/client";
 import {
+  defenseStatLine,
   formatRecord,
   formatSacks,
   formatStat,
   isQuarterback,
   isRookie,
+  passingStatLine,
   playerName,
+  skillStatLine,
 } from "@/lib/madden/display";
 import {
   getLeaders,
   getSeasonPlayerTotals,
+  getWeekPlayerTotals,
   latestStatWeek,
   type SeasonPlayerTotal,
 } from "@/lib/madden/query";
@@ -118,18 +122,7 @@ function candidate(
 }
 
 function qbHeadline(player: SeasonPlayerTotal) {
-  return `${formatStat(player.passYds)} yds · ${player.passTDs} TD · ${player.passInts} INT`;
-}
-
-function skillHeadline(player: SeasonPlayerTotal) {
-  if (player.rushYds >= player.recYds) {
-    return `${formatStat(player.rushYds)} rush yds · ${player.rushTDs} TD`;
-  }
-  return `${player.recCatches} rec · ${formatStat(player.recYds)} yds · ${player.recTDs} TD`;
-}
-
-function defenseHeadline(player: SeasonPlayerTotal) {
-  return `${formatSacks(player.defSacks)} sacks · ${player.defInts} INT · ${formatStat(player.defTackles)} tkl`;
+  return passingStatLine(player, { compact: true });
 }
 
 function topBy(
@@ -165,7 +158,7 @@ function buildRaces(players: SeasonPlayerTotal[]): AwardRace[] {
         players,
         mvpScore,
         (player) =>
-          isQuarterback(player.position) ? qbHeadline(player) : skillHeadline(player),
+          isQuarterback(player.position) ? qbHeadline(player) : skillStatLine(player),
         (player) => `${player.teamAbbr} ${formatRecord(player.wins, player.losses, player.ties)}`
       ),
     },
@@ -173,11 +166,11 @@ function buildRaces(players: SeasonPlayerTotal[]): AwardRace[] {
       id: "opoty",
       title: "Offensive Player of the Year",
       short: "OPOTY",
-      blurb: "Non-QB skill work. Rushing, receiving, and touchdowns — not just volume.",
+      blurb: "From-scrimmage work. Rushing and receiving both print — not just the bigger column.",
       candidates: topBy(
         offense,
         skillValue,
-        skillHeadline,
+        skillStatLine,
         (player) => `${player.position} · ${player.teamAbbr}`
       ),
     },
@@ -185,11 +178,11 @@ function buildRaces(players: SeasonPlayerTotal[]): AwardRace[] {
       id: "dpoty",
       title: "Defensive Player of the Year",
       short: "DPOTY",
-      blurb: "Sacks first, takeaways second, tackles to break ties.",
+      blurb: "Sacks, takeaways, and tackles together — the line that put them in the race.",
       candidates: topBy(
         defense,
         defensiveValue,
-        defenseHeadline,
+        defenseStatLine,
         (player) => `${player.position} · ${player.teamAbbr}`
       ),
     },
@@ -203,10 +196,10 @@ function buildRaces(players: SeasonPlayerTotal[]): AwardRace[] {
         royScore,
         (player) =>
           defensiveValue(player) > offensiveValue(player)
-            ? defenseHeadline(player)
+            ? defenseStatLine(player)
             : isQuarterback(player.position)
               ? qbHeadline(player)
-              : skillHeadline(player),
+              : skillStatLine(player),
         (player) => `${player.position} · ${player.teamAbbr}`
       ),
     },
@@ -242,12 +235,14 @@ function buildPulse(players: SeasonPlayerTotal[]): SeasonPulse[] {
 
 async function buildHeaters(weekIndex: number): Promise<WeekHeater[]> {
   const href = `/league/leaders?week=${weekIndex}`;
-  const [passing, rushing, receiving, defense] = await Promise.all([
+  const [passing, rushing, receiving, defense, totals] = await Promise.all([
     getLeaders(weekIndex, MaddenStatCategory.PASSING, 1),
     getLeaders(weekIndex, MaddenStatCategory.RUSHING, 1),
     getLeaders(weekIndex, MaddenStatCategory.RECEIVING, 1),
     getLeaders(weekIndex, MaddenStatCategory.DEFENSE, 1),
+    getWeekPlayerTotals(weekIndex),
   ]);
+  const merged = new Map(totals.map((row) => [row.rosterId, row]));
 
   const color = (row: { team: { franchise?: { primaryColor: string } | null } }) =>
     row.team.franchise?.primaryColor &&
@@ -258,45 +253,49 @@ async function buildHeaters(weekIndex: number): Promise<WeekHeater[]> {
   const heaters: WeekHeater[] = [];
   const pass = passing[0];
   if (pass) {
+    const stats = merged.get(pass.rosterId) ?? pass;
     heaters.push({
       label: "Air raid",
       name: playerName(pass.player) || pass.fullName,
       teamAbbr: pass.team.abbr,
       teamColor: color(pass),
-      line: `${formatStat(pass.passYds)} yds · ${pass.passTDs} TD`,
+      line: passingStatLine(stats, { compact: true, rushFloor: 20 }),
       href,
     });
   }
   const rush = rushing[0];
   if (rush) {
+    const stats = merged.get(rush.rosterId) ?? rush;
     heaters.push({
       label: "Ground game",
       name: playerName(rush.player) || rush.fullName,
       teamAbbr: rush.team.abbr,
       teamColor: color(rush),
-      line: `${formatStat(rush.rushYds)} yds · ${rush.rushTDs} TD`,
+      line: skillStatLine(stats),
       href,
     });
   }
   const rec = receiving[0];
   if (rec) {
+    const stats = merged.get(rec.rosterId) ?? rec;
     heaters.push({
       label: "Target hog",
       name: playerName(rec.player) || rec.fullName,
       teamAbbr: rec.team.abbr,
       teamColor: color(rec),
-      line: `${rec.recCatches} for ${formatStat(rec.recYds)} · ${rec.recTDs} TD`,
+      line: skillStatLine(stats),
       href,
     });
   }
   const def = defense[0];
   if (def) {
+    const stats = merged.get(def.rosterId) ?? def;
     heaters.push({
       label: "Chaos agent",
       name: playerName(def.player) || def.fullName,
       teamAbbr: def.team.abbr,
       teamColor: color(def),
-      line: `${formatSacks(def.defSacks)} sacks · ${def.defInts} INT`,
+      line: defenseStatLine(stats),
       href,
     });
   }

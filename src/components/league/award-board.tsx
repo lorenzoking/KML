@@ -251,7 +251,7 @@ function AwardRaceCard({ race }: { race: AwardRace }) {
                       <Trophy className="size-3.5 shrink-0 text-[var(--primary)]" />
                     ) : null}
                   </div>
-                  <p className="mt-0.5 text-xs text-[var(--muted-foreground)]">
+                  <p className="mt-0.5 text-sm leading-snug text-[var(--muted-foreground)]">
                     {row.headline}
                   </p>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--muted)]">

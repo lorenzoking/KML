@@ -22,6 +22,7 @@ import {
   displayWeek,
   formatRecord,
   formatSalary,
+  isRunningBack,
   playerName,
   POSITION_GROUP_ORDER,
   positionGroup,
@@ -90,7 +91,7 @@ export default async function LeagueTeamPage({
     withStats,
     (row) => {
       const pos = row.player.position.toUpperCase();
-      return row.stats.rushYds >= 25 && (pos === "HB" || pos === "FB" || pos === "QB");
+      return row.stats.rushYds >= 25 && (isRunningBack(pos) || pos === "QB");
     },
     (row) => row.stats.rushYds
   );
@@ -142,7 +143,7 @@ export default async function LeagueTeamPage({
             title="Receiving"
             rows={receiving.map((row) => ({
               name: playerName(row.player),
-              line: rosterSeasonLine("WR", row.stats),
+              line: rosterSeasonLine(row.player.position, row.stats),
             }))}
           />
           <LeaderCard
@@ -202,7 +203,7 @@ export default async function LeagueTeamPage({
                       <TableCell className="tabular-nums">{player.overall}</TableCell>
                       <TableCell
                         className={cn(
-                          "whitespace-nowrap text-xs sm:text-sm",
+                          "text-xs leading-snug sm:text-sm",
                           hasLine
                             ? "text-[var(--foreground)]"
                             : "text-[var(--muted-foreground)]"
@@ -264,7 +265,9 @@ function LeaderCard({
               <span className="text-[var(--muted-foreground)]">{index + 1}.</span>{" "}
               <span className="font-medium">{row.name}</span>
             </p>
-            <p className="shrink-0 text-xs text-[var(--muted-foreground)]">{row.line}</p>
+            <p className="max-w-[65%] text-right text-xs leading-snug text-[var(--muted-foreground)]">
+              {row.line}
+            </p>
           </div>
         ))}
       </CardContent>

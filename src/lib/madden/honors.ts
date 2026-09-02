@@ -1,9 +1,14 @@
 import { StoryCategory } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
+  defenseStatLine,
   formatSacks,
   isQuarterback,
   isRunningBack,
+  passingStatLine,
+  scrimmageTDs,
+  scrimmageYards,
+  skillStatLine,
 } from "@/lib/madden/display";
 import { canonAbbr } from "@/lib/madden/franchises";
 import { isMaddenFinal } from "@/lib/madden/game-status";
@@ -65,14 +70,6 @@ export function honorsOgPath(week: number, stamp?: string) {
   return stamp ? `${path}?v=${encodeURIComponent(stamp)}` : path;
 }
 
-function scrimmageYards(row: WeekPlayerTotal) {
-  return row.rushYds + row.recYds;
-}
-
-function scrimmageTDs(row: WeekPlayerTotal) {
-  return row.rushTDs + row.recTDs;
-}
-
 /** Same weights as the League award races — rush, rec, and pass all count. */
 function offensiveValue(row: WeekPlayerTotal) {
   return (
@@ -113,24 +110,19 @@ function sortBy<T>(rows: T[], value: (row: T) => number) {
 }
 
 function passingLine(row: WeekPlayerTotal) {
-  const pass = `${row.passYds} yds, ${row.passTDs} TD`;
-  return row.rushYds >= 20 ? `${pass} · ${row.rushYds} rush` : pass;
+  return passingStatLine(row, { compact: true, rushFloor: 20 });
 }
 
 function rushingLine(row: WeekPlayerTotal) {
-  if (row.recCatches > 0 || row.recYds > 0) {
-    return `${row.rushYds} rush, ${row.recCatches} for ${row.recYds} · ${scrimmageYards(row)} yds, ${scrimmageTDs(row)} TD`;
-  }
-  return `${row.rushYds} yds, ${row.rushTDs} TD`;
+  return skillStatLine(row);
 }
 
 function receivingLine(row: WeekPlayerTotal) {
-  const rec = `${row.recCatches} for ${row.recYds}, ${row.recTDs} TD`;
-  return row.rushYds >= 15 ? `${rec} · ${row.rushYds} rush` : rec;
+  return skillStatLine(row);
 }
 
 function defenseLine(row: WeekPlayerTotal) {
-  return `${formatSacks(row.defSacks)} sacks, ${row.defInts} INT, ${row.defTackles} tkl`;
+  return defenseStatLine(row);
 }
 
 function stampCategory(row: WeekPlayerTotal): HonorsPlayer["category"] {
@@ -319,15 +311,7 @@ function opoyTable(player: HonorsPlayer) {
 }
 
 function heaterCopy(player: HonorsPlayer) {
-  if (player.category === "RUSHING" || isRunningBack(player.position)) {
-    return player.line;
-  }
-  if (player.recCatches > 0 || player.recYds > 0) {
-    return player.rushYds >= 15
-      ? `${player.recCatches} catches, **${player.recYds} yards**, ${player.recTDs} TD · ${player.rushYds} rush.`
-      : `${player.recCatches} catches, **${player.recYds} yards**, ${player.recTDs} TD.`;
-  }
-  return `${player.line}.`;
+  return player.line;
 }
 
 export function renderHonorsArticle(board: HonorsBoard) {
