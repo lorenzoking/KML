@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { MaddenStatCategory } from "@/generated/prisma/client";
 import {
   Card,
   CardContent,
@@ -18,11 +17,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LeagueNav } from "@/components/league/league-nav";
-import { displayWeek, playerName } from "@/lib/madden/display";
+import { displayWeek, formatSacks, formatStat } from "@/lib/madden/display";
 import {
   ensureMaddenLeague,
-  getLeaders,
-  getSeasonLeaders,
+  getSeasonPlayerTotals,
+  getWeekPlayerTotals,
   latestStatWeek,
   listStatWeeks,
 } from "@/lib/madden/query";
@@ -62,19 +61,21 @@ export default async function LeagueLeadersPage({
   }
 
   const seasonMode = weekIndex == null;
-  const [passing, rushing, receiving, defense] = seasonMode
-    ? await Promise.all([
-        getSeasonLeaders(MaddenStatCategory.PASSING),
-        getSeasonLeaders(MaddenStatCategory.RUSHING),
-        getSeasonLeaders(MaddenStatCategory.RECEIVING),
-        getSeasonLeaders(MaddenStatCategory.DEFENSE),
-      ])
-    : await Promise.all([
-        getLeaders(weekIndex, MaddenStatCategory.PASSING),
-        getLeaders(weekIndex, MaddenStatCategory.RUSHING),
-        getLeaders(weekIndex, MaddenStatCategory.RECEIVING),
-        getLeaders(weekIndex, MaddenStatCategory.DEFENSE),
-      ]);
+  const totals = seasonMode
+    ? await getSeasonPlayerTotals()
+    : await getWeekPlayerTotals(weekIndex);
+  const passing = topBy(totals, (row) => row.passYds, (row) => row.passYds > 0);
+  const rushing = topBy(totals, (row) => row.rushYds, (row) => row.rushYds > 0);
+  const receiving = topBy(
+    totals,
+    (row) => row.recYds,
+    (row) => row.recCatches > 0 || row.recYds > 0
+  );
+  const defense = topBy(
+    totals,
+    (row) => row.defSacks * 12 + row.defInts * 12 + row.defTackles * 0.4,
+    (row) => row.defSacks > 0 || row.defInts > 0 || row.defTackles > 0
+  );
 
   return (
     <div className="space-y-6">
@@ -118,51 +119,89 @@ export default async function LeagueLeadersPage({
 
       <Board
         title="Passing"
-        headers={["Player", "Team", "Yds", "TD", "INT", "Rating"]}
+        headers={["Player", "Team", "Yds", "TD", "INT", "Rush", "Rush TD"]}
         rows={passing.map((row) => [
-          row.fullName || playerName(row.player),
-          row.team.abbr,
-          String(row.passYds),
+          leaderName(row),
+          row.teamAbbr,
+          formatStat(row.passYds),
           String(row.passTDs),
           String(row.passInts),
-          seasonMode ? "—" : row.passerRating.toFixed(1),
+          formatStat(row.rushYds),
+          String(row.rushTDs),
         ])}
       />
       <Board
         title="Rushing"
-        headers={["Player", "Team", "Yds", "TD", "Att"]}
+        headers={["Player", "Team", "Rush", "TD", "Rec", "Rec Yds", "Rec TD"]}
         rows={rushing.map((row) => [
-          row.fullName || playerName(row.player),
-          row.team.abbr,
-          String(row.rushYds),
+          leaderName(row),
+          row.teamAbbr,
+          formatStat(row.rushYds),
           String(row.rushTDs),
-          String(row.rushAtt),
+          String(row.recCatches),
+          formatStat(row.recYds),
+          String(row.recTDs),
         ])}
       />
       <Board
         title="Receiving"
-        headers={["Player", "Team", "Rec", "Yds", "TD"]}
+        headers={["Player", "Team", "Rec", "Yds", "TD", "Rush", "Rush TD"]}
         rows={receiving.map((row) => [
-          row.fullName || playerName(row.player),
-          row.team.abbr,
+          leaderName(row),
+          row.teamAbbr,
           String(row.recCatches),
-          String(row.recYds),
+          formatStat(row.recYds),
           String(row.recTDs),
+          formatStat(row.rushYds),
+          String(row.rushTDs),
         ])}
       />
       <Board
         title="Defense"
         headers={["Player", "Team", "Sacks", "INT", "Tackles"]}
         rows={defense.map((row) => [
-          row.fullName || playerName(row.player),
-          row.team.abbr,
-          String(row.defSacks),
+          leaderName(row),
+          row.teamAbbr,
+          formatSacks(row.defSacks),
           String(row.defInts),
-          String(row.defTackles),
+          formatStat(row.defTackles),
         ])}
       />
     </div>
   );
+}
+
+type LeaderRow = {
+  name?: string;
+  fullName?: string;
+  teamAbbr: string;
+  passYds: number;
+  passTDs: number;
+  passInts: number;
+  rushYds: number;
+  rushTDs: number;
+  recYds: number;
+  recTDs: number;
+  recCatches: number;
+  defSacks: number;
+  defInts: number;
+  defTackles: number;
+};
+
+function leaderName(row: LeaderRow) {
+  return row.name || row.fullName || "Unknown";
+}
+
+function topBy<T extends LeaderRow>(
+  rows: T[],
+  metric: (row: T) => number,
+  eligible: (row: T) => boolean,
+  take = 10
+) {
+  return [...rows]
+    .filter(eligible)
+    .sort((a, b) => metric(b) - metric(a))
+    .slice(0, take);
 }
 
 function Board({

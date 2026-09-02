@@ -1,7 +1,7 @@
 import { StoryCategory, MaddenStatCategory } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason } from "@/lib/league";
-import { displayWeek } from "@/lib/madden/display";
+import { displayWeek, defenseStatLine, passingStatLine, skillStatLine } from "@/lib/madden/display";
 import { isMaddenFinal } from "@/lib/madden/game-status";
 import {
   autoHonorsSlug,
@@ -13,6 +13,7 @@ import {
 import {
   getLeaders,
   getWeekGames,
+  getWeekPlayerTotals,
   listStatWeeks,
 } from "@/lib/madden/query";
 
@@ -43,13 +44,15 @@ export async function generateMaddenStories() {
 
 async function stampWeekTape(weekIndex: number, seasonId: string | null) {
   const week = displayWeek(weekIndex);
-  const [games, passing, rushing, receiving, defense] = await Promise.all([
+  const [games, passing, rushing, receiving, defense, totals] = await Promise.all([
     getWeekGames(weekIndex),
     getLeaders(weekIndex, MaddenStatCategory.PASSING, 5),
     getLeaders(weekIndex, MaddenStatCategory.RUSHING, 5),
     getLeaders(weekIndex, MaddenStatCategory.RECEIVING, 5),
     getLeaders(weekIndex, MaddenStatCategory.DEFENSE, 5),
+    getWeekPlayerTotals(weekIndex),
   ]);
+  const merged = new Map(totals.map((row) => [row.rosterId, row]));
 
   const played = games.filter((game) => isMaddenFinal(game.status));
   if (played.length === 0 && passing.length === 0) return;
@@ -113,22 +116,22 @@ ${scoreboard || "No completed games in this export yet."}
 
 ${
   pass
-    ? `- **Pass:** ${pass.fullName}, ${pass.team.abbr} — ${pass.passYds} yards, ${pass.passTDs} TD, ${pass.passInts} INT`
+    ? `- **Pass:** ${pass.fullName}, ${pass.team.abbr} — ${passingStatLine(merged.get(pass.rosterId) ?? pass, { compact: true, rushFloor: 20 })}`
     : ""
 }
 ${
   rush
-    ? `- **Rush:** ${rush.fullName}, ${rush.team.abbr} — ${rush.rushYds} yards, ${rush.rushTDs} TD`
+    ? `- **Rush:** ${rush.fullName}, ${rush.team.abbr} — ${skillStatLine(merged.get(rush.rosterId) ?? rush)}`
     : ""
 }
 ${
   rec
-    ? `- **Receive:** ${rec.fullName}, ${rec.team.abbr} — ${rec.recCatches} for ${rec.recYds}, ${rec.recTDs} TD`
+    ? `- **Receive:** ${rec.fullName}, ${rec.team.abbr} — ${skillStatLine(merged.get(rec.rosterId) ?? rec)}`
     : ""
 }
 ${
   def
-    ? `- **Defense:** ${def.fullName}, ${def.team.abbr} — ${def.defSacks} sacks, ${def.defInts} INT, ${def.defTackles} tackles`
+    ? `- **Defense:** ${def.fullName}, ${def.team.abbr} — ${defenseStatLine(merged.get(def.rosterId) ?? def)}`
     : ""
 }
 

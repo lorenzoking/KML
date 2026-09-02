@@ -1,8 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { defenseStatLine, skillStatLine } from "./display";
+import {
+  defenseStatLine,
+  emptyStatSums,
+  passingStatLine,
+  rosterSeasonLine,
+  skillStatLine,
+} from "./display";
 
-test("skill line prints from-scrimmage when a back has rush and receiving", () => {
+test("skill line prints from-scrimmage with rush and receiving TDs", () => {
   assert.equal(
     skillStatLine({
       rushYds: 1245,
@@ -11,7 +17,7 @@ test("skill line prints from-scrimmage when a back has rush and receiving", () =
       recTDs: 4,
       recCatches: 32,
     }),
-    "1,657 scrimmage yds · 14 TD · 1,245 rush · 32 for 412"
+    "1,657 scrimmage yds · 14 TD · 1,245 rush, 10 TD · 32 for 412, 4 TD"
   );
 });
 
@@ -53,5 +59,38 @@ test("defense line skips empty columns so coverage players are not 0-sack first"
   assert.equal(
     defenseStatLine({ defSacks: 11, defInts: 3, defTackles: 67 }),
     "11 sacks · 3 INT · 67 tkl"
+  );
+});
+
+test("roster season line for backs includes receiving TDs, not just rec yards", () => {
+  const stats = {
+    ...emptyStatSums(),
+    rushYds: 1245,
+    rushTDs: 10,
+    recYds: 412,
+    recTDs: 4,
+    recCatches: 32,
+  };
+  const expected =
+    "1,657 scrimmage yds · 14 TD · 1,245 rush, 10 TD · 32 for 412, 4 TD";
+  assert.equal(rosterSeasonLine("HB", stats), expected);
+  assert.equal(rosterSeasonLine("RB", stats), expected);
+});
+
+test("passing line includes rushing TDs for dual-threat QBs", () => {
+  assert.equal(
+    passingStatLine(
+      {
+        passComp: 210,
+        passAtt: 310,
+        passYds: 2840,
+        passTDs: 24,
+        passInts: 6,
+        rushYds: 412,
+        rushTDs: 7,
+      },
+      { compact: true }
+    ),
+    "2,840 yds · 24 TD · 6 INT · 412 rush, 7 TD"
   );
 });

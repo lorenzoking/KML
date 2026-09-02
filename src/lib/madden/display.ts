@@ -100,18 +100,59 @@ export type SkillLineStats = {
   recCatches: number;
 };
 
+function rushClause(stats: SkillLineStats) {
+  return stats.rushTDs > 0
+    ? `${formatStat(stats.rushYds)} rush, ${stats.rushTDs} TD`
+    : `${formatStat(stats.rushYds)} rush`;
+}
+
+function recClause(stats: SkillLineStats) {
+  const catches = `${stats.recCatches} for ${formatStat(stats.recYds)}`;
+  return stats.recTDs > 0 ? `${catches}, ${stats.recTDs} TD` : catches;
+}
+
 /** Rush + rec on one line so dual-threat backs do not look like rush-only. */
 export function skillStatLine(stats: SkillLineStats) {
   const hasRush = stats.rushYds > 0 || stats.rushTDs > 0;
   const hasRec = stats.recCatches > 0 || stats.recYds > 0 || stats.recTDs > 0;
 
   if (hasRush && hasRec) {
-    return `${formatStat(scrimmageYards(stats))} scrimmage yds · ${scrimmageTDs(stats)} TD · ${formatStat(stats.rushYds)} rush · ${stats.recCatches} for ${formatStat(stats.recYds)}`;
+    return `${formatStat(scrimmageYards(stats))} scrimmage yds · ${scrimmageTDs(stats)} TD · ${rushClause(stats)} · ${recClause(stats)}`;
   }
   if (hasRec) {
     return `${stats.recCatches} rec · ${formatStat(stats.recYds)} yds · ${stats.recTDs} TD`;
   }
   return `${formatStat(stats.rushYds)} rush yds · ${stats.rushTDs} TD`;
+}
+
+export type PassingLineStats = {
+  passComp: number;
+  passAtt: number;
+  passYds: number;
+  passTDs: number;
+  passInts: number;
+  rushYds: number;
+  rushTDs: number;
+};
+
+export function passingStatLine(
+  stats: PassingLineStats,
+  opts?: { compact?: boolean; rushFloor?: number }
+) {
+  const parts: string[] = [];
+  const rushFloor = opts?.rushFloor ?? 40;
+  if (stats.passAtt > 0) {
+    if (!opts?.compact) parts.push(`${stats.passComp}/${stats.passAtt}`);
+    parts.push(`${formatStat(stats.passYds)} yds`);
+    parts.push(`${stats.passTDs} TD`);
+    parts.push(`${stats.passInts} INT`);
+  }
+  if (stats.rushTDs > 0) {
+    parts.push(`${formatStat(stats.rushYds)} rush, ${stats.rushTDs} TD`);
+  } else if (stats.rushYds >= rushFloor) {
+    parts.push(`${formatStat(stats.rushYds)} rush`);
+  }
+  return parts.join(" · ");
 }
 
 export type DefenseLineStats = {
@@ -233,49 +274,35 @@ export function sumPlayerStats(
 export function rosterSeasonLine(position: string, stats: PlayerStatSums) {
   const pos = position.toUpperCase();
   const group = positionGroup(pos);
-  const parts: string[] = [];
 
   if (pos === "QB") {
-    if (stats.passAtt > 0) {
-      parts.push(`${stats.passComp}/${stats.passAtt}`);
-      parts.push(`${formatStat(stats.passYds)} yds`);
-      parts.push(`${stats.passTDs} TD`);
-      parts.push(`${stats.passInts} INT`);
-    }
-    if (stats.rushYds >= 40) parts.push(`${formatStat(stats.rushYds)} rush`);
-  } else if (pos === "HB" || pos === "FB") {
-    if (stats.rushYds > 0 || stats.rushTDs > 0) {
-      parts.push(`${formatStat(stats.rushYds)} rush`);
-      parts.push(`${stats.rushTDs} TD`);
-    }
-    if (stats.recCatches > 0) {
-      parts.push(`${stats.recCatches} rec`);
-      if (stats.recYds >= 40) parts.push(`${formatStat(stats.recYds)} yds`);
-    }
-  } else if (pos === "WR" || pos === "TE") {
-    if (stats.recCatches > 0 || stats.recYds > 0) {
-      parts.push(`${stats.recCatches} rec`);
-      parts.push(`${formatStat(stats.recYds)} yds`);
-      parts.push(`${stats.recTDs} TD`);
-    }
-    if (stats.rushYds >= 40) parts.push(`${formatStat(stats.rushYds)} rush`);
-  } else if (group === "Defense") {
-    if (stats.defSacks > 0 || stats.defInts > 0 || stats.defTackles > 0) {
-      parts.push(`${formatSacks(stats.defSacks)} sacks`);
-      parts.push(`${stats.defInts} INT`);
-      parts.push(`${formatStat(stats.defTackles)} tkl`);
-    }
-  } else if (pos === "K" || pos === "P") {
-    if (stats.kickPts > 0) parts.push(`${stats.kickPts} pts`);
-  } else {
-    if (stats.passAtt > 0) parts.push(`${formatStat(stats.passYds)} pass`);
-    if (stats.rushYds > 0) parts.push(`${formatStat(stats.rushYds)} rush`);
-    if (stats.recCatches > 0) parts.push(`${stats.recCatches} rec`);
-    if (stats.defSacks > 0 || stats.defInts > 0) {
-      parts.push(`${formatSacks(stats.defSacks)} sacks`);
-    }
-    if (stats.kickPts > 0) parts.push(`${stats.kickPts} pts`);
+    return passingStatLine(stats) || "—";
+  }
+  if (isRunningBack(pos) || pos === "WR" || pos === "TE") {
+    const hasSkill =
+      stats.rushYds > 0 ||
+      stats.rushTDs > 0 ||
+      stats.recCatches > 0 ||
+      stats.recYds > 0 ||
+      stats.recTDs > 0;
+    return hasSkill ? skillStatLine(stats) : "—";
+  }
+  if (group === "Defense") {
+    const hasDefense = stats.defSacks > 0 || stats.defInts > 0 || stats.defTackles > 0;
+    return hasDefense ? defenseStatLine(stats) : "—";
+  }
+  if (pos === "K" || pos === "P") {
+    return stats.kickPts > 0 ? `${stats.kickPts} pts` : "—";
   }
 
+  const parts: string[] = [];
+  if (stats.passAtt > 0) parts.push(`${formatStat(stats.passYds)} pass`);
+  if (stats.rushYds > 0 || stats.rushTDs > 0 || stats.recCatches > 0 || stats.recYds > 0) {
+    parts.push(skillStatLine(stats));
+  }
+  if (stats.defSacks > 0 || stats.defInts > 0 || stats.defTackles > 0) {
+    parts.push(defenseStatLine(stats));
+  }
+  if (stats.kickPts > 0) parts.push(`${stats.kickPts} pts`);
   return parts.length > 0 ? parts.join(" · ") : "—";
 }

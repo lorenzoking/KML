@@ -6,12 +6,14 @@ import {
   formatStat,
   isQuarterback,
   isRookie,
+  passingStatLine,
   playerName,
   skillStatLine,
 } from "@/lib/madden/display";
 import {
   getLeaders,
   getSeasonPlayerTotals,
+  getWeekPlayerTotals,
   latestStatWeek,
   type SeasonPlayerTotal,
 } from "@/lib/madden/query";
@@ -120,7 +122,7 @@ function candidate(
 }
 
 function qbHeadline(player: SeasonPlayerTotal) {
-  return `${formatStat(player.passYds)} yds · ${player.passTDs} TD · ${player.passInts} INT`;
+  return passingStatLine(player, { compact: true });
 }
 
 function topBy(
@@ -233,12 +235,14 @@ function buildPulse(players: SeasonPlayerTotal[]): SeasonPulse[] {
 
 async function buildHeaters(weekIndex: number): Promise<WeekHeater[]> {
   const href = `/league/leaders?week=${weekIndex}`;
-  const [passing, rushing, receiving, defense] = await Promise.all([
+  const [passing, rushing, receiving, defense, totals] = await Promise.all([
     getLeaders(weekIndex, MaddenStatCategory.PASSING, 1),
     getLeaders(weekIndex, MaddenStatCategory.RUSHING, 1),
     getLeaders(weekIndex, MaddenStatCategory.RECEIVING, 1),
     getLeaders(weekIndex, MaddenStatCategory.DEFENSE, 1),
+    getWeekPlayerTotals(weekIndex),
   ]);
+  const merged = new Map(totals.map((row) => [row.rosterId, row]));
 
   const color = (row: { team: { franchise?: { primaryColor: string } | null } }) =>
     row.team.franchise?.primaryColor &&
@@ -249,45 +253,49 @@ async function buildHeaters(weekIndex: number): Promise<WeekHeater[]> {
   const heaters: WeekHeater[] = [];
   const pass = passing[0];
   if (pass) {
+    const stats = merged.get(pass.rosterId) ?? pass;
     heaters.push({
       label: "Air raid",
       name: playerName(pass.player) || pass.fullName,
       teamAbbr: pass.team.abbr,
       teamColor: color(pass),
-      line: `${formatStat(pass.passYds)} yds · ${pass.passTDs} TD`,
+      line: passingStatLine(stats, { compact: true, rushFloor: 20 }),
       href,
     });
   }
   const rush = rushing[0];
   if (rush) {
+    const stats = merged.get(rush.rosterId) ?? rush;
     heaters.push({
       label: "Ground game",
       name: playerName(rush.player) || rush.fullName,
       teamAbbr: rush.team.abbr,
       teamColor: color(rush),
-      line: `${formatStat(rush.rushYds)} yds · ${rush.rushTDs} TD`,
+      line: skillStatLine(stats),
       href,
     });
   }
   const rec = receiving[0];
   if (rec) {
+    const stats = merged.get(rec.rosterId) ?? rec;
     heaters.push({
       label: "Target hog",
       name: playerName(rec.player) || rec.fullName,
       teamAbbr: rec.team.abbr,
       teamColor: color(rec),
-      line: `${rec.recCatches} for ${formatStat(rec.recYds)} · ${rec.recTDs} TD`,
+      line: skillStatLine(stats),
       href,
     });
   }
   const def = defense[0];
   if (def) {
+    const stats = merged.get(def.rosterId) ?? def;
     heaters.push({
       label: "Chaos agent",
       name: playerName(def.player) || def.fullName,
       teamAbbr: def.team.abbr,
       teamColor: color(def),
-      line: defenseStatLine(def),
+      line: defenseStatLine(stats),
       href,
     });
   }
