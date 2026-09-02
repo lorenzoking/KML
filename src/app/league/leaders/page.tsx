@@ -61,9 +61,24 @@ export default async function LeagueLeadersPage({
   }
 
   const seasonMode = weekIndex == null;
-  const totals = seasonMode
+  const source = seasonMode
     ? await getSeasonPlayerTotals()
     : await getWeekPlayerTotals(weekIndex);
+  const totals: LeaderRow[] = source.map((row) => ({
+    name: "name" in row ? row.name : row.fullName,
+    teamAbbr: row.teamAbbr,
+    passYds: row.passYds,
+    passTDs: row.passTDs,
+    passInts: row.passInts,
+    rushYds: row.rushYds,
+    rushTDs: row.rushTDs,
+    recYds: row.recYds,
+    recTDs: row.recTDs,
+    recCatches: row.recCatches,
+    defSacks: row.defSacks,
+    defInts: row.defInts,
+    defTackles: row.defTackles,
+  }));
   const passing = topBy(totals, (row) => row.passYds, (row) => row.passYds > 0);
   const rushing = topBy(totals, (row) => row.rushYds, (row) => row.rushYds > 0);
   const receiving = topBy(
@@ -121,7 +136,7 @@ export default async function LeagueLeadersPage({
         title="Passing"
         headers={["Player", "Team", "Yds", "TD", "INT", "Rush", "Rush TD"]}
         rows={passing.map((row) => [
-          leaderName(row),
+          row.name,
           row.teamAbbr,
           formatStat(row.passYds),
           String(row.passTDs),
@@ -134,7 +149,7 @@ export default async function LeagueLeadersPage({
         title="Rushing"
         headers={["Player", "Team", "Rush", "TD", "Rec", "Rec Yds", "Rec TD"]}
         rows={rushing.map((row) => [
-          leaderName(row),
+          row.name,
           row.teamAbbr,
           formatStat(row.rushYds),
           String(row.rushTDs),
@@ -147,7 +162,7 @@ export default async function LeagueLeadersPage({
         title="Receiving"
         headers={["Player", "Team", "Rec", "Yds", "TD", "Rush", "Rush TD"]}
         rows={receiving.map((row) => [
-          leaderName(row),
+          row.name,
           row.teamAbbr,
           String(row.recCatches),
           formatStat(row.recYds),
@@ -160,7 +175,7 @@ export default async function LeagueLeadersPage({
         title="Defense"
         headers={["Player", "Team", "Sacks", "INT", "Tackles"]}
         rows={defense.map((row) => [
-          leaderName(row),
+          row.name,
           row.teamAbbr,
           formatSacks(row.defSacks),
           String(row.defInts),
@@ -172,8 +187,7 @@ export default async function LeagueLeadersPage({
 }
 
 type LeaderRow = {
-  name?: string;
-  fullName?: string;
+  name: string;
   teamAbbr: string;
   passYds: number;
   passTDs: number;
@@ -188,14 +202,10 @@ type LeaderRow = {
   defTackles: number;
 };
 
-function leaderName(row: LeaderRow) {
-  return row.name || row.fullName || "Unknown";
-}
-
-function topBy<T extends LeaderRow>(
-  rows: T[],
-  metric: (row: T) => number,
-  eligible: (row: T) => boolean,
+function topBy(
+  rows: LeaderRow[],
+  metric: (row: LeaderRow) => number,
+  eligible: (row: LeaderRow) => boolean,
   take = 10
 ) {
   return [...rows]
