@@ -84,6 +84,53 @@ export function formatSacks(value: number) {
   return formatStat(value, Number.isInteger(value) ? 0 : 1);
 }
 
+export function scrimmageYards(stats: { rushYds: number; recYds: number }) {
+  return stats.rushYds + stats.recYds;
+}
+
+export function scrimmageTDs(stats: { rushTDs: number; recTDs: number }) {
+  return stats.rushTDs + stats.recTDs;
+}
+
+export type SkillLineStats = {
+  rushYds: number;
+  rushTDs: number;
+  recYds: number;
+  recTDs: number;
+  recCatches: number;
+};
+
+/** Rush + rec on one line so dual-threat backs do not look like rush-only. */
+export function skillStatLine(stats: SkillLineStats) {
+  const hasRush = stats.rushYds > 0 || stats.rushTDs > 0;
+  const hasRec = stats.recCatches > 0 || stats.recYds > 0 || stats.recTDs > 0;
+
+  if (hasRush && hasRec) {
+    return `${formatStat(scrimmageYards(stats))} scrimmage yds · ${scrimmageTDs(stats)} TD · ${formatStat(stats.rushYds)} rush · ${stats.recCatches} for ${formatStat(stats.recYds)}`;
+  }
+  if (hasRec) {
+    return `${stats.recCatches} rec · ${formatStat(stats.recYds)} yds · ${stats.recTDs} TD`;
+  }
+  return `${formatStat(stats.rushYds)} rush yds · ${stats.rushTDs} TD`;
+}
+
+export type DefenseLineStats = {
+  defSacks: number;
+  defInts: number;
+  defTackles: number;
+};
+
+/** Print the production that scored the race — skip empty columns so a DB is not a 0-sack rusher. */
+export function defenseStatLine(stats: DefenseLineStats) {
+  const parts: string[] = [];
+  if (stats.defSacks > 0) parts.push(`${formatSacks(stats.defSacks)} sacks`);
+  if (stats.defInts > 0) parts.push(`${stats.defInts} INT`);
+  if (stats.defTackles > 0) parts.push(`${formatStat(stats.defTackles)} tkl`);
+  return parts.length > 0
+    ? parts.join(" · ")
+    : `${formatSacks(stats.defSacks)} sacks · ${stats.defInts} INT · ${formatStat(stats.defTackles)} tkl`;
+}
+
 export function isLightHex(color: string) {
   const hex = color.replace("#", "");
   if (hex.length < 6) return false;

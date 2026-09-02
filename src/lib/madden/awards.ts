@@ -1,11 +1,13 @@
 import { MaddenStatCategory } from "@/generated/prisma/client";
 import {
+  defenseStatLine,
   formatRecord,
   formatSacks,
   formatStat,
   isQuarterback,
   isRookie,
   playerName,
+  skillStatLine,
 } from "@/lib/madden/display";
 import {
   getLeaders,
@@ -121,17 +123,6 @@ function qbHeadline(player: SeasonPlayerTotal) {
   return `${formatStat(player.passYds)} yds · ${player.passTDs} TD · ${player.passInts} INT`;
 }
 
-function skillHeadline(player: SeasonPlayerTotal) {
-  if (player.rushYds >= player.recYds) {
-    return `${formatStat(player.rushYds)} rush yds · ${player.rushTDs} TD`;
-  }
-  return `${player.recCatches} rec · ${formatStat(player.recYds)} yds · ${player.recTDs} TD`;
-}
-
-function defenseHeadline(player: SeasonPlayerTotal) {
-  return `${formatSacks(player.defSacks)} sacks · ${player.defInts} INT · ${formatStat(player.defTackles)} tkl`;
-}
-
 function topBy(
   players: SeasonPlayerTotal[],
   scoreOf: (player: SeasonPlayerTotal) => number,
@@ -165,7 +156,7 @@ function buildRaces(players: SeasonPlayerTotal[]): AwardRace[] {
         players,
         mvpScore,
         (player) =>
-          isQuarterback(player.position) ? qbHeadline(player) : skillHeadline(player),
+          isQuarterback(player.position) ? qbHeadline(player) : skillStatLine(player),
         (player) => `${player.teamAbbr} ${formatRecord(player.wins, player.losses, player.ties)}`
       ),
     },
@@ -173,11 +164,11 @@ function buildRaces(players: SeasonPlayerTotal[]): AwardRace[] {
       id: "opoty",
       title: "Offensive Player of the Year",
       short: "OPOTY",
-      blurb: "Non-QB skill work. Rushing, receiving, and touchdowns — not just volume.",
+      blurb: "From-scrimmage work. Rushing and receiving both print — not just the bigger column.",
       candidates: topBy(
         offense,
         skillValue,
-        skillHeadline,
+        skillStatLine,
         (player) => `${player.position} · ${player.teamAbbr}`
       ),
     },
@@ -185,11 +176,11 @@ function buildRaces(players: SeasonPlayerTotal[]): AwardRace[] {
       id: "dpoty",
       title: "Defensive Player of the Year",
       short: "DPOTY",
-      blurb: "Sacks first, takeaways second, tackles to break ties.",
+      blurb: "Sacks, takeaways, and tackles together — the line that put them in the race.",
       candidates: topBy(
         defense,
         defensiveValue,
-        defenseHeadline,
+        defenseStatLine,
         (player) => `${player.position} · ${player.teamAbbr}`
       ),
     },
@@ -203,10 +194,10 @@ function buildRaces(players: SeasonPlayerTotal[]): AwardRace[] {
         royScore,
         (player) =>
           defensiveValue(player) > offensiveValue(player)
-            ? defenseHeadline(player)
+            ? defenseStatLine(player)
             : isQuarterback(player.position)
               ? qbHeadline(player)
-              : skillHeadline(player),
+              : skillStatLine(player),
         (player) => `${player.position} · ${player.teamAbbr}`
       ),
     },
@@ -296,7 +287,7 @@ async function buildHeaters(weekIndex: number): Promise<WeekHeater[]> {
       name: playerName(def.player) || def.fullName,
       teamAbbr: def.team.abbr,
       teamColor: color(def),
-      line: `${formatSacks(def.defSacks)} sacks · ${def.defInts} INT`,
+      line: defenseStatLine(def),
       href,
     });
   }
