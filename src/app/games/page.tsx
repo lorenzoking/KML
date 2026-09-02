@@ -33,11 +33,12 @@ import {
   computeReputationScore,
   getReputationLabel,
 } from "@/lib/reputation";
-import { formatBothSimScores } from "@/lib/sim-score";
+import { formatBothSimScores, myOutstandingSimScore } from "@/lib/sim-score";
 import { formatMatchupScore } from "@/lib/game-score";
 import { ScrollToHash } from "@/components/games/scroll-to-hash";
 import { WeekSlate } from "@/components/games/week-slate";
 import { TeamSchedule } from "@/components/games/team-schedule";
+import { SimScoreForm } from "@/components/forms/sim-score-form";
 import {
   buildTeamSchedule,
   buildWeekSlate,
@@ -303,6 +304,26 @@ export default async function GamesPage({
     })
   );
 
+  const myWeekGame =
+    membership && tab === "week"
+      ? weekGames.find(
+          (game) =>
+            (game.status === "PENDING" || game.status === "APPROVED") &&
+            (game.userTeamId === membership.franchiseId ||
+              game.opponentTeamId === membership.franchiseId)
+        )
+      : null;
+  const myWeekOutstanding =
+    membership && myWeekGame
+      ? myOutstandingSimScore(myWeekGame, membership.franchiseId)
+      : null;
+  const myWeekRatedTeam =
+    myWeekGame && myWeekOutstanding
+      ? myWeekOutstanding.ratedTeamId === myWeekGame.userTeamId
+        ? myWeekGame.userTeam
+        : myWeekGame.opponentTeam
+      : null;
+
   const canSubmit =
     Boolean(user?.isActive) &&
     season.id === activeSeason.id &&
@@ -412,12 +433,18 @@ export default async function GamesPage({
           <div className="space-y-6 lg:col-span-2">
             <Card id="submit-result" className="scroll-mt-24 animate-rise">
               <CardHeader>
-                <CardTitle>Submit Sim Score</CardTitle>
+                <CardTitle>
+                  {myWeekGame &&
+                  !myWeekGame.isForceWin &&
+                  myWeekOutstanding &&
+                  !myWeekOutstanding.alreadySubmitted
+                    ? "Submit opponent Sim Score"
+                    : "Submit Sim Score"}
+                </CardTitle>
                 <CardDescription>
-                  Season {settings.currentSeason} · Week {settings.currentWeek}.
-                  Rate your opponent — Madden scores and coach XP come from the
-                  Companion export. If the game cut out or your opponent could
-                  not play, mark a force win instead.
+                  {myWeekGame
+                    ? `This Week ${myWeekGame.week} matchup is already on the board. Rate your opponent — the Companion export already posted the score and XP.`
+                    : `Season ${settings.currentSeason} · Week ${settings.currentWeek}. Rate your opponent — Madden scores and coach XP come from the Companion export. If the game cut out or your opponent could not play, mark a force win instead.`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -438,6 +465,46 @@ export default async function GamesPage({
                     title="No franchise assigned"
                     description="Ask a commissioner to assign you a team before submitting."
                   />
+                ) : myWeekGame?.isForceWin ? (
+                  <div className="space-y-3">
+                    <EmptyState
+                      title="Force win on the board"
+                      description="This matchup does not take a Sim Score. Open the game if you still need to post the simulated score after the week advances."
+                    />
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href={`/games/${myWeekGame.id}`}>Open game</Link>
+                    </Button>
+                  </div>
+                ) : myWeekGame &&
+                  myWeekOutstanding &&
+                  !myWeekOutstanding.alreadySubmitted &&
+                  myWeekRatedTeam ? (
+                  <div id="sim-score" className="scroll-mt-24">
+                    <SimScoreForm
+                      submissionId={myWeekGame.id}
+                      opponentName={myWeekRatedTeam.name}
+                      opponentAbbr={myWeekRatedTeam.abbreviation}
+                    />
+                    <p className="mt-3 text-xs text-[var(--muted-foreground)]">
+                      <Link
+                        href={`/games/${myWeekGame.id}#sim-score`}
+                        className="font-medium text-[var(--primary)] hover:underline"
+                      >
+                        Open the game page
+                      </Link>{" "}
+                      if you want the recap while you rate.
+                    </p>
+                  </div>
+                ) : myWeekGame && myWeekOutstanding?.alreadySubmitted ? (
+                  <div className="space-y-3">
+                    <EmptyState
+                      title={`You already rated ${myWeekRatedTeam?.abbreviation ?? "your opponent"}`}
+                      description="Your Sim Score is in. Open the game if you want the recap or box score."
+                    />
+                    <Button asChild variant="outline" className="w-full">
+                      <Link href={`/games/${myWeekGame.id}`}>Open game</Link>
+                    </Button>
+                  </div>
                 ) : (
                   <SubmissionForm
                     franchises={franchises.filter(

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { getReputationGradeLabel } from "@/lib/coach/grades";
 import type { CoachBoardRow } from "@/lib/coach/coach-board";
+import { formatAverageSimScore } from "@/lib/sim-score";
 import { cn } from "@/lib/utils";
 
 export function rankByCoachReputation(rows: CoachBoardRow[]) {
@@ -56,7 +57,8 @@ export function ReputationStandings({
                 {row.coach}
               </p>
               <p className="truncate text-xs text-[var(--muted-foreground)]">
-                {row.teamAbbr ?? "FA"} · {row.record}
+                {row.teamAbbr ?? "FA"} · {row.record} · Sim{" "}
+                {formatAverageSimScore(row.avgSimScore, row.avgSimScoreCount)}
               </p>
             </div>
             <div className="shrink-0 text-right">
@@ -82,6 +84,7 @@ export function ReputationStandings({
               <TableHead>Coach</TableHead>
               <TableHead>Team</TableHead>
               <TableHead>Record</TableHead>
+              <TableHead>Sim</TableHead>
               <TableHead>Rep</TableHead>
               <TableHead>Grade</TableHead>
               {showJobStatus ? <TableHead>Job</TableHead> : null}
@@ -103,6 +106,14 @@ export function ReputationStandings({
                 </TableCell>
                 <TableCell>{row.teamAbbr ?? "—"}</TableCell>
                 <TableCell className="tabular-nums">{row.record}</TableCell>
+                <TableCell className="tabular-nums">
+                  {formatAverageSimScore(row.avgSimScore, row.avgSimScoreCount)}
+                  {row.avgSimScoreCount > 0 ? (
+                    <span className="ml-1 text-xs text-[var(--muted-foreground)]">
+                      /5
+                    </span>
+                  ) : null}
+                </TableCell>
                 <TableCell className="font-semibold tabular-nums">
                   {row.coachRepScore}
                 </TableCell>

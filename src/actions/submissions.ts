@@ -68,13 +68,31 @@ export async function submitGameResult(formData: FormData) {
         },
       ],
     },
+    include: {
+      userTeam: { select: { abbreviation: true } },
+      opponentTeam: { select: { abbreviation: true } },
+      result: { select: { id: true } },
+    },
   });
 
   if (duplicate) {
-    return {
-      error:
-        "A pending or approved submission already exists for this matchup/week.",
-    };
+    if (data.isForceWin) {
+      return {
+        error:
+          "This matchup is already on the board. Open the game to add a force-win note with a commissioner.",
+      };
+    }
+    if (data.opponentSimScore == null) {
+      return {
+        error: "Opponent Sim Score must be 1–5",
+      };
+    }
+    return saveCoachSimScore({
+      userId: user.id,
+      franchiseId: membership.franchiseId,
+      submission: duplicate,
+      simScore: data.opponentSimScore,
+    });
   }
 
   const maddenScore =
@@ -133,6 +151,96 @@ export async function submitGameResult(formData: FormData) {
   return { success: true, submissionId: submission.id };
 }
 
+type LiveSubmission = {
+  id: string;
+  status: SubmissionStatus;
+  isForceWin: boolean;
+  userTeamId: string;
+  opponentTeamId: string;
+  opponentSimScore: number | null;
+  userTeamSimScore: number | null;
+  userTeam: { abbreviation: string };
+  opponentTeam: { abbreviation: string };
+  result: { id: string } | null;
+};
+
+async function saveCoachSimScore(params: {
+  userId: string;
+  franchiseId: string;
+  submission: LiveSubmission;
+  simScore: number;
+}) {
+  const { userId, franchiseId, submission, simScore } = params;
+
+  if (
+    submission.status !== SubmissionStatus.PENDING &&
+    submission.status !== SubmissionStatus.APPROVED
+  ) {
+    return { error: "Sim Scores can only be added on pending or approved games." };
+  }
+
+  const isUserTeam = franchiseId === submission.userTeamId;
+  const isOpponentTeam = franchiseId === submission.opponentTeamId;
+  if (!isUserTeam && !isOpponentTeam) {
+    return { error: "Only the two teams in this game can submit a Sim Score." };
+  }
+
+  if (submission.isForceWin) {
+    return {
+      error:
+        "Force wins do not use Sim Scores. The CPU sim score can be posted after the week advances.",
+    };
+  }
+
+  if (isUserTeam && submission.opponentSimScore != null) {
+    return { error: "You already submitted a Sim Score for this opponent." };
+  }
+
+  if (isOpponentTeam && submission.userTeamSimScore != null) {
+    return { error: "You already submitted a Sim Score for this opponent." };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.gameSubmission.update({
+      where: { id: submission.id },
+      data: isUserTeam
+        ? { opponentSimScore: simScore }
+        : { userTeamSimScore: simScore },
+    });
+    if (submission.result) {
+      await tx.gameResult.update({
+        where: { id: submission.result.id },
+        data: isUserTeam
+          ? { opponentSimScore: simScore }
+          : { userTeamSimScore: simScore },
+      });
+    }
+  });
+
+  await writeAuditLog({
+    actorId: userId,
+    action: "SUBMIT_GAME_SIM_SCORE",
+    entityType: "GameSubmission",
+    entityId: submission.id,
+    metadata: {
+      simScore,
+      ratedTeamId: isUserTeam ? submission.opponentTeamId : submission.userTeamId,
+      ratedTeam: isUserTeam
+        ? submission.opponentTeam.abbreviation
+        : submission.userTeam.abbreviation,
+    },
+  });
+
+  revalidatePath("/games");
+  revalidatePath(`/games/${submission.id}`);
+  revalidatePath("/dashboard");
+  revalidatePath("/admin");
+  revalidatePath("/admin/approvals");
+  revalidatePath("/coach/reputation");
+
+  return { success: true, submissionId: submission.id };
+}
+
 export async function submitGameSimScore(formData: FormData) {
   const user = await requireUser();
   const { season } = await getActiveSeason();
@@ -161,69 +269,13 @@ export async function submitGameSimScore(formData: FormData) {
   });
 
   if (!submission) return { error: "Game not found." };
-  if (
-    submission.status !== SubmissionStatus.PENDING &&
-    submission.status !== SubmissionStatus.APPROVED
-  ) {
-    return { error: "Sim Scores can only be added on pending or approved games." };
-  }
 
-  const isUserTeam = membership.franchiseId === submission.userTeamId;
-  const isOpponentTeam = membership.franchiseId === submission.opponentTeamId;
-  if (!isUserTeam && !isOpponentTeam) {
-    return { error: "Only the two teams in this game can submit a Sim Score." };
-  }
-
-  if (submission.isForceWin) {
-    return { error: "Force wins do not use Sim Scores. The CPU sim score can be posted after the week advances." };
-  }
-
-  if (isUserTeam && submission.opponentSimScore != null) {
-    return { error: "You already submitted a Sim Score for this opponent." };
-  }
-
-  if (isOpponentTeam && submission.userTeamSimScore != null) {
-    return { error: "You already submitted a Sim Score for this opponent." };
-  }
-
-  await prisma.$transaction(async (tx) => {
-    await tx.gameSubmission.update({
-      where: { id: submission.id },
-      data: isUserTeam
-        ? { opponentSimScore: parsed.data.simScore }
-        : { userTeamSimScore: parsed.data.simScore },
-    });
-    if (submission.result) {
-      await tx.gameResult.update({
-        where: { id: submission.result.id },
-        data: isUserTeam
-          ? { opponentSimScore: parsed.data.simScore }
-          : { userTeamSimScore: parsed.data.simScore },
-      });
-    }
+  return saveCoachSimScore({
+    userId: user.id,
+    franchiseId: membership.franchiseId,
+    submission,
+    simScore: parsed.data.simScore,
   });
-
-  await writeAuditLog({
-    actorId: user.id,
-    action: "SUBMIT_GAME_SIM_SCORE",
-    entityType: "GameSubmission",
-    entityId: submission.id,
-    metadata: {
-      simScore: parsed.data.simScore,
-      ratedTeamId: isUserTeam ? submission.opponentTeamId : submission.userTeamId,
-      ratedTeam: isUserTeam
-        ? submission.opponentTeam.abbreviation
-        : submission.userTeam.abbreviation,
-    },
-  });
-
-  revalidatePath("/games");
-  revalidatePath(`/games/${submission.id}`);
-  revalidatePath("/dashboard");
-  revalidatePath("/admin");
-  revalidatePath("/admin/approvals");
-
-  return { success: true };
 }
 
 export async function submitForceWinScore(formData: FormData) {

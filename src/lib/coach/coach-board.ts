@@ -13,6 +13,7 @@ import {
   getJobSecurityStatus,
   getRecoveryNote,
 } from "@/lib/coach/job-security";
+import { averageSimScore } from "@/lib/sim-score";
 
 export type CoachBoardRow = {
   userId: string;
@@ -39,13 +40,15 @@ export type CoachBoardRow = {
   coachIdentity: string | null;
   teamIdentity: string | null;
   seasonsWithTeam: number;
+  avgSimScore: number | null;
+  avgSimScoreCount: number;
 };
 
 async function loadCoachBoardRows(
   seasonId: string,
   userId?: string
 ): Promise<CoachBoardRow[]> {
-  const [settings, standings, memberships, stintHistory] = await Promise.all([
+  const [settings, standings, memberships, stintHistory, simGames] = await Promise.all([
     getLeagueSettings(),
     getSeasonStandings(seasonId),
     prisma.leagueMembership.findMany({
@@ -76,8 +79,34 @@ async function loadCoachBoardRows(
       where: userId ? { userId } : { user: { deletedAt: null } },
       select: { userId: true, franchiseId: true, seasonId: true },
     }),
+    prisma.gameSubmission.findMany({
+      where: {
+        seasonId,
+        isForceWin: false,
+        status: { in: ["PENDING", "APPROVED"] },
+      },
+      select: {
+        userTeamId: true,
+        opponentTeamId: true,
+        opponentSimScore: true,
+        userTeamSimScore: true,
+      },
+    }),
   ]);
   const standingsMap = new Map(standings.map((s) => [s.franchiseId, s]));
+  const simScoresByFranchise = new Map<string, number[]>();
+  for (const game of simGames) {
+    if (game.userTeamSimScore != null) {
+      const list = simScoresByFranchise.get(game.userTeamId) ?? [];
+      list.push(game.userTeamSimScore);
+      simScoresByFranchise.set(game.userTeamId, list);
+    }
+    if (game.opponentSimScore != null) {
+      const list = simScoresByFranchise.get(game.opponentTeamId) ?? [];
+      list.push(game.opponentSimScore);
+      simScoresByFranchise.set(game.opponentTeamId, list);
+    }
+  }
 
   // Count unique seasons per coach/team in one query. The prior implementation
   // ran a full career/game scan once per coach, which became very expensive.
@@ -125,6 +154,9 @@ async function loadCoachBoardRows(
         seasonsByCoachTeam.get(
           `${membership.userId}:${membership.franchiseId}`
         )?.size ?? 0;
+      const receivedSim = averageSimScore(
+        simScoresByFranchise.get(membership.franchiseId) ?? []
+      );
 
       return {
         userId: membership.userId,
@@ -151,6 +183,8 @@ async function loadCoachBoardRows(
         coachIdentity: coachProfile?.coachIdentity?.name ?? null,
         teamIdentity: membership.franchise.teamIdentity?.name ?? null,
         seasonsWithTeam,
+        avgSimScore: receivedSim.average,
+        avgSimScoreCount: receivedSim.count,
       };
     });
 

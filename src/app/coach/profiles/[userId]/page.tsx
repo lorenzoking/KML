@@ -225,6 +225,14 @@ export default async function CoachProfileDetailPage({
         </CardHeader>
         <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
           <p>Coach rep: {row ? `${row.coachRepScore} (${row.coachRepGrade})` : "N/A"}</p>
+          <p>
+            Avg sim:{" "}
+            {row && row.avgSimScoreCount > 0
+              ? `${row.avgSimScore?.toFixed(1)}/5 (${row.avgSimScoreCount} game${
+                  row.avgSimScoreCount === 1 ? "" : "s"
+                })`
+              : "No ratings yet"}
+          </p>
           <p>GM rep: {row ? `${row.gmRepScore} (${row.gmRepGrade} · ${row.gmRepStatus})` : "N/A"}</p>
           <p>Career record: {`${career.wins}-${career.losses}-${career.ties}`}</p>
           <p>Career XP: {career.careerXp}</p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { submitGameSimScore } from "@/actions/submissions";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -16,6 +17,7 @@ export function SimScoreForm({
   opponentName: string;
   opponentAbbr: string;
 }) {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -29,7 +31,10 @@ export function SimScoreForm({
         startTransition(async () => {
           const result = await submitGameSimScore(formData);
           if (result?.error) setError(result.error);
-          else setSuccess(`Saved ${opponentAbbr} Sim Score.`);
+          else {
+            setSuccess(`Saved ${opponentAbbr} Sim Score.`);
+            router.refresh();
+          }
         });
       }}
     >

@@ -73,6 +73,7 @@ export default async function CoachReputationPage({
           <CardTitle>Coach reputation standings</CardTitle>
           <CardDescription>
             Ranked by live coaching reputation. Grade follows the coach, not the franchise.
+            Sim is the average Sim Score this coach has received this season.
           </CardDescription>
         </CardHeader>
         <CardContent>
