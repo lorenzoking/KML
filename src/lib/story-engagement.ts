@@ -324,6 +324,20 @@ const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
       },
     ],
   },
+  {
+    storySlug: "season-1-week-8-swipe-simmons-trade",
+    key: "week-8-swipe-simmons",
+    title: "Swipe–Simmons lock-in",
+    questions: [
+      {
+        prompt: "Championship window or championship gamble?",
+        options: [
+          { label: "Window — Simmons was worth it", franchiseAbbr: "SF" },
+          { label: "Gamble — Swipe overpaid", franchiseAbbr: "TEN" },
+        ],
+      },
+    ],
+  },
 ];
 
 function isMissingEngagementTable(error: unknown) {

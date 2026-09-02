@@ -28,6 +28,7 @@ const STORY_ASSETS = {
   week5Primetime: "/stories/wk5/primetime.png",
   week7Primetime: "/stories/wk7/primetime.png",
   week7PowerRankings: "/stories/wk7/power-rankings.png",
+  week8SwipeTrade: "/stories/wk8/swipatrade.PNG",
 } as const;
 
 const DEFAULT_STORIES = [
@@ -1213,7 +1214,7 @@ Lock your picks. Submit the scores. Let the desk argue.
 This is KML. This is primetime. Every game matters.
 
 Compete. Conquer. Be legendary.`,
-    isFeatured: true,
+    isFeatured: false,
     sortOrder: -80,
     week: 7,
   },
@@ -1367,6 +1368,89 @@ Compete. Conquer. Be legendary.`,
     isFeatured: false,
     sortOrder: -78,
     week: 7,
+  },
+  {
+    slug: "season-1-week-8-swipe-simmons-trade",
+    category: StoryCategory.FEATURE,
+    title: "Under fire: Swipe trades a haul for Jeff Simmons",
+    eyebrow: "KML Morning Show · Trade desk",
+    summary:
+      "Stephen A. called it unnecessary. Shannon said he spent capital like Madden points. San Francisco sent a 2026 1st, a 2027 2nd, and a 2026 4th to Tennessee for DT Jeff Simmons — and the desk is asking if that’s a championship window or a championship gamble.",
+    body: `![KML Morning Show — Under fire Coach Swipe trades a haul for Jeff Simmons](${STORY_ASSETS.week8SwipeTrade})
+
+The KML Morning Show did not ease into Week 8. **Stephen A.** and **Shannon** opened on Coach **Swipe** with the banner already in all caps: **UNDER FIRE.**
+
+San Francisco did not need more help. Then Swipe spent a fortune anyway.
+
+## The deal
+
+The board printed it clean.
+
+| 49ers receive | Titans receive |
+| --- | --- |
+| **DT Jeff Simmons** | **2026 1st-round pick** |
+| | **2027 2nd-round pick** |
+| | **2026 4th-round pick** |
+
+That is a first, a future second, and a fourth — for one defensive tackle. Elite player. No doubt. The price is what set the desk on fire.
+
+## Stephen A.: that was unnecessary
+
+The left side of the graphic did not hedge.
+
+**“Swipe… that was unnecessary!”**
+
+Swipe already had the 90-offense toys, **Christian McCaffrey**, and a defense that put **Ji’Ayir Brown** on a Week 4 honors stamp with three pick-sixes. The last power board still had San Francisco **4–2** and **Pressured at 81** after three straight, including a 35–16 primetime dunk on Washington.
+
+A Pressured coach on a **bye week** does not have to swing. Swipe swung anyway. Stephen A.’s point is the simple one: when you already have enough, a haul like that is not adding a missing piece. It is spending the future to look busy.
+
+## Shannon: he spent capital like Madden points
+
+Shannon did not come to talk scheme.
+
+**“Bro spent capital like it’s Madden points!”**
+
+A 2026 first is not a dart throw. A 2027 second is not pocket change. **Qon’s Titans** just cashed a contend club’s draft board for a defensive tackle San Francisco could have lived without. Rebuilders dream about that return. Contenders only pay it when they think a ring is on the table **this year**.
+
+The Morning Show’s own copy said the quiet part: this move **might not move the needle come playoff time** — and it **definitely** sets Swipe up for major backlash if the year does not end with another ring.
+
+## Championship window or championship gamble?
+
+That’s the red line on the graphic. That’s the only question that matters.
+
+**Jeff Simmons** in a 49ers uniform is a splash. Interior wrecker. Win-now identity on a helmet. The desk is not arguing whether Simmons can play. The desk is arguing whether **Swipe just told the league he is all-in** — and whether the ledger will remember the picks if January is quiet.
+
+Great teams make smart moves. Legends make the right ones.
+
+If Simmons wrecks pockets through December, this is a window. If San Francisco is still Pressured and the first-rounder is in Tennessee, this is the gamble Stephen A. already named.
+
+## Around the league
+
+The ticker did not wait for the trade argument to cool.
+
+| Stamp | The desk’s line |
+| --- | --- |
+| **Patriots stay undefeated** | **Ren** has New England rolling. Elite. Still perfect. Still the problem. |
+| **Dolphins surging** | **Mease** is proving you don’t need a loaded roster to win. The 76 overall is still lying. |
+| **Chargers & Rams clash this week** | Respect is on the line in L.A. **Oli** vs **Jordan Stowe**. Only one coach walks away with it. |
+| **Tank Bowl** | **Raiders vs Jets.** Somebody has to win sometime. |
+
+Week 8 is not a quiet bye for the rest of the league. It is Ren still unbeaten, Mease still beating the rating, Hollywood and the Chargers playing for respect, and a Tank Bowl that the ticker refused to dress up.
+
+## Desk verdict
+
+Swipe is under fire and he answered with a fortune.
+
+**Jeff Simmons** is the player. The **2026 1st, 2027 2nd, and 2026 4th** are the receipt. **Qon** just got paid to rebuild. The 49ers just told every GM in Discord they are not saving picks for next April.
+
+The Morning Show already asked it. Now the league votes with its mouth:
+
+**Championship window — or championship gamble?**
+
+Compete. Conquer. Be legendary.`,
+    isFeatured: true,
+    sortOrder: -90,
+    week: 8,
   },
   {
     slug: "season-1-week-1-preview",
