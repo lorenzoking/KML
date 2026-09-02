@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import {
   Card,
   CardContent,
@@ -237,7 +238,13 @@ export default async function LeagueLeadersPage({
         title="Team offense"
         headers={["Team", "Pass", "Rush", "TDs", "Pts"]}
         rows={teamOffense.map((row) => [
-          row.teamAbbr,
+          <Link
+            key={`${row.teamAbbr}-off`}
+            href={`/league/teams/${row.teamAbbr}`}
+            className="hover:text-[var(--primary)]"
+          >
+            {row.teamAbbr}
+          </Link>,
           formatStat(row.offPassYds),
           formatStat(row.offRushYds),
           formatStat(row.offPassTDs + row.offRushTDs),
@@ -248,7 +255,13 @@ export default async function LeagueLeadersPage({
         title="Team defense"
         headers={["Team", "Yds allwd", "Sacks", "Pts allwd"]}
         rows={teamDefense.map((row) => [
-          row.teamAbbr,
+          <Link
+            key={`${row.teamAbbr}-def`}
+            href={`/league/teams/${row.teamAbbr}`}
+            className="hover:text-[var(--primary)]"
+          >
+            {row.teamAbbr}
+          </Link>,
           formatStat(row.defTotalYds),
           formatSacks(row.defSacks),
           formatStat(row.defPts, Number.isInteger(row.defPts) ? 0 : 1),
@@ -294,7 +307,7 @@ function Board({
 }: {
   title: string;
   headers: string[];
-  rows: string[][];
+  rows: Array<Array<string | number | ReactNode>>;
 }) {
   return (
     <Card>
