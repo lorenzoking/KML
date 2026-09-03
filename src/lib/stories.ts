@@ -39,12 +39,14 @@ const DEFAULT_STORIES = [
     title: "The Hot Seat: who’s safe, who’s cooked, and Stephen A. already picked a champion",
     eyebrow: "KML Morning Show · Coaching reputation",
     summary:
-      "Eight weeks of Companion tape and a live reputation ledger. Ren and Renzo King sit at Elite 99. Chance is the other 95. Then the desk lights the chair: Puddin is Extreme Risk at 61, Curry is on the Hot Seat at 5–2, and Jbone and Jerm are in the fire with him.",
+      "Eight weeks of Companion tape and a live reputation ledger. Ren sits at Elite 99 with Jenna King as the in-game head coach — KML’s first female HC. Chance is the other 95. Then the desk lights the chair: Puddin is Extreme Risk at 61, Curry is on the Hot Seat at 5–2, and Jbone and Jerm are in the fire with him.",
     body: `![KML Morning Show — The Hot Seat](${STORY_ASSETS.hotSeat})
 
 The KML Morning Show did not come to talk trades this week. **Stephen A. and Shannon** slammed the desk on the only board that still has teeth after eight weeks of live football: **Coaching Reputation.**
 
-The Companion App dumped the tape. The website dumped the ledger. The names on the site and the names in Madden do not always match — so the desk is treating those desks as **staffs**. Head coach. Offensive voice. Same fire.
+The Companion App dumped the tape. The website dumped the ledger. When the name on the site and the name in Madden are not the same person, the desk treats them as **equals on the coaching staff**. Head coach. User. Same fire.
+
+Do not get this one twisted: **Ren and Renzo King are the same person.** That is the KML user. The head coach actually walking the Patriots sideline in Madden is **Jenna King** — **the first female head coach in KML.** Ren’s grade. Jenna’s headset. One 8–0.
 
 **Elite is 93. Hot Seat is 74 and below. Below 65 is Extreme Risk.** Puddin is already there.
 
@@ -52,11 +54,11 @@ The Companion App dumped the tape. The website dumped the ledger. The names on t
 
 The left side of the graphic did not hedge.
 
-**“I’m taking the Patriots. Ren and Renzo King. 8–0. Elite 99. That’s a championship staff. Puddin? An 86 overall and one win. That’s a firing.”**
+**“I’m taking the Patriots. Ren. Jenna King on the sideline. 8–0. Elite 99. First female head coach in KML. That’s a championship staff. Puddin? An 86 overall and one win. That’s a firing.”**
 
 That is the prediction. Stamp it or fade it. The numbers behind it are not vibes.
 
-**Ren** is the league name the Discord already knew. **Renzo King** is the name the Madden export printed on New England. Same building. Same 8–0. Same **+175** (306–131). **Drake Maye** leads the league at **2,444 yards and 28 touchdowns**. New England still allows **16.4 points a game** — stingiest defense in the Companion dump. **40 XP. Reputation 99. The only A+ on the board.**
+**Ren** — also **Renzo King** on the site and the export — is the user the Discord already knew. **Jenna King** is the name on the Madden headset. Same building. Same 8–0. Same **+175** (306–131). **Drake Maye** leads the league at **2,444 yards and 28 touchdowns**. New England still allows **16.4 points a game** — stingiest defense in the Companion dump. **40 XP. Reputation 99. The only A+ on the board.**
 
 Week 1 called them the dark horse. Week 7 called them Elite. Week 9 is calling them the favorite.
 
@@ -84,13 +86,13 @@ The live standings board already stamped every staff. This is not a preview. Thi
 
 Record is the floor. Reputation is the argument. Roster overall is the excuse. The desk used all three — plus the Companion names sitting on each franchise.
 
-### 1. Ren / Renzo King · Patriots — 8–0 · +175 · 85 OVR · Elite 99 · 40 XP
+### 1. Ren · HC Jenna King · Patriots — 8–0 · +175 · 85 OVR · Elite 99 · 40 XP
 
-**The championship staff.**
+**The championship staff. First female head coach in the league.**
 
-No other desk is 8–0. No other coach is 99. **TreVeyon Henderson** just ran for **200**. Maye already has the passing throne. The Week 7 board argued Lefty vs Ren for #1. Then Dallas dropped **61–35** on Philadelphia and the argument died.
+No other desk is 8–0. No other coach is 99. **Ren** is the user — **Renzo King** is the same person. **Jenna King** is the in-game head coach. **TreVeyon Henderson** just ran for **200**. Maye already has the passing throne. The Week 7 board argued Lefty vs Ren for #1. Then Dallas dropped **61–35** on Philadelphia and the argument died.
 
-Stephen A. is not picking a sleeper. He is picking the form team, the rating of the user, and the cleanest two-way tape in Madden 27.
+Stephen A. is not picking a sleeper. He is picking the form team, the rating of the user, the headset in Foxborough, and the cleanest two-way tape in Madden 27.
 
 ### 2. Chance Allred · Packers — 5–3 · +73 · 81 OVR · Elite 95 · 28 XP
 
@@ -229,7 +231,7 @@ The Companion slate is already up. Primetime is not a cupcake. It is **Elite vs 
 
 | Matchup | Why the chair cares |
 | --- | --- |
-| **Packers vs Patriots** | **Chance Allred (95)** vs **Ren / Renzo King (99)**. The only two Elite stamps in the league. An 81 overall walking into 8–0. If Chance wins this, Stephen A.’s prediction gets a scar. If Ren wins it, the 9–0 starts looking like February. |
+| **Packers vs Patriots** | **Chance Allred (95)** vs **Ren and HC Jenna King (99)**. The only two Elite stamps in the league. An 81 overall walking into 8–0 and the first female head coach in KML. If Chance wins this, Stephen A.’s prediction gets a scar. If New England wins it, the 9–0 starts looking like February. |
 | **Broncos at Panthers** | Extreme Risk vs a 3–4 staff that just dropped 43. Another loss and 61 becomes a press conference. |
 | **Lions at Dolphins** | Hot Seat 71 vs Mease’s 78-overall overachievers. Curry cannot do 50–49 again and call it health. |
 | **Jets at Chiefs** | 0–8 walks into Trent. A 21–0 bye-week energy is sitting in Kansas City. |
@@ -244,7 +246,7 @@ Byes: **Big Al / Almon Young III** and **Qon / Coach Q**. The sleeper sits clean
 
 The best coaches in KML right now are not a mystery.
 
-**Ren and Renzo King** have the record, the points, the defense, the passing throne, and the only **99**. Stephen A. stamped the first Lombardi on New England. The desk is not fading 8–0 and A+.
+**Ren** — same person as **Renzo King** — has the record, the points, the defense, the passing throne, and the only **99**. **Jenna King** has the headset. First female head coach in KML, sitting on 8–0. Stephen A. stamped the first Lombardi on New England. The desk is not fading 8–0 and A+.
 
 **Chance Allred** is the other Elite — an 81 overall that just **44–3’d** the 1-pick. **Big Al and Almon Young III** are the sleeper that stopped being a cute graphic. **Petey and Phillip Reaves** still have the chalk. **Lefty and xLeftsideee** still have Saquon and a 7–1. They also have a 61–35 hole in the résumé.
 

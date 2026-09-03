@@ -346,7 +346,7 @@ const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
       {
         prompt: "Who is the best coach in KML right now?",
         options: [
-          { label: "Ren / Renzo King · Patriots", franchiseAbbr: "NE" },
+            { label: "Ren · Jenna King · Patriots", franchiseAbbr: "NE" },
           { label: "Chance Allred · Packers", franchiseAbbr: "GB" },
           { label: "Big Al / Almon Young III · Steelers", franchiseAbbr: "PIT" },
           { label: "Lefty / xLeftsideee · Eagles", franchiseAbbr: "PHI" },
@@ -364,7 +364,7 @@ const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
       {
         prompt: "Stephen A. stamped it: Patriots hoist the first Lombardi?",
         options: [
-          { label: "Stamp it — Ren and Renzo King", franchiseAbbr: "NE" },
+            { label: "Stamp it — Ren and Jenna King", franchiseAbbr: "NE" },
           { label: "Fade it — Chance, Big Al, or Lefty steal it", franchiseAbbr: "GB" },
         ],
       },
