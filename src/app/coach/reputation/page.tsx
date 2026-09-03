@@ -2,6 +2,7 @@ import { addCoachLedgerEntry } from "@/actions/coach";
 import { ReputationStandings } from "@/components/coach/reputation-standings";
 import { SubmitButton } from "@/components/forms/submit-button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -12,16 +13,21 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { ReputationCategory } from "@/generated/prisma/client";
 import { isCommissioner, requireUser } from "@/lib/auth";
 import { getCoachBoardRows } from "@/lib/coach/coach-board";
+import { displayCoachName } from "@/lib/coach/display-name";
 import { getActiveSeason } from "@/lib/league";
 import { COACHING_REP_GRADES } from "@/lib/hot-seat-rules";
 import { prisma } from "@/lib/prisma";
 import { formatLeagueDate } from "@/lib/datetime";
 import Link from "next/link";
 
+const LEDGER_CATEGORIES = Object.values(ReputationCategory);
+
 type SearchParams = Promise<{
   q?: string;
+  userId?: string;
   category?: string;
   week?: string;
 }>;
@@ -34,18 +40,17 @@ export default async function CoachReputationPage({
   const user = await requireUser();
   const commissioner = await isCommissioner(user);
   const params = await searchParams;
-  const q = (params.q ?? "").toLowerCase();
-  const category = (params.category ?? "").toUpperCase();
-  const week = params.week ? Number(params.week) : undefined;
+  const q = (params.q ?? "").trim().toLowerCase();
+  const selectedUserId = (params.userId ?? "").trim();
+  const category = (params.category ?? "").trim().toUpperCase();
+  const weekNumber = params.week ? Number(params.week) : NaN;
+  const week = Number.isInteger(weekNumber) && weekNumber > 0 ? weekNumber : undefined;
+  const categoryFilter = LEDGER_CATEGORIES.includes(category as ReputationCategory)
+    ? (category as ReputationCategory)
+    : undefined;
   const { season } = await getActiveSeason();
 
-  const [repRows, users, board] = await Promise.all([
-    prisma.reputationAdjustment.findMany({
-      where: { seasonId: season.id },
-      include: { user: true, createdBy: true },
-      orderBy: { createdAt: "desc" },
-      take: 200,
-    }),
+  const [users, board] = await Promise.all([
     commissioner
       ? prisma.leagueMembership.findMany({
           where: { seasonId: season.id, isActive: true, user: { deletedAt: null } },
@@ -56,15 +61,55 @@ export default async function CoachReputationPage({
     getCoachBoardRows(season.id),
   ]);
 
-  const filtered = repRows.filter((row) => {
-    const qMatch =
-      !q ||
-      (row.user.name ?? "Unnamed coach").toLowerCase().includes(q) ||
-      row.reason.toLowerCase().includes(q);
-    const categoryMatch = !category || row.category === category;
-    const weekMatch = !week || row.week === week;
-    return qMatch && categoryMatch && weekMatch;
+  const coaches = [...board].sort((a, b) => a.coach.localeCompare(b.coach));
+  const matchingCoachIds = selectedUserId
+    ? [selectedUserId]
+    : q
+      ? coaches
+          .filter((row) => {
+            const haystack = [
+              row.coach,
+              row.team,
+              row.teamAbbr,
+              row.coachIdentity,
+            ]
+              .filter(Boolean)
+              .join(" ")
+              .toLowerCase();
+            return haystack.includes(q);
+          })
+          .map((row) => row.userId)
+      : [];
+
+  const filtered = await prisma.reputationAdjustment.findMany({
+    where: {
+      seasonId: season.id,
+      ...(categoryFilter ? { category: categoryFilter } : {}),
+      ...(week ? { week } : {}),
+      ...(selectedUserId
+        ? {
+            userId: selectedUserId,
+            ...(q ? { reason: { contains: q, mode: "insensitive" as const } } : {}),
+          }
+        : q
+          ? {
+              OR: [
+                ...(matchingCoachIds.length
+                  ? [{ userId: { in: matchingCoachIds } }]
+                  : []),
+                { reason: { contains: q, mode: "insensitive" as const } },
+                { user: { name: { contains: q, mode: "insensitive" as const } } },
+              ],
+            }
+          : {}),
+    },
+    include: { user: true, createdBy: true },
+    orderBy: { createdAt: "desc" },
   });
+
+  const selectedCoach = coaches.find((row) => row.userId === selectedUserId);
+  const hasFilters = Boolean(q || selectedUserId || categoryFilter || week);
+  const coachByUserId = new Map(coaches.map((row) => [row.userId, row]));
 
   return (
     <div className="space-y-6">
@@ -126,17 +171,75 @@ export default async function CoachReputationPage({
           <CardTitle>Reputation ledger</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <form className="grid gap-2 sm:grid-cols-3">
-            <Input name="q" placeholder="Search coach or reason" defaultValue={params.q ?? ""} />
-            <Input name="category" placeholder="Category (CONDUCT, BONUS...)" defaultValue={params.category ?? ""} />
-            <Input name="week" type="number" placeholder="Week" defaultValue={params.week ?? ""} />
+          <form method="get" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            <Select name="userId" defaultValue={selectedUserId} aria-label="Coach">
+              <option value="">All coaches</option>
+              {coaches.map((row) => (
+                <option key={row.userId} value={row.userId}>
+                  {row.coach}
+                  {row.teamAbbr ? ` · ${row.teamAbbr}` : ""}
+                </option>
+              ))}
+            </Select>
+            <Input
+              name="q"
+              placeholder="Search name, team, or reason"
+              defaultValue={params.q ?? ""}
+            />
+            <Select name="category" defaultValue={categoryFilter ?? ""} aria-label="Category">
+              <option value="">All categories</option>
+              {LEDGER_CATEGORIES.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </Select>
+            <Input
+              name="week"
+              type="number"
+              min={1}
+              placeholder="Week"
+              defaultValue={week ? String(week) : ""}
+            />
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1">
+                Search
+              </Button>
+              {hasFilters ? (
+                <Button asChild variant="outline">
+                  <Link href="/coach/reputation">Clear</Link>
+                </Button>
+              ) : null}
+            </div>
           </form>
+          <p className="text-xs text-[var(--muted-foreground)]">
+            {filtered.length === 0
+              ? hasFilters
+                ? "No ledger entries match those filters."
+                : "No ledger entries this season."
+              : selectedCoach
+                ? `${filtered.length} ${filtered.length === 1 ? "entry" : "entries"} for ${selectedCoach.coach}`
+                : `${filtered.length} ${filtered.length === 1 ? "entry" : "entries"}`}
+          </p>
           <div className="space-y-2 md:hidden">
-            {filtered.map((row) => (
+            {filtered.map((row) => {
+              const coach = coachByUserId.get(row.userId);
+              const name = coach?.coach ?? displayCoachName(row.user);
+              return (
               <div key={row.id} className="rounded-md border p-3 text-sm">
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-medium">
-                    {row.user.name?.trim() || "Unnamed coach"}
+                    <Link
+                      href={`/coach/profiles/${row.userId}`}
+                      className="hover:underline"
+                    >
+                      {name}
+                    </Link>
+                    {coach?.teamAbbr ? (
+                      <span className="ml-1.5 text-xs font-normal text-[var(--muted-foreground)]">
+                        {coach.teamAbbr}
+                      </span>
+                    ) : null}
                   </p>
                   <p className="text-xs text-[var(--muted-foreground)]">{row.category}</p>
                 </div>
@@ -159,7 +262,8 @@ export default async function CoachReputationPage({
                   </a>
                 ) : null}
               </div>
-            ))}
+              );
+            })}
           </div>
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
@@ -175,11 +279,24 @@ export default async function CoachReputationPage({
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((row) => (
+                {filtered.map((row) => {
+                  const coach = coachByUserId.get(row.userId);
+                  const name = coach?.coach ?? displayCoachName(row.user);
+                  return (
                   <tr key={row.id} className="border-b">
                     <td className="py-2 pr-3">{formatLeagueDate(row.createdAt, "MMM d, h:mm a")}</td>
                     <td className="py-2 pr-3">
-                      {row.user.name?.trim() || "Unnamed coach"}
+                      <Link
+                        href={`/coach/profiles/${row.userId}`}
+                        className="font-medium hover:underline"
+                      >
+                        {name}
+                      </Link>
+                      {coach?.teamAbbr ? (
+                        <span className="ml-1.5 text-xs text-[var(--muted-foreground)]">
+                          {coach.teamAbbr}
+                        </span>
+                      ) : null}
                     </td>
                     <td className="py-2 pr-3">{row.category}</td>
                     <td className="py-2 pr-3">{row.week ?? "—"}</td>
@@ -199,7 +316,8 @@ export default async function CoachReputationPage({
                       ) : null}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -248,21 +366,7 @@ export default async function CoachReputationPage({
               <div className="space-y-2">
                 <Label htmlFor="category">Category</Label>
                 <Select id="category" name="category" defaultValue="GENERAL">
-                  {[
-                    "GENERAL",
-                    "CONDUCT",
-                    "EXPECTATION",
-                    "GAME_MANAGEMENT",
-                    "ROSTER",
-                    "TANKING",
-                    "TRADE",
-                    "DRAFT",
-                    "OWNERSHIP_REVIEW",
-                    "CAROUSEL",
-                    "BONUS",
-                    "PENALTY",
-                    "SIM_SCORE",
-                  ].map((option) => (
+                  {LEDGER_CATEGORIES.map((option) => (
                     <option key={option} value={option}>
                       {option}
                     </option>
