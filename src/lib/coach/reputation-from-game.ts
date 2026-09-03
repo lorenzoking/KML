@@ -9,6 +9,35 @@ export type ReputationEvent = {
   category: ReputationCategory;
 };
 
+type PendingAward = {
+  userId: string;
+  ruleKey: string;
+  submissionId: string;
+};
+
+const ENGINE_RULE_KEYS = [
+  "MAJOR_UPSET",
+  "BEAT_CONTENDER",
+  "PRIMETIME_UPSET",
+  "PRIMETIME_WIN",
+  "BLOWOUT_WIN",
+  "MAJOR_UPSET_LOSS",
+  "PRIMETIME_BLOWOUT_LOSS",
+  "PRIMETIME_LOSS",
+  "EMBARRASSING_LOSS",
+  "BLOWOUT_LOSS",
+  "WIN_STREAK_3",
+  "WIN_STREAK_5",
+  "WIN_STREAK_8",
+  "LOSE_STREAK_3",
+  "LOSE_STREAK_5",
+  "LOSE_STREAK_8",
+  "MAJOR_TURNAROUND",
+  "SEASON_TURNAROUND",
+  "MAJOR_COLLAPSE",
+  "SEASON_COLLAPSE",
+] as const;
+
 type FranchiseRef = {
   id: string;
   name: string;
@@ -191,36 +220,29 @@ async function loadTeamResults(
   });
 }
 
-export async function applyReputationForApprovedGame(
+type GameReputationParams = {
+  submissionId: string;
+  seasonId: string;
+  week: number;
+  gameType: string;
+  userTeam: FranchiseRef;
+  opponentTeam: FranchiseRef;
+  userScore: number;
+  opponentScore: number;
+  winnerTeamId: string | null;
+  submitterId: string;
+  isPrimetime: boolean;
+};
+
+export async function collectReputationEvents(
   tx: Prisma.TransactionClient,
-  params: {
-    submissionId: string;
-    seasonId: string;
-    week: number;
-    gameType: string;
-    userTeam: FranchiseRef;
-    opponentTeam: FranchiseRef;
-    userScore: number;
-    opponentScore: number;
-    winnerTeamId: string | null;
-    submitterId: string;
-    isPrimetime: boolean;
-    createdById: string;
-  }
-) {
+  params: GameReputationParams,
+  pending: PendingAward[] = [],
+  replay = false
+): Promise<ReputationEvent[]> {
   if (params.gameType === "SIMULATED" || params.gameType === "PRESEASON") {
     return [];
   }
-
-  const alreadyApplied = await tx.reputationAdjustment.findFirst({
-    where: {
-      submissionId: params.submissionId,
-      isAutomatic: true,
-      NOT: { ruleKey: { startsWith: "VOID_" } },
-    },
-    select: { id: true },
-  });
-  if (alreadyApplied) return [];
 
   const [userMembership, opponentMembership] = await Promise.all([
     tx.leagueMembership.findFirst({
@@ -386,6 +408,8 @@ export async function applyReputationForApprovedGame(
     results: winnerThrough,
     events,
     kind: "W",
+    pending,
+    replay,
   });
   await addStreakEvents(tx, {
     seasonId: params.seasonId,
@@ -396,6 +420,8 @@ export async function applyReputationForApprovedGame(
     results: loserThrough,
     events,
     kind: "L",
+    pending,
+    replay,
   });
 
   await addTrajectoryEvents(tx, {
@@ -406,6 +432,8 @@ export async function applyReputationForApprovedGame(
     userId: winnerUserId,
     results: winnerResults,
     events,
+    pending,
+    replay,
   });
   await addTrajectoryEvents(tx, {
     seasonId: params.seasonId,
@@ -415,8 +443,28 @@ export async function applyReputationForApprovedGame(
     userId: loserUserId,
     results: loserResults,
     events,
+    pending,
+    replay,
   });
 
+  return events;
+}
+
+export async function applyReputationForApprovedGame(
+  tx: Prisma.TransactionClient,
+  params: GameReputationParams & { createdById: string }
+) {
+  const alreadyApplied = await tx.reputationAdjustment.findFirst({
+    where: {
+      submissionId: params.submissionId,
+      isAutomatic: true,
+      NOT: { ruleKey: { startsWith: "VOID_" } },
+    },
+    select: { id: true },
+  });
+  if (alreadyApplied) return [];
+
+  const events = await collectReputationEvents(tx, params);
   for (const event of events) {
     await tx.reputationAdjustment.create({
       data: {
@@ -449,6 +497,8 @@ async function addStreakEvents(
     results: ResultRow[];
     events: ReputationEvent[];
     kind: "W" | "L";
+    pending?: PendingAward[];
+    replay?: boolean;
   }
 ) {
   if (!params.userId) return;
@@ -468,21 +518,32 @@ async function addStreakEvents(
           { length: 8, amount: -2, ruleKey: "LOSE_STREAK_8", label: "8-game losing streak" },
         ];
 
-  const hit = thresholds.filter((row) => streak.length === row.length);
+  const hit = thresholds.filter((row) => streak.length >= row.length);
   if (!hit.length) return;
 
   const streakIds = streakSubmissionIds(params.results, params.franchiseId);
-  const already = await tx.reputationAdjustment.findMany({
-    where: {
-      userId: params.userId,
-      seasonId: params.seasonId,
-      isAutomatic: true,
-      ruleKey: { in: hit.map((row) => row.ruleKey) },
-      submissionId: { in: streakIds },
-    },
-    select: { ruleKey: true },
-  });
+  const already = params.replay
+    ? []
+    : await tx.reputationAdjustment.findMany({
+        where: {
+          userId: params.userId,
+          seasonId: params.seasonId,
+          isAutomatic: true,
+          ruleKey: { in: hit.map((row) => row.ruleKey) },
+          submissionId: { in: streakIds },
+        },
+        select: { ruleKey: true, submissionId: true },
+      });
   const used = new Set(already.map((row) => row.ruleKey));
+  for (const row of params.pending ?? []) {
+    if (
+      row.userId === params.userId &&
+      streakIds.includes(row.submissionId) &&
+      hit.some((item) => item.ruleKey === row.ruleKey)
+    ) {
+      used.add(row.ruleKey);
+    }
+  }
 
   for (const row of hit) {
     if (used.has(row.ruleKey)) continue;
@@ -506,6 +567,8 @@ async function addTrajectoryEvents(
     userId: string | undefined;
     results: ResultRow[];
     events: ReputationEvent[];
+    pending?: PendingAward[];
+    replay?: boolean;
   }
 ) {
   if (!params.userId) return;
@@ -517,7 +580,9 @@ async function addTrajectoryEvents(
   const first10 = form.through.find((row) => row.played === 10);
   const winPct = form.played > 0 ? form.wins / form.played : 0;
 
-  const existing = await tx.reputationAdjustment.findMany({
+  const existing = params.replay
+    ? []
+    : await tx.reputationAdjustment.findMany({
     where: {
       userId: params.userId,
       seasonId: params.seasonId,
@@ -556,6 +621,9 @@ async function addTrajectoryEvents(
         return !voided.has(key);
       })
   );
+  for (const row of params.pending ?? []) {
+    if (row.userId === params.userId) have.add(row.ruleKey);
+  }
 
   const majorTurnaround =
     first7 && first7.wins <= 1 && form.played >= 10 && winPct >= 0.5;
@@ -603,6 +671,290 @@ async function addTrajectoryEvents(
       category: "PENALTY",
     });
   }
+}
+
+export type ReputationRepairItem = {
+  week: number;
+  matchup: string;
+  userId: string;
+  coach: string;
+  teamAbbr: string;
+  amount: number;
+  ruleKey: string;
+  reason: string;
+  submissionId: string;
+};
+
+export type ReputationTeamAudit = {
+  teamAbbr: string;
+  coach: string;
+  record: string;
+  expectedAutoNet: number;
+  actualAutoNet: number;
+  missingNet: number;
+  extraNet: number;
+  missing: number;
+  extra: number;
+};
+
+export async function repairMissingAutomaticReputation(
+  tx: Prisma.TransactionClient,
+  params: {
+    seasonId: string;
+    createdById: string;
+    dryRun?: boolean;
+  }
+) {
+  const results = await tx.gameResult.findMany({
+    where: {
+      seasonId: params.seasonId,
+      isVoided: false,
+      isForceWin: false,
+      winnerTeamId: { not: null },
+      gameType: { in: ["REGULAR_SEASON", "PLAYOFF", "SUPER_BOWL", "OTHER"] },
+    },
+    orderBy: [{ week: "asc" }, { createdAt: "asc" }],
+    include: {
+      homeTeam: { select: { id: true, name: true, abbreviation: true } },
+      awayTeam: { select: { id: true, name: true, abbreviation: true } },
+      submission: { select: { submitterId: true } },
+    },
+  });
+
+  const memberships = await tx.leagueMembership.findMany({
+    where: { seasonId: params.seasonId, isActive: true, user: { deletedAt: null } },
+    include: {
+      user: { select: { id: true, name: true } },
+      franchise: { select: { id: true, abbreviation: true } },
+    },
+  });
+  const coachByUser = new Map(
+    memberships.map((row) => [
+      row.userId,
+      {
+        name: row.user.name?.trim() || "Unnamed coach",
+        teamAbbr: row.franchise.abbreviation,
+        franchiseId: row.franchise.id,
+      },
+    ])
+  );
+
+  const pending: PendingAward[] = [];
+  const expected: ReputationRepairItem[] = [];
+  const missing: ReputationRepairItem[] = [];
+
+  for (const result of results) {
+    const events = await collectReputationEvents(
+      tx,
+      {
+        submissionId: result.submissionId,
+        seasonId: result.seasonId,
+        week: result.week,
+        gameType: result.gameType,
+        userTeam: result.homeTeam,
+        opponentTeam: result.awayTeam,
+        userScore: result.homeScore,
+        opponentScore: result.awayScore,
+        winnerTeamId: result.winnerTeamId,
+        submitterId: result.submission.submitterId,
+        isPrimetime: result.isPrimetime,
+      },
+      pending,
+      true
+    );
+
+    const existing = await tx.reputationAdjustment.findMany({
+      where: {
+        submissionId: result.submissionId,
+        isAutomatic: true,
+      },
+      select: { userId: true, ruleKey: true },
+    });
+    const voided = new Set(
+      existing
+        .map((row) => row.ruleKey)
+        .filter((key): key is string => Boolean(key?.startsWith("VOID_")))
+        .map((key) => key.slice("VOID_".length))
+    );
+    const haveForCoach = new Set(
+      existing
+        .filter((row) => row.ruleKey && !row.ruleKey.startsWith("VOID_") && !voided.has(row.ruleKey))
+        .map((row) => `${row.userId}:${row.ruleKey}`)
+    );
+    const haveRuleOnGame = new Set(
+      existing
+        .filter((row) => row.ruleKey && !row.ruleKey.startsWith("VOID_") && !voided.has(row.ruleKey))
+        .map((row) => row.ruleKey as string)
+    );
+
+    const matchup = `${result.awayTeam.abbreviation} @ ${result.homeTeam.abbreviation}`;
+    for (const event of events) {
+      pending.push({
+        userId: event.userId,
+        ruleKey: event.ruleKey,
+        submissionId: result.submissionId,
+      });
+      const coach = coachByUser.get(event.userId);
+      const item: ReputationRepairItem = {
+        week: result.week,
+        matchup,
+        userId: event.userId,
+        coach: coach?.name ?? "Unnamed coach",
+        teamAbbr: coach?.teamAbbr ?? "—",
+        amount: event.amount,
+        ruleKey: event.ruleKey,
+        reason: event.reason,
+        submissionId: result.submissionId,
+      };
+      expected.push(item);
+      if (
+        haveForCoach.has(`${event.userId}:${event.ruleKey}`) ||
+        haveRuleOnGame.has(event.ruleKey)
+      ) {
+        continue;
+      }
+      missing.push(item);
+      if (!params.dryRun) {
+        await tx.reputationAdjustment.create({
+          data: {
+            userId: event.userId,
+            amount: event.amount,
+            gmAmount: 0,
+            category: event.category,
+            seasonId: params.seasonId,
+            week: result.week,
+            reason: event.reason,
+            isAutomatic: true,
+            submissionId: result.submissionId,
+            ruleKey: event.ruleKey,
+            createdById: params.createdById,
+          },
+        });
+      }
+    }
+  }
+
+  const actualRows = await tx.reputationAdjustment.findMany({
+    where: {
+      seasonId: params.seasonId,
+      isAutomatic: true,
+      OR: [
+        { ruleKey: { in: [...ENGINE_RULE_KEYS] } },
+        { ruleKey: { startsWith: "VOID_" } },
+      ],
+    },
+    select: {
+      userId: true,
+      ruleKey: true,
+      amount: true,
+      submissionId: true,
+      week: true,
+      reason: true,
+      user: { select: { name: true } },
+    },
+  });
+  const expectedKeys = new Set(
+    expected.map((row) => `${row.submissionId}:${row.userId}:${row.ruleKey}`)
+  );
+  const voidedKeys = new Set(
+    actualRows
+      .filter((row) => row.ruleKey?.startsWith("VOID_") && row.submissionId)
+      .map((row) => `${row.submissionId}:${row.userId}:${row.ruleKey!.slice("VOID_".length)}`)
+  );
+  const liveActual = actualRows.filter(
+    (row) =>
+      row.ruleKey &&
+      ENGINE_RULE_KEYS.includes(row.ruleKey as (typeof ENGINE_RULE_KEYS)[number]) &&
+      !voidedKeys.has(`${row.submissionId}:${row.userId}:${row.ruleKey}`)
+  );
+  const voidedSubmissionIds = new Set(
+    (
+      await tx.gameResult.findMany({
+        where: { seasonId: params.seasonId, isVoided: true },
+        select: { submissionId: true },
+      })
+    ).map((row) => row.submissionId)
+  );
+  const extra: ReputationRepairItem[] = [];
+  for (const row of liveActual) {
+    if (!row.ruleKey || !row.submissionId) continue;
+    if (voidedSubmissionIds.has(row.submissionId)) continue;
+    if (expectedKeys.has(`${row.submissionId}:${row.userId}:${row.ruleKey}`)) continue;
+    if (!coachByUser.has(row.userId)) continue;
+    const coach = coachByUser.get(row.userId);
+    extra.push({
+      week: row.week ?? 0,
+      matchup: "—",
+      userId: row.userId,
+      coach: coach?.name ?? row.user.name?.trim() ?? "Unnamed coach",
+      teamAbbr: coach?.teamAbbr ?? "—",
+      amount: row.amount,
+      ruleKey: row.ruleKey,
+      reason: row.reason,
+      submissionId: row.submissionId,
+    });
+  }
+
+  const teams: ReputationTeamAudit[] = memberships
+    .map((row) => {
+      const teamMissing = missing.filter((item) => item.userId === row.userId);
+      const teamExtra = extra.filter((item) => item.userId === row.userId);
+      const teamActual = liveActual.filter((item) => item.userId === row.userId);
+      const actualAutoNet = teamActual.reduce((sum, item) => sum + item.amount, 0);
+      const missingNet = teamMissing.reduce((sum, item) => sum + item.amount, 0);
+      return {
+        teamAbbr: row.franchise.abbreviation,
+        coach: row.user.name?.trim() || "Unnamed coach",
+        record: "",
+        expectedAutoNet: actualAutoNet + missingNet,
+        actualAutoNet,
+        missingNet,
+        extraNet: teamExtra.reduce((sum, item) => sum + item.amount, 0),
+        missing: teamMissing.length,
+        extra: teamExtra.length,
+      };
+    })
+    .sort((a, b) => a.teamAbbr.localeCompare(b.teamAbbr));
+
+  const schedule = await tx.gameResult.findMany({
+    where: { seasonId: params.seasonId, isVoided: false },
+    select: { homeTeamId: true, awayTeamId: true, winnerTeamId: true },
+  });
+  for (const team of teams) {
+    const id = memberships.find((row) => row.franchise.abbreviation === team.teamAbbr)?.franchise.id;
+    if (!id) continue;
+    let wins = 0;
+    let losses = 0;
+    for (const game of schedule) {
+      if (game.homeTeamId !== id && game.awayTeamId !== id) continue;
+      if (!game.winnerTeamId) continue;
+      if (game.winnerTeamId === id) wins += 1;
+      else losses += 1;
+    }
+    team.record = `${wins}–${losses}`;
+  }
+
+  if (!params.dryRun) {
+    for (const row of extra) {
+      await tx.reputationAdjustment.create({
+        data: {
+          userId: row.userId,
+          amount: -row.amount,
+          gmAmount: 0,
+          category: row.amount > 0 ? "PENALTY" : "BONUS",
+          seasonId: params.seasonId,
+          week: row.week || null,
+          reason: `Void reversal: ${row.reason}`,
+          isAutomatic: true,
+          submissionId: row.submissionId,
+          ruleKey: `VOID_${row.ruleKey}`,
+          createdById: params.createdById,
+        },
+      });
+    }
+  }
+
+  return { missing, extra, expected, teams };
 }
 
 export async function reverseAutomaticReputation(

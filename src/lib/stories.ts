@@ -36,237 +36,94 @@ const DEFAULT_STORIES = [
   {
     slug: "season-1-week-9-hot-seat",
     category: StoryCategory.FEATURE,
-    title: "The Hot Seat: who’s safe, who’s cooked, and Stephen A. already picked a champion",
+    title: "Stephen A. stamped the Patriots. The Hot Seat board just told on everybody else.",
     eyebrow: "KML Morning Show · Coaching reputation",
     summary:
-      "Eight weeks of Companion tape and a live reputation ledger. Ren sits at Elite 99 with Jenna King as the in-game head coach — KML’s first female HC. Chance is the other 95. Then the desk lights the chair: Puddin is Extreme Risk at 61, Curry is on the Hot Seat at 5–2, and Jbone and Jerm are in the fire with him.",
+      "Renzo King is 8–0 with a 99. Petey is the other Elite. Chance is not. Curry is 5–2 and still in the chair. Puddin is already past it.",
     body: `![KML Morning Show — The Hot Seat](${STORY_ASSETS.hotSeat})
 
-The KML Morning Show did not come to talk trades this week. **Stephen A. and Shannon** slammed the desk on the only board that still has teeth after eight weeks of live football: **Coaching Reputation.**
+Stephen A. did not come in soft.
 
-The Companion App dumped the tape. The website dumped the ledger. When the name on the site and the name in Madden are not the same person, the desk treats them as **equals on the coaching staff**. Head coach. User. Same fire.
+He pointed at Foxborough — 8–0, a 99, **Jenna King** on the headset as the first woman to walk a KML sideline — and he said it. **I’m taking the Patriots.** Then he pointed at Denver. An 86 overall. One win. **That’s a firing.**
 
-Do not get this one twisted: **Ren and Renzo King are the same person.** That is the KML user. The head coach actually walking the Patriots sideline in Madden is **Jenna King** — **the first female head coach in KML.** Ren’s grade. Jenna’s headset. One 8–0.
+Shannon had been waiting for the 1-pick.
 
-**Elite is 93. Hot Seat is 74 and below. Below 65 is Extreme Risk.** Puddin is already there.
+**“Curry went 4–0, then Chance dropped 44–3 on him. That’s how you go from the throne to the chair at 5–2.”**
 
-## Stephen A.: I’m taking the Patriots
+Everybody started at 85. Ordinary wins do not move it. Primetime does. Blowouts do. Streaks do. Getting run off the field in front of the league does. After eight weeks, this is what the board actually says.
 
-The left side of the graphic did not hedge.
+## The room at the top
 
-**“I’m taking the Patriots. Ren. Jenna King on the sideline. 8–0. Elite 99. First female head coach in KML. That’s a championship staff. Puddin? An 86 overall and one win. That’s a firing.”**
+**Renzo King, 99.** There is no second 8–0. There is no second A+. New England is 306–131. Drake Maye leads the league at 2,444 yards and 28 touchdowns. The Patriots still give up 16.4 a night. TreVeyon Henderson just ran for 200. Week 1 called them a dark horse. Stephen A. is not calling them that anymore.
 
-That is the prediction. Stamp it or fade it. The numbers behind it are not vibes.
+**Phillip Reaves, 96.** That should not surprise anyone who watched Week 1. The Morning Show sold Petey as chalk then, and the Seahawks have looked like it. Jaxon Smith-Njigba has 1,033 yards. Seattle allows 20 a game, second only to New England. They are 6–2. They just cooked Kansas City on a Sunday night. Petey is the other Elite stamp in the league. Chance is not.
 
-**Ren** — also **Renzo King** on the site and the export — is the user the Discord already knew. **Jenna King** is the name on the Madden headset. Same building. Same 8–0. Same **+175** (306–131). **Drake Maye** leads the league at **2,444 yards and 28 touchdowns**. New England still allows **16.4 points a game** — stingiest defense in the Companion dump. **40 XP. Reputation 99. The only A+ on the board.**
+**Almon Young III, 91.** Last pick of the draft. Stephen A. called the Steelers a sleeper before the first snap. Pittsburgh is 6–2 with a defense that still looks like the one they drafted, Patrick Queen sitting on seven interceptions, and a five-game heater that carried them here. 91 is not Elite. It is the best grade that is not.
 
-Week 1 called them the dark horse. Week 7 called them Elite. Week 9 is calling them the favorite.
+**Chance Allred, 90.** He is not Elite anymore. He 44–3’d Curry in Week 7 on an 81 overall, which is still the loudest win in the league, and Jordan Love had already gone 338/4/0 the week before. Then Carolina beat him 43–35 when the lights were on, and 95 became 90. The 5–3 is not a collapse. It is a coach who just told on a 1-pick and then got told on himself. Week 9 he walks into Ren anyway.
 
-Shannon did not come to crown anyone. Shannon came to light the chair.
+**Oliver Cardenas, 90.** The Chargers are 4–3 and scoring 41.9 a game. A 90 at 4–3 is the board saying the offense is the story, not the record.
 
-**“Curry went 4–0 then got 44–3’d by Chance. That’s how a 1-pick goes from the throne to the Hot Seat at 5–2.”**
+**xLeftsideee, 86.** Lefty still has the best remaining roster and a 7–1. Saquon Barkley is the early MVP at 1,159 from scrimmage and 15 scores. Then Javon dropped 61–35 on Philadelphia in Week 7, and a 92 that was knocking on Elite became an 86 that has to live with the hole. Still a contender. Not a coronation.
 
-## How the desk reads the ledger
+Raine Reed is 7–1 and 86, quiet as ever, Henry still the hammer. Mease is 4–3 on a 78 overall at 86, which is how you beat a rating. Trentan Carpenter just shut Denver out 21–0 and sits at 83. Nick’s Panthers are 3–4 with an 88 because Bryce Young just went 424 and five and they took Chance in primetime. Konrad Fitzgerald, the man who ended 4–0, is 3–5 and 85. The respect is leftover. The last three games are not.
 
-Coaching Reputation follows the **coach**, not the helmet. Everybody started at **85 (B)**. Ordinary wins do not move it. Blowouts, Primetime, streaks, and embarrassing tapes do.
+Jaylen Stowe survived a 217-yard night in Week 6 and then ate 69–21 from Ren. He is 5–3 and 79. That 69–21 is the scar, and it is his primetime this week.
 
-| Score | Grade | Label | Job security |
+## Who is actually in trouble
+
+**michael richard II is 61.** Puddin, if you have been in the chat. Denver was a pick-10 win-now club, 86 overall, supposed to punch people in the mouth. They have one win. They have been outscored 289–140. Kansas City just blanked them. 61 is not the chair. 61 is below 65, which is the line where the commissioner can move now. Stephen A. did not hedge it.
+
+**Jbone is 0–8 and 67.** That used to look like a warning. It is worse. 114 points scored, 295 allowed, and Vegas hung 48–13 on him in the Tank Bowl. Zero wins. The chair is not a warning anymore. It is the default.
+
+**Kyerin Curry is 5–2 and 72.** The No. 1 pick. A 91-offense Lions club. Jahmyr Gibbs still in the MVP race at 1,187 from scrimmage and 15 scores. And the grade is a D.
+
+The 4–0 was real. Gibbs went for four scores on Carolina. The three-game streak from that start is on the board. It moved him from 71 to 72. Then Konrad ended the unbeaten, 38–28. Then Chance ended the get-right, 44–3. Week 8 they survived Minnesota 50–49, which is not a statement, it is a pulse. Ownership on a 1-pick does not grade the streak. They grade the 44–3.
+
+**Jerimey Jones is 1–6 and 74.** Jerm on the league wire. 108 points scored. He flipped Daron Payne to Curry for a 2027 fifth on deadline day, which is rebuild math, and the board still dropped him on an 83 overall. Jordan Stowe’s 88-overall Rams are next. That is not a get-well game.
+
+**Pryor is 1–6 and 74** with a 91-offense draft grade. Five straight losses. He is on the chair now, not approaching it. Minnesota is next. Somebody in that game has to stop losing.
+
+**Coach Q is 1–7 and 73.** Three hundred forty points allowed. He cashed Swipe’s 20-point haul and the Titans still cannot get off the field. The bye this week is the only mercy on the slate.
+
+Classic Secondline is 0–7 and 75 with Kyler throwing for 425 in a 49–50 loss, which is how you know the offense is not the problem. Dawson Triplitt is 4–3 and 77 after a 42-point night, which is the wrong neighborhood for a Burrow club. Jordan Stowe is 6–2 on an 88 overall at 82 — the highest remaining roster wearing a C. Swipe spent 20 points on Jeffery Simmons and still sits at 81. Javon crawled off the chair at 81 after the 61–35. The fire is out. The 4–4 is not a revival.
+
+Atlanta is vacant. CPU. 3–5. They just beat Tampa 45–40 with nobody in the building. Tha Don is 5–3 and 82 after that. That is how loud some of these human desks have been.
+
+## The chair
+
+70 to 74 is the Hot Seat. 65 to 69 is firing eligible. Below 65 is Extreme Risk.
+
+| Rep | Coach | Record | Seat |
 | --- | --- | --- | --- |
-| **97–100** | A+ | Elite | Secure |
-| **93–96** | A | Championship level | Secure |
-| **87–92** | B+ | Highly respected | Safe |
-| **83–86** | B | Stable | Safe |
-| **75–82** | C | Pressured / Hot Seat math | Pressure building |
-| **70–74** | D | Firing territory | Official Hot Seat |
-| **Below 70** | F | Termination level | Extreme risk — the commissioner can move now |
+| **61** | Puddin · Broncos | 1–7 · 86 OVR | Extreme Risk. The commissioner can move now. |
+| **67** | Jbone · Jets | 0–8 | Firing eligible. Still looking for a win. |
+| **72** | Curry · Lions | 5–2 · 86 OVR | The 1-pick in the chair. 44–3 did that. |
+| **73** | Coach Q · Titans | 1–7 | Bye week. 340 allowed. |
+| **74** | Jerm · Commanders | 1–6 | Payne is gone. The Rams are next. |
+| **74** | Pryor · Bills | 1–6 | Premium offense. One win. |
 
-The live standings board already stamped every staff. This is not a preview. This is the grade book after Week 8.
+You can coach off it. Four-and-one over the next five can lift a Hot Seat stamp. A 3-game streak is a point. Puddin does not have a streak. Jbone does not have a win. Curry’s last two are a 41-point loss and a one-point survival. That is not four-and-one.
 
-## The best coaches in the league
+## Week 9
 
-Record is the floor. Reputation is the argument. Roster overall is the excuse. The desk used all three — plus the Companion names sitting on each franchise.
+The biggest game on the slate is not even the primetime window. Chance at 90 walks into Ren at 99 in Foxborough. If the 81 overall beats 8–0, Stephen A. has to talk. If he does not, New England starts looking like February.
 
-### 1. Ren · HC Jenna King · Patriots — 8–0 · +175 · 85 OVR · Elite 99 · 40 XP
+Primetime is Jaylen at 79 hosting Dre after that 69–21. Denver goes to Carolina. Another loss and 61 stops being a graphic and starts being a meeting. Curry gets Mease’s 78-overall Dolphins, which is a trap if you just escaped Minnesota by a point. Jbone walks into Kansas City after a 21–0. Jerm gets Hollywood. Buffalo and Minnesota play to see whose losing streak lives. Javon goes to Indianapolis trying to stay off the chair. The Giants draw Lefty a week after 61–35.
 
-**The championship staff. First female head coach in the league.**
+Big Al sits the bye on 91. Q sits it on 73.
 
-No other desk is 8–0. No other coach is 99. **Ren** is the user — **Renzo King** is the same person. **Jenna King** is the in-game head coach. **TreVeyon Henderson** just ran for **200**. Maye already has the passing throne. The Week 7 board argued Lefty vs Ren for #1. Then Dallas dropped **61–35** on Philadelphia and the argument died.
+## Stamp it
 
-Stephen A. is not picking a sleeper. He is picking the form team, the rating of the user, the headset in Foxborough, and the cleanest two-way tape in Madden 27.
+The best coach in the league is not a debate if you read the board. Renzo King has the record, the defense, the passing throne, and the only 99. Stephen A. already put the first Lombardi on them.
 
-### 2. Chance Allred · Packers — 5–3 · +73 · 81 OVR · Elite 95 · 28 XP
+The second-best grade in the league is Petey, not Chance. Chance still has the 44–3. He does not have Elite anymore. Big Al is the sleeper that stopped being a bit. Lefty still has Saquon and a 7–1 and a 61–35 he has to live with.
 
-**The other Elite. The 81 overall that keeps cooking 86s.**
+Then there is the other list. Puddin is 61 on an 86. Jbone is 0–8 and 67. Curry is 5–2 and 72 because a 1-pick is not allowed to look like 44–3, and a 50–49 does not wash it off. Jerm and Pryor are both 74. Q is 73.
 
-Chance has been telling the league he’s the best in it. The ledger finally agreed. **Elite 95** on the **lowest-rated roster in the top 10**. Week 7 was the receipt: **44–3 over Curry’s Lions.** Jordan Love had already gone **338/4/0** in Week 6. Week 8 was a 43–35 loss to Carolina. The 5–3 is not a collapse. It is a staff that just got done embarrassing the 1-pick.
+Stamp the Patriots. Watch Denver. Curry got the streak from 4–0. It did not save him.
 
-If you rank the user over the spreadsheet, Chance is in the Ren conversation. The 81 overall is the only thing keeping him second.
-
-### 3. Big Al / Almon Young III · Steelers — 6–2 · +63 · 84 OVR · Stable 91 · 28 XP
-
-**The sleeper that hit.**
-
-Stephen A. called it in Week 1: **the Steelers are sleepers. Coach Al can ball.** The Companion name on Pittsburgh is **Almon Young III**. Same staff. Last pick of the draft. **87 defense** then, **6–2** now, **five straight** into the Week 8 board, **303 points scored**, **Patrick Queen** with **seven interceptions** in the award race.
-
-91 is not Elite yet. It is the highest non-Elite stamp in the league. A last-pick staff sitting next to the 8–0 and the 95 is the whole point of KML.
-
-### 4. Petey / Phillip Reaves · Seahawks — 6–2 · +66 · 84 OVR · Stable 89 · 32 XP
-
-**Morning Show chalk. Still walking.**
-
-**Petey** is the name the first-champion graphic sold. **Phillip Reaves** is the name the export printed in Seattle. **Jaxon Smith-Njigba** leads the league at **1,033 yards**. Seattle allows **20.0 points a game** — second only to New England. **32 XP** is second on the board. The 6–2 is the chalk answering the slow start.
-
-### 5. Oli / Oliver Cardenas · Chargers — 4–3 · +54 · 82 OVR · Stable 90 · 22 XP
-
-**269, then 293. The loudest offense that will not get buried for a 4–3.**
-
-Los Angeles still grades as a **82 overall** and still scores like a 90. Companion team offense has the Chargers at **41.9 points a game**. A 90 reputation at 4–3 is how the desk says the tape is better than the record.
-
-### 6. Lefty / xLeftsideee · Eagles — 7–1 · +110 · 87 OVR · Stable 86 · 26 XP
-
-**The best remaining roster among the unbeatens — until they weren’t unbeaten.**
-
-**Lefty** is the league name. **xLeftsideee** is the Madden desk. **Saquon Barkley** holds the early MVP crown: **1,159 scrimmage yards, 15 touchdowns, 1,052 rushing**. Philadelphia is **7–1** and **308 points**. Then **Coach Javon Smith** dropped **61–35** on them in Week 7 and the reputation fell from the Elite doorstep (**92**) to **86 Stable**.
-
-That is still a top-two team. It is no longer a top-two coaching grade. The 61–35 is why.
-
-### The rest of the respected room
-
-| Staff | Club | Record | OVR | Rep | The tape |
-| --- | --- | --- | --- | --- | --- |
-| **Raine Reed** | Ravens | **7–1** · +50 | 85 | **88 Stable** | Quiet 7–1. Henry still the hammer. Five-game heater. |
-| **Trent / Trentan Carpenter** | Chiefs | **5–2** · +42 | 85 | **88 Stable** | Just **shut out Denver 21–0**. Walker still eating. |
-| **Mease** | Dolphins | **4–3** · +41 | **78** | **86 Stable** | Lowest-rated club that is still beating the rating. 21.6 points allowed. |
-| **Tha Don / Dre** | Buccaneers | **5–3** · +43 | 84 | **85 Stable** | 29 XP. Still a real 5–3 after the 52–49 war and a 45–40 loss to vacant Atlanta. |
-| **Jaylen Stowe** | Bears | **5–3** · −1 | 84 | **81 Pressured** | Survived 217 in Week 6. Then Ren dropped **69–21** on Chicago. The 81 is the scar. |
-
-## The call-out: underperforming staffs
-
-Talent on the roster is not the same as talent on the sticks. These desks were handed contend clubs — or at least competitive overalls — and the Companion record is not catching the rating.
-
-### Puddin / michael richard II · Broncos — 1–7 · 86 OVR · 61 Extreme Risk
-
-**The worst record-to-roster gap in KML Reborn. Termination level.**
-
-Denver was a **pick-10 surprise board**: elite defense, 86 overall, win-now identity. **Puddin** is the league name. **michael richard II** is the name Madden printed. Same staff. **One win. 140 points scored. 289 allowed. −149.** Kansas City just **shut them out 21–0**.
-
-**61** is not Hot Seat. **61 is below 65.** The rulebook’s own language is **Extreme Risk — the coach may be terminated immediately depending on circumstances.** Win Now franchise. Championship-caliber roster. Catastrophic stretch. That is the Emergency Hot Seat checklist with the boxes already ticked.
-
-Stephen A. did not stutter. **That’s a firing.**
-
-### Curry / Kyerin Curry · Lions — 5–2 · 86 OVR · 71 Hot Seat
-
-**5–2 and already in the chair. That is how loud a 44–3 is.**
-
-Curry took the **No. 1 overall pick** and a **91-offense** Lions club. **Jahmyr Gibbs** is still in the MVP race at **1,187 scrimmage yards and 15 scores**. Detroit is **5–2**. And the reputation board still stamped **Hot Seat 71** — **D, firing territory**.
-
-The tape explains the grade:
-
-- **Konrad Fitzgerald’s Cardinals ended 4–0**, 38–28, in Week 5
-- **Chance ended the get-right**, **44–3**, in Week 7 — an embarrassing-loss band (35+)
-- Week 8 survived **Minnesota 50–49** in a 49–50 war. That is not a statement. That is oxygen.
-
-A 1-pick is not allowed to look like that. Ownership expectations on a Win Now 86 are January. **71** says the ledger already filed the collapse.
-
-### Pryor · Bills — 1–6 · 83 OVR · 76 Pressured
-
-**A 91-offense draft grade. One win.**
-
-Pryor stole a premium attack at pick 21. Buffalo is **83 overall** and **1–6**, **142–188**, five straight losses. **76** is Pressure building, not yet the chair — but a 1–6 on that roster is how you walk into 74. Next up is Minnesota. Two struggling staffs. Somebody has to stop the bleeding.
-
-### Jerm / Jerimey Jones “JERM” · Commanders — 1–6 · 83 OVR · 74 Hot Seat
-
-**Official chair. Sold Daron Payne for a fifth. 108 points scored.**
-
-**Jerm** is the league name. **Jerimey Jones “JERM”** is the Companion print. **1–6. 108–194. Hot Seat 74.** Deadline day he flipped **Daron Payne** to Curry for a **2027 fifth (2 points)**. Rebuild math on a 1–6 club is one story. A Hot Seat stamp on an 83 overall is the other. **Jordan Stowe’s 88-overall Rams** are next. That is not a get-right.
-
-### The rest of the underperform tape
-
-| Staff | Club | Record | OVR | Rep | Why the desk is loud |
-| --- | --- | --- | --- | --- | --- |
-| **Jbone / Bone** | Jets | **0–8** · −181 | 80 | **72 Hot Seat** | Zero wins. 114 points. 295 allowed. The Tank Bowl did not save him — Vegas dropped **48–13**. |
-| **Qon / Coach Q** | Titans | **1–7** · −136 | 77 | **75 Pressured** | 340 points allowed. Rebuild tools, but the 75 is one bad tape from the chair. Cashed Swipe’s 20-point haul. The roster still cannot stop anyone. |
-| **Classic Secondline** | Vikings | **0–7** · −161 | 81 | **77 Pressured** | **Kyler Murray** just threw for **425 and four** in a 49–50 loss. The offense can cook. The staff is 0–7. |
-| **Jordan Stowe** | Rams | **6–2** · +78 | **88** | **82 Pressured** | Highest remaining overall. Still Pressured. The Week 1 hole never fully left Hollywood. 41–24 over Oli helps. 82 is not what a 88-overall throne is supposed to wear. |
-| **Swipe / RoyalxSwipa** | 49ers | **5–2** · +60 | 86 | **81 Pressured** | Spent **20 points on Jeffery Simmons**. Still Pressured at 81. The deadline gamble has not moved the grade. |
-| **Dawson Triplitt** | Bengals | **4–3** · −19 | 82 | **77 Pressured** | .500-ish with a negative differential. 77 is the wrong neighborhood for a Burrow club that just dropped 42. |
-| **Lojorian / Biz** | Giants | **2–5** · −94 | 82 | **85 Stable** | New name on the export. Same 2–5. The 85 is a starting-grade courtesy. The −94 is the tape. |
-| **Brian Dawkins** | Jaguars | **2–5** · −65 | 81 | **82 Pressured** | Two wins. Pressured. Not a fire yet. Not a résumé either. |
-
-**Atlanta is a vacant desk.** CPU. 3–5. **0 XP.** The Falcons just beat Tampa **45–40** with nobody in the chair. That is how loud the rest of the underperform tape is — a CPU club just took a 5–3 staff’s lunch.
-
-## The Hot Seat board — no soft language
-
-The in-season chair is not a vibe. **70–74 is Hot Seat. 65–69 is firing eligible. Below 65 is Extreme Risk.**
-
-| Seat | Staff | Record | Rep | What the rulebook says |
-| --- | --- | --- | --- | --- |
-| **Extreme Risk** | **Puddin / michael richard II · Broncos** | 1–7 · 86 OVR | **61** | Below 65. Immediate termination is on the table. Win Now collapse. |
-| **Hot Seat** | **Kyerin Curry · Lions** | 5–2 · 86 OVR | **71** | Firing territory. 44–3. 1-pick. Not enough oxygen in a 50–49. |
-| **Hot Seat** | **Jbone · Jets** | 0–8 · 80 OVR | **72** | Zero wins. Embarrassing-loss pattern. The 0 has to go or the chair wins. |
-| **Hot Seat** | **Jerm · Commanders** | 1–6 · 83 OVR | **74** | Officially evaluating the coach. Next game is the Rams. |
-| **Pressure / one tape from the chair** | **Qon / Coach Q · Titans** | 1–7 | **75** | 75 is the last step before Hot Seat. 340 points allowed. |
-| **Pressure** | **Pryor · Bills** | 1–6 · 83 OVR | **76** | Premium offense, one win, five straight losses. |
-| **Pressure** | **Classic Secondline · Vikings** | 0–7 | **77** | 0–7 with a 425-yard night. The offense is not the problem. |
-| **Pressure** | **Dawson · Bengals** | 4–3 | **77** | Negative differential. Burrow just threw six scores. The grade still says C. |
-| **Off the chair — still not clean** | **Javon / Coach Javon Smith · Cowboys** | 4–4 · 85 OVR | **81 Pressured** | Was **74 Hot Seat** at 2–4. Then he **61–35’d Lefty**. Two straight. The 454-yard tape finally cashed. The 81 says the fire is out. The 4–4 says it is not a revival yet. |
-
-Recovery is in the rulebook. **4–1 over the next five** can lift a Hot Seat stamp. **3-game winning streak is +1.** Puddin does not have a streak. Jbone does not have a win. Curry’s last two are **L by 41** and **W by 1**. That is not 4–1.
-
-## Around the league — the other desks
-
-Not every staff is Elite or on fire. Some are just being watched.
-
-- **Slap / Slap (FreeSmokeJr) · Saints** — 4–3, **81 Pressured**. Four-game heater died. Tiny differential.
-- **Quon · Colts** — 4–3, **80 Pressured**. Beat Jacksonville 35–20. Still a C.
-- **Nick / Big Bird- Panthers · Carolina** — 3–4, **84 Stable**. **Bryce Young** just went **424 and five**. **Tetairoa McMillan** took the Week 8 honors stamp. The 3–4 is lying a little. They drew **Puddin** next. That is a chance to bury Extreme Risk.
-- **Konrad Fitzgerald · Cardinals** — 3–5, **85 Stable**. The staff that ended Curry’s 4–0 is 3–5. The 85 is the leftover respect. Three straight losses are the new tape.
-- **Da Truth / Prime · Raiders** — 3–5, **84 Stable**. 48–13 over the Jets is not a résumé. It is a date with a 0–8.
-- **Taylor Watermann · Texans** — 3–3, **85 Stable**. Quiet. 84 OVR. +15. The desk is not yelling.
-- **Raine’s 7–1** still does not have an Elite stamp. One more statement and it should.
-
-## Week 9 is the next exam
-
-The Companion slate is already up. Primetime is not a cupcake. It is **Elite vs Elite**.
-
-| Matchup | Why the chair cares |
-| --- | --- |
-| **Packers vs Patriots** | **Chance Allred (95)** vs **Ren and HC Jenna King (99)**. The only two Elite stamps in the league. An 81 overall walking into 8–0 and the first female head coach in KML. If Chance wins this, Stephen A.’s prediction gets a scar. If New England wins it, the 9–0 starts looking like February. |
-| **Broncos at Panthers** | Extreme Risk vs a 3–4 staff that just dropped 43. Another loss and 61 becomes a press conference. |
-| **Lions at Dolphins** | Hot Seat 71 vs Mease’s 78-overall overachievers. Curry cannot do 50–49 again and call it health. |
-| **Jets at Chiefs** | 0–8 walks into Trent. A 21–0 bye-week energy is sitting in Kansas City. |
-| **Rams at Commanders** | 88 OVR Pressured throne vs Hot Seat 74. Jerm’s 108 points against Hollywood is a horror movie. |
-| **Bills at Vikings** | 1–6 vs 0–7. Somebody’s losing streak survives. Somebody’s reputation does not. |
-| **Cowboys at Colts** | Javon trying to stay off the chair. Quon trying to climb off 80. |
-| **Giants at Eagles** | Lojorian/Biz into Lefty/xLeftsideee. The 61–35 scar is one week old. Philadelphia should eat. |
-
-Byes: **Big Al / Almon Young III** and **Qon / Coach Q**. The sleeper sits clean. The 1–7 Titans sit with a 75 that is one tape from the chair.
-
-## Desk verdict
-
-The best coaches in KML right now are not a mystery.
-
-**Ren** — same person as **Renzo King** — has the record, the points, the defense, the passing throne, and the only **99**. **Jenna King** has the headset. First female head coach in KML, sitting on 8–0. Stephen A. stamped the first Lombardi on New England. The desk is not fading 8–0 and A+.
-
-**Chance Allred** is the other Elite — an 81 overall that just **44–3’d** the 1-pick. **Big Al and Almon Young III** are the sleeper that stopped being a cute graphic. **Petey and Phillip Reaves** still have the chalk. **Lefty and xLeftsideee** still have Saquon and a 7–1. They also have a 61–35 hole in the résumé.
-
-Then the chair.
-
-**Puddin and michael richard II** are **61 Extreme Risk** on an **86 overall**. That is the loudest underperform in the league and it is not close. **Curry** is **5–2 and 71** because 44–3 is how a 1-pick gets fired in public. **Jbone** is **0–8 and 72**. **Jerm** is **1–6 and 74**. **Qon / Coach Q** is one tape from joining them.
-
-The Morning Show does not move reputation. It reports the fire.
-
-**Great coaches build reputation. Bad ones sit in the chair.**
-
-Stamp the Patriots. Light the Broncos. Tell Curry the 5–2 does not save a 44–3.
-
-Week 9 puts the prediction on the field: **Chance vs Ren. Elite vs Elite.** If the 81 overall beats 8–0, the Morning Show has a new argument. If it does not, Stephen A. gets louder.
-
-Lock the board. Best coach. First one out. Stamp or fade the prediction.
-
-This is KML. This is the Hot Seat. Every game matters.
-
-Compete. Conquer. Be legendary.`,
+Week 9 is Chance vs Ren. If Green Bay wins, the show has a new argument. If they do not, Stephen A. gets to say he told you so.`,
     isFeatured: true,
     sortOrder: -100,
     week: 9,
