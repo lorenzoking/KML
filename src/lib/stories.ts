@@ -162,7 +162,7 @@ Curry took the **No. 1 overall pick** and a **91-offense** Lions club. **Jahmyr 
 
 The tape explains the grade:
 
-- **Konrad Fitzgerald ended 4–0**, 38–28, in Week 5
+- **Konrad Fitzgerald’s Cardinals ended 4–0**, 38–28, in Week 5
 - **Chance ended the get-right**, **44–3**, in Week 7 — an embarrassing-loss band (35+)
 - Week 8 survived **Minnesota 50–49** in a 49–50 war. That is not a statement. That is oxygen.
 
@@ -186,7 +186,7 @@ Pryor stole a premium attack at pick 21. Buffalo is **83 overall** and **1–6**
 | --- | --- | --- | --- | --- | --- |
 | **Jbone / Bone** | Jets | **0–8** · −181 | 80 | **72 Hot Seat** | Zero wins. 114 points. 295 allowed. The Tank Bowl did not save him — Vegas dropped **48–13**. |
 | **Qon / Coach Q** | Titans | **1–7** · −136 | 77 | **75 Pressured** | 340 points allowed. Rebuild tools, but the 75 is one bad tape from the chair. Cashed Swipe’s 20-point haul. The roster still cannot stop anyone. |
-| **Classic Secondline / Fitz** | Vikings | **0–7** · −161 | 81 | **77 Pressured** | **Kyler Murray** just threw for **425 and four** in a 49–50 loss. The offense can cook. The staff is 0–7. |
+| **Classic Secondline** | Vikings | **0–7** · −161 | 81 | **77 Pressured** | **Kyler Murray** just threw for **425 and four** in a 49–50 loss. The offense can cook. The staff is 0–7. |
 | **Jordan Stowe** | Rams | **6–2** · +78 | **88** | **82 Pressured** | Highest remaining overall. Still Pressured. The Week 1 hole never fully left Hollywood. 41–24 over Oli helps. 82 is not what a 88-overall throne is supposed to wear. |
 | **Swipe / RoyalxSwipa** | 49ers | **5–2** · +60 | 86 | **81 Pressured** | Spent **20 points on Jeffery Simmons**. Still Pressured at 81. The deadline gamble has not moved the grade. |
 | **Dawson Triplitt** | Bengals | **4–3** · −19 | 82 | **77 Pressured** | .500-ish with a negative differential. 77 is the wrong neighborhood for a Burrow club that just dropped 42. |
