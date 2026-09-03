@@ -324,7 +324,7 @@ const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
       },
     ],
   },
-  {
+    {
     storySlug: "season-1-week-8-swipe-simmons-trade",
     key: "week-8-swipe-simmons",
     title: "Swipe–Simmons lock-in",
@@ -334,6 +334,38 @@ const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
         options: [
           { label: "Window — Simmons was worth it", franchiseAbbr: "SF" },
           { label: "Gamble — Swipe overpaid 20-for-10", franchiseAbbr: "TEN" },
+        ],
+      },
+    ],
+  },
+  {
+    storySlug: "season-1-week-9-hot-seat",
+    key: "week-9-hot-seat",
+    title: "Hot Seat lock-in",
+    questions: [
+      {
+        prompt: "Who is the best coach in KML right now?",
+        options: [
+            { label: "Ren · Jenna King · Patriots", franchiseAbbr: "NE" },
+          { label: "Chance Allred · Packers", franchiseAbbr: "GB" },
+          { label: "Big Al / Almon Young III · Steelers", franchiseAbbr: "PIT" },
+          { label: "Lefty / xLeftsideee · Eagles", franchiseAbbr: "PHI" },
+        ],
+      },
+      {
+        prompt: "Who sits in the fire — first coach out?",
+        options: [
+          { label: "Puddin / michael richard II · Broncos", franchiseAbbr: "DEN" },
+          { label: "Kyerin Curry · Lions", franchiseAbbr: "DET" },
+          { label: "Jbone · Jets", franchiseAbbr: "NYJ" },
+          { label: "Jerm · Commanders", franchiseAbbr: "WAS" },
+        ],
+      },
+      {
+        prompt: "Stephen A. stamped it: Patriots hoist the first Lombardi?",
+        options: [
+            { label: "Stamp it — Ren and Jenna King", franchiseAbbr: "NE" },
+          { label: "Fade it — Chance, Big Al, or Lefty steal it", franchiseAbbr: "GB" },
         ],
       },
     ],
