@@ -3,6 +3,7 @@ import Image from "next/image";
 import { CalendarDays, ClipboardCheck, FileSignature, Flag, ListOrdered, Send, Shirt, Star, Trophy, User, UserRound, Vote } from "lucide-react";
 import { CoachAvatar } from "@/components/coach/coach-avatar";
 import { JobStatusBadge } from "@/components/coach/job-status-badge";
+import { NeedsYouSection } from "@/components/dashboard/add-to-home-screen";
 import { Group, GroupRow, HomeSection, Shortcut } from "@/components/dashboard/ios";
 import { cn, formatRecord } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -462,22 +463,18 @@ export default async function DashboardPage({
         </Link>
       ) : null}
 
-      {toDos.length > 0 ? (
-        <HomeSection label="Needs you">
-          <Group className="border-[color-mix(in_srgb,var(--primary)_28%,var(--border))] bg-[color-mix(in_srgb,var(--primary)_7%,var(--surface-raised))]">
-            {toDos.map((item) => (
-              <GroupRow
-                key={`${item.href}-${item.title}`}
-                href={item.href}
-                icon={item.icon}
-                iconClassName={item.iconClassName}
-                title={item.title}
-                subtitle={item.subtitle}
-              />
-            ))}
-          </Group>
-        </HomeSection>
-      ) : null}
+      <NeedsYouSection>
+        {toDos.map((item) => (
+          <GroupRow
+            key={`${item.href}-${item.title}`}
+            href={item.href}
+            icon={item.icon}
+            iconClassName={item.iconClassName}
+            title={item.title}
+            subtitle={item.subtitle}
+          />
+        ))}
+      </NeedsYouSection>
 
       <HomeSection label={`Week ${settings.currentWeek}`}>
         {membership && weekGame ? (

@@ -30,6 +30,7 @@ const STORY_ASSETS = {
   week7Primetime: "/stories/wk7/primetime.png",
   week7PowerRankings: "/stories/wk7/power-rankings.png",
   week8SwipeTrade: "/stories/wk8/swipatrade.PNG",
+  week9Primetime: "/stories/wk9/wk9-primetimeparlay.PNG",
 } as const;
 
 const DEFAULT_STORIES = [
@@ -107,9 +108,9 @@ You can coach off it. Four-and-one over the next five can lift a Hot Seat stamp.
 
 ## Week 9
 
-The biggest game on the slate is not even the primetime window. Chance at 90 walks into Ren at 99 in Foxborough. If the 81 overall beats 8–0, Stephen A. has to talk. If he does not, New England starts looking like February.
+The desk put three games on the card. Chance at 90 walks into Ren at 99 at 1:00. Jaylen already took the 4:25, 17–10 over Dre. Primetime is Javon at Quon. If Green Bay beats 8–0, Stephen A. has to talk. If he does not, New England starts looking like February.
 
-Primetime is Jaylen at 79 hosting Dre after that 69–21. Denver goes to Carolina. Another loss and 61 stops being a graphic and starts being a meeting. Curry gets Mease’s 78-overall Dolphins, which is a trap if you just escaped Minnesota by a point. Jbone walks into Kansas City after a 21–0. Jerm gets Hollywood. Buffalo and Minnesota play to see whose losing streak lives. Javon goes to Indianapolis trying to stay off the chair. The Giants draw Lefty a week after 61–35.
+Denver goes to Carolina. Another loss and 61 stops being a graphic and starts being a meeting. Curry gets Mease’s 78-overall Dolphins, which is a trap if you just escaped Minnesota by a point. Jbone walks into Kansas City after a 21–0. Jerm gets Hollywood. Buffalo and Minnesota play to see whose losing streak lives. The Giants draw Lefty a week after 61–35.
 
 Big Al sits the bye on 91. Q sits it on 73.
 
@@ -126,6 +127,66 @@ Stamp the Patriots. Watch Denver. Curry got the streak from 4–0. It did not sa
 Week 9 is Chance vs Ren. If Green Bay wins, the show has a new argument. If they do not, Stephen A. gets to say he told you so.`,
     isFeatured: true,
     sortOrder: -100,
+    week: 9,
+  },
+  {
+    slug: "season-1-week-9-primetime",
+    category: StoryCategory.GAME_OF_WEEK,
+    title: "Week 9 Games of the Week: Love vs the 8–0, then Dallas under the lights",
+    eyebrow: "Games of the week · Primetime slate",
+    summary:
+      "Chance takes the 1:00 into Foxborough. Chicago already cashed the afternoon, 17–10. Primetime is Javon at Quon.",
+    body: `![KML Week 9 Games of the Week](${STORY_ASSETS.week9Primetime})
+
+The desk put three games on the card. Sunday 1:00, 4:25, and the one with Primetime written under it.
+
+Chicago already took the middle window. The other two can still ruin a Sunday.
+
+## 1:00 — Packers at Patriots
+
+This is the one the league will argue about if Green Bay wins it.
+
+**Chance Allred** is 5–3 on an 81 overall. Jordan Love is the name on the graphic. Chance 44–3’d Curry in Week 7, then Carolina beat him 43–35 when the lights were on, and the 95 Elite stamp became a 90. He is still the loudest 5–3 in the league. He is walking into the only 8–0.
+
+**Renzo King** is 8–0, 306–131, reputation 99. Drake Maye has 2,444 yards and 28 touchdowns. New England still gives up 16.4 a night. They just hung 28–7 on Miami. Week 1 called them a dark horse. Stephen A. is not calling them that anymore.
+
+If Love beats Maye in Foxborough, the Hot Seat column has a new argument. If he does not, 9–0 starts looking like February.
+
+## 4:25 — Buccaneers at Bears
+
+Already in the book. **Jaylen Stowe 17, Dre 10.**
+
+The graphic still says 5–3 and 5–3. That was the window. Chicago is 6–3 now. Tampa is 5–4.
+
+Jaylen had eaten 69–21 from Ren in Week 7 and lost 21–14 in Seattle in Week 8. A 17–10 over Baker Mayfield is not a statement night. It is a team that refused to slide after the scar. Caleb Williams is still the name on the card. The Bears took the ugly one and moved on.
+
+Dre — Tha Don on the league wire — had just lost 45–40 to a vacant Falcons desk. Then this. 5–4 with 273 points scored is not a collapse. It is a staff that keeps getting in games and not finishing them.
+
+## 8:20 — Cowboys at Colts
+
+This is the primetime stamp on the graphic.
+
+**Coach Javon Smith** is 4–4. Dak Prescott is the name under the lights. Two weeks ago Javon dropped 61–35 on Lefty and crawled off the Hot Seat. Last week he beat Arizona 27–17. The toys finally cashed. The 4–4 is not a revival yet. A night game in Indianapolis is how you find out if it is.
+
+**Quon** is 4–3 and has won four of his last five. Indianapolis just took Jacksonville 35–20. Anthony Richardson is the other QB on the card. Quon has been a quiet 4–3 all year — Pressured at 81, no Elite talk, no chair. Primetime is the first time the desk has put him on the bottom of the board on purpose.
+
+Javon has the louder tape. Quon has the better record. Somebody leaves 5–3. Somebody leaves .500 or worse with the league watching.
+
+## The rest of Sunday
+
+The card is three games. The week is not.
+
+Curry takes 5–2 and a 72 into Miami, which is a trap if you just escaped Minnesota by a point. Puddin is 61 and goes to Carolina. Jbone is 0–8 in Kansas City after a 21–0. Jerm gets Jordan Stowe’s Rams. Buffalo and Minnesota play to see whose losing streak lives. The Giants draw Lefty a week after 61–35.
+
+Big Al sits the bye on 91. Q sits it on 73.
+
+## The take
+
+Lock the 1:00 if you think Chance is who he said he was after 44–3. Lock primetime if you think Javon’s 61–35 was the start of something.
+
+The afternoon is already over. Chicago took it. The other two are the show.`,
+    isFeatured: false,
+    sortOrder: -95,
     week: 9,
   },
   {

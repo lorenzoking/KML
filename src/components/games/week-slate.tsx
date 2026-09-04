@@ -27,12 +27,52 @@ export function WeekSlate({
     );
   });
 
-  const missing = ordered.filter((row) => row.status === "missing");
-  const pending = ordered.filter((row) => row.status === "pending");
-  const approved = ordered.filter((row) => row.status === "approved");
+  const featured = rows
+    .filter((row) => row.isPrimetime)
+    .sort((a, b) => {
+      const rank = { missing: 0, pending: 1, approved: 2 };
+      return (
+        rank[a.status] - rank[b.status] ||
+        a.home.abbreviation.localeCompare(b.home.abbreviation)
+      );
+    });
+  const rest = ordered.filter((row) => !row.isPrimetime);
+  const missing = rest.filter((row) => row.status === "missing");
+  const pending = rest.filter((row) => row.status === "pending");
+  const approved = rest.filter((row) => row.status === "approved");
 
   return (
     <div className="space-y-8">
+      {featured.length > 0 ? (
+        <SlateGroup
+          title="Games of the week"
+          hint={`${featured.length} on the desk`}
+        >
+          {featured.map((row) => (
+            <li key={row.scheduledId}>
+              <MatchupCard
+                row={row}
+                myTeamId={myTeamId}
+                footer={
+                  isCommissioner &&
+                  seasonNumber != null &&
+                  row.status === "missing" ? (
+                    <CommissionerFileMissingGameForm
+                      seasonNumber={seasonNumber}
+                      week={row.week}
+                      homeTeamId={row.home.id}
+                      awayTeamId={row.away.id}
+                      homeAbbr={row.home.abbreviation}
+                      awayAbbr={row.away.abbreviation}
+                      isPrimetime={row.isPrimetime}
+                    />
+                  ) : undefined
+                }
+              />
+            </li>
+          ))}
+        </SlateGroup>
+      ) : null}
       {missing.length > 0 ? (
         <SlateGroup title="Upcoming" hint={`${missing.length} still open`}>
           {missing.map((row) => (

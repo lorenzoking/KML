@@ -64,6 +64,8 @@ export function GamesHero({
   open,
   primetime,
   liveLabel,
+  deskHref,
+  deskLabel,
 }: {
   week: number;
   seasonNumber: number;
@@ -72,6 +74,8 @@ export function GamesHero({
   open: number;
   primetime: number;
   liveLabel: string;
+  deskHref?: string;
+  deskLabel?: string;
 }) {
   return (
     <section className="relative overflow-hidden rounded-3xl border border-[color-mix(in_srgb,var(--primary)_35%,var(--border))] field-stripe">
@@ -103,6 +107,16 @@ export function GamesHero({
             {liveLabel} Scores and XP land from Companion. Coaches still drop
             Sim Scores.
           </p>
+          {deskHref && deskLabel ? (
+            <p className="mt-3">
+              <Link
+                href={deskHref}
+                className="text-sm font-medium text-[var(--primary)] underline-offset-4 hover:underline"
+              >
+                {deskLabel}
+              </Link>
+            </p>
+          ) : null}
         </div>
         <div className="stagger grid grid-cols-3 gap-2 sm:max-w-lg">
           <PulseTile icon={Trophy} label="Final" value={String(finals)} />

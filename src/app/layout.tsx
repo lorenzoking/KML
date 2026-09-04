@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -9,7 +9,7 @@ import {
   isCommissioner,
   isViewingAsUser,
 } from "@/lib/auth";
-import { APP_NAME } from "@/lib/constants";
+import { APP_NAME, APP_SHORT } from "@/lib/constants";
 import {
   buildShareMetadata,
   DEFAULT_OG_IMAGE_PATH,
@@ -69,9 +69,22 @@ export const metadata: Metadata = {
     template: `%s · ${APP_NAME}`,
   },
   description: SITE_DESCRIPTION,
+  applicationName: APP_SHORT,
   // Favicon / apple icons come from src/app/icon.png + apple-icon.png (Next file convention).
+  appleWebApp: {
+    capable: true,
+    title: APP_SHORT,
+    statusBarStyle: "black-translucent",
+  },
   openGraph: share.openGraph,
   twitter: share.twitter,
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a0a0a",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 // League pages read live DB state; never prerender against Postgres at build time.

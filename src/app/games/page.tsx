@@ -389,6 +389,14 @@ export default async function GamesPage({
           open={weekOpen}
           primetime={weekPrimetime}
           liveLabel={liveLabel}
+          deskHref={
+            selectedWeek === 9
+              ? "/storylines/season-1-week-9-primetime"
+              : undefined
+          }
+          deskLabel={
+            selectedWeek === 9 ? "Week 9 Games of the Week" : undefined
+          }
         />
       ) : tab === "schedule" ? (
         <BoardHero

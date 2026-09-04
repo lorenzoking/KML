@@ -370,6 +370,34 @@ const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
       },
     ],
   },
+  {
+    storySlug: "season-1-week-9-primetime",
+    key: "week-9-primetime",
+    title: "Week 9 Games of the Week lock-in",
+    questions: [
+      {
+        prompt: "1:00 — Packers at Patriots",
+        options: [
+          { label: "Chance · Packers", franchiseAbbr: "GB" },
+          { label: "Ren · Patriots", franchiseAbbr: "NE" },
+        ],
+      },
+      {
+        prompt: "4:25 — Buccaneers at Bears",
+        options: [
+          { label: "Dre · Buccaneers", franchiseAbbr: "TB" },
+          { label: "Jaylen Stowe · Bears", franchiseAbbr: "CHI" },
+        ],
+      },
+      {
+        prompt: "Primetime — Cowboys at Colts",
+        options: [
+          { label: "Javon · Cowboys", franchiseAbbr: "DAL" },
+          { label: "Quon · Colts", franchiseAbbr: "IND" },
+        ],
+      },
+    ],
+  },
 ];
 
 function isMissingEngagementTable(error: unknown) {
