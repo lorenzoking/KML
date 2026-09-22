@@ -31,9 +31,240 @@ const STORY_ASSETS = {
   week7PowerRankings: "/stories/wk7/power-rankings.png",
   week8SwipeTrade: "/stories/wk8/swipatrade.PNG",
   week9Primetime: "/stories/wk9/wk9-primetimeparlay.PNG",
+  yearEndHero: "/stories/eoy/year-end-hero.png",
+  yearEndHardware: "/stories/eoy/hardware.png",
+  yearEndStandouts: "/stories/eoy/standouts.png",
+  yearEndChair: "/stories/eoy/chair.png",
+  yearEndChairHero: "/stories/eoy/chair-hero.png",
+  playoffHero: "/stories/eoy/playoff-hero.png",
+  playoffSeeds: "/stories/eoy/seeds.png",
+  playoffWeek18: "/stories/eoy/week18.png",
 } as const;
 
 const DEFAULT_STORIES = [
+  {
+    slug: "season-1-year-end-recap",
+    category: StoryCategory.FEATURE,
+    title: "Gibbs ate the year. Ren sat at 99. The chair is Puddin and Jbone.",
+    eyebrow: "KML Morning Show · Season 1 year-end",
+    summary:
+      "Jahmyr Gibbs owns the hardware. New England owns the board. Curry is 11–5 and 83 Stable — the 44–3 is the scar, not a pink slip. Week 18 is the last regular Sunday.",
+    body: `![KML Morning Show — Season 1 Year End](${STORY_ASSETS.yearEndHero})
+
+Stephen A. did not wait for Week 18.
+
+He pointed at Detroit — **2,970 from scrimmage, 33 touchdowns, a 1-pick, an 11–5** — and he said the first part out loud. **Jahmyr Gibbs is the MVP of Season 1.** Then he pointed at the same building. **Kyerin Curry is 83 Stable.** Same roster. Same Sunday. The 44–3 still happened. The pink slip did not.
+
+Shannon had the other board.
+
+**“Renzo King is 13–3, 590–349, and a 99. Chance is 13–3 and a 96. Big Al was the last pick of the draft and he is 13–3 and Elite. Curry is 11–5 and 83. Then you have Puddin at 60 and Jbone at 66. Those two are the chair.”**
+
+Week 18 is still open. Sixteen games. Zero finals. The regular year is not closed until those land. The desk is not waiting. The tape through 17 already told on everybody.
+
+## The hardware
+
+![KML Year End Hardware](${STORY_ASSETS.yearEndHardware})
+
+**Jahmyr Gibbs** ran the league and then caught it too. 2,674 rushing, 28 rushing scores, 33 for 296 and five more in the passing game. That is 2,970 from scrimmage and 33 total. The desk scores backs on everything they touch. Saquon Barkley chased him at 2,527 and 28. Jonathan Taylor is third. There is no second Gibbs.
+
+**Offensive Player** is the same name. From-scrimmage work. Not a quarterback statue. Gibbs, then Saquon, then Taylor, then TreVeyon Henderson at 2,133 and 19, then Christian McCaffrey at 2,129. Detroit’s back ate the category. New England’s back made it a race.
+
+**Drake Maye** still owns the air. 4,745 yards. 51 touchdowns. 25 interceptions. 372 on the ground. The Patriots scored 590 points, which is first, and they did it with a quarterback who never came off the throne after Week 1. Jordan Love is the cleaner killer — 4,232, **50 touchdowns, 16 picks** — and Chance is 13–3 because of it. Patrick Mahomes is the efficiency argument at 4,399, 43, and 11. Justin Herbert threw for 4,472 on an 8–8 Chargers club that could still sneak into January.
+
+**Jaxon Smith-Njigba** is the receiving stamp. 103 for 1,680 and 17. Petey’s hammer. Puka Nacua won the touchdown board, 91 for 1,445 and **19**. Xavier Worthy is right behind him in the end zone. Ja’Marr Chase still printed 1,518 for a 6–10 Bengals desk that is about to get a meeting. Carnell Tate put up 1,404 and 10 as a rookie in Tennessee, which is the only nice sentence Coach Q gets in this column.
+
+**Odafe Oweh** is Defensive Player of the Year. 20.5 sacks. Washington is 9–7 and Jerm just won five straight to crawl back into the building, and Oweh is the reason the rush never died. Micah Parsons is 18.5 on a 13–3 Packers club. T.J. Watt is third on the desk at 14.5 and a pick. Myles Garrett has 15 sacks for Jordan Stowe and sits fourth because the formula counts the whole line. The rush was the story. The takeaway board was not.
+
+**Fernando Mendoza** is Rookie of the Year. 3,852 yards, 32 touchdowns, 12 picks, and Las Vegas is 11–5 with a five-game heater and an Elite 93. Da Truth drafted a quarterback and the desk has to live with it. Tate is second. Ted Hurst III and Zachariah Branch kept the receiver room honest.
+
+| Award | Stamp | The line |
+| --- | --- | --- |
+| **MVP** | Jahmyr Gibbs · DET | 2,970 scrimmage · 33 TD · 11–5 |
+| **OPOY** | Jahmyr Gibbs · DET | 2,674 rush, 28 TD · 296 rec, 5 TD |
+| **DPOY** | Odafe Oweh · WAS | 20.5 sacks |
+| **ROY** | Fernando Mendoza · LV | 3,852 · 32 TD · 12 INT |
+| **Pass king** | Drake Maye · NE | 4,745 · 51 TD |
+| **Cleaner QB** | Jordan Love · GB | 4,232 · 50 TD · 16 INT |
+| **Receiver** | JSN · SEA | 103 · 1,680 · 17 |
+
+## Team standouts
+
+![KML Standouts and Letdowns](${STORY_ASSETS.yearEndStandouts})
+
+**Renzo King, 13–3, 99.** There is no second plus-241. New England scored 590 and gave up 349. Jenna King is still on the headset. Maye still leads the league. TreVeyon still prints from scrimmage. Week 1 called them a dark horse. Stephen A. stamped them in Week 9. The board did not move off that stamp. Miami is in the building Sunday. A win is 14–3 and a 1-seed.
+
+**Chance Allred, 13–3, 96.** Five straight. 514–350. Love with 50 scores. Parsons with 18.5. The 44–3 over Curry in Week 7 is still the loudest win of the year, and the 90 that used to be a 95 is a 96 again. He plays Detroit in Week 18. That is a 1-seed game and a rematch of 44–3 on the same field.
+
+**Quon, 12–3, 318 points allowed.** Indianapolis has a game in hand and the stingiest approved board in the league. Jonathan Taylor is 1,952 and 21. They play Jacksonville. If Ren slips and Quon cashes, the AFC 1-seed conversation gets rude.
+
+**Almon Young III, 13–3, 93.** Last pick of the draft. Stephen A. called the Steelers a sleeper before the first snap. They scored 552. They are still Elite. They go to Baltimore on Sunday, which is how a 2-seed becomes a 3-seed in one night.
+
+**Da Truth, 11–5, 93.** Five straight. Mendoza. 515–363. The Raiders were not the January club in Week 9. They are walking into Kansas City as a 5-seed with a heater.
+
+The rest of the room that earned a sentence: **Phillip Reaves** is 11–5 and 94, still Elite, JSN still the best receiver in the league. **Jaylen Stowe** is 12–4 after the 69–21 scar and would be a 5-seed on the road to Tampa, which is a crime if you only read records. **Jerimey Jones** is 9–7 with five straight after a 1–6 start and a deadline sale of Daron Payne. That is a rebuild that refused to die. **Jordan Stowe** is 12–4 and 565 points in Hollywood. **Trentan Carpenter** is 13–3 and the other AFC 13–3 that is not Foxborough or Pittsburgh.
+
+## The disappointments
+
+The Lions are first. That is the fight — the scar, not the chair.
+
+**Curry is 11–5 and 83 Stable.** Detroit scored **571 points**, second only to New England. Gibbs is the MVP. The Lions are the 7-seed if Week 18 holds. The 44–3 is still the loudest loss of the year. A 1-pick that goes into Green Bay as a wild card is a disappointment. It is not a firing. The 1-pick still has to live with Chance. He does not have to live with a pink slip.
+
+**michael richard II is 3–13 and 60.** Puddin. Pick 10. Win-now club. 303 points scored, 515 allowed. Below 65 is Extreme Risk. The commissioner can move now. Kansas City blanked them in the middle of the year and the year never came back.
+
+**Jbone is 1–15 and 66.** Two hundred eighty points scored. Five hundred thirty-three allowed. One win. Firing eligible is the polite sentence. The Jets desk did not survive Season 1.
+
+**Coach Q is 4–12.** Tennessee allowed **594 points**, last in the league. He cashed Swipe’s 20-point Simmons haul in Week 8 and the Titans still could not get off the field. Carnell Tate was real. The building was not. 70 is the Hot Seat. It is also a meeting.
+
+**xLeftsideee is 12–4 and Pressured at 82.** Lefty still has Saquon. He still has a division lead. He still has the 61–35 Javon hung on him in Week 7, and the board never gave the 92 back. A 12-win club wearing a C is the other fight in this league.
+
+**RoyalxSwipa is 10–6 and 75.** Twenty points of draft capital for Jeffery Simmons. The Morning Show said it then: the move might not move the needle in January, and it would be a backlash if it did not. San Francisco is on the bubble. Arizona is Sunday. That is the needle.
+
+The rest of the letdown pile: **Coach Javon Smith** scored 489 points and won five games. **Classic Secondline** is 4–12 in Minnesota. Atlanta is vacant and 3–13. Buffalo is 5–11, and the chair already flipped — Pryor is not the name on the standings anymore. **Bobby Brown** is.
+
+## The chair
+
+![KML The Chair — Season 1 coaching changes](${STORY_ASSETS.yearEndChairHero})
+
+![Who the commissioner can move](${STORY_ASSETS.yearEndChair})
+
+70 to 74 is the Hot Seat. 65 to 69 is firing eligible. Below 65 is Extreme Risk.
+
+| Rep | Coach | Record | The meeting |
+| --- | --- | --- | --- |
+| **60** | Puddin · Broncos | 3–13 | Extreme Risk. The commissioner can move now. |
+| **66** | Jbone · Jets | 1–15 | Firing eligible. One win. |
+| **70** | Coach Q · Titans | 4–12 | Hot Seat. 594 allowed. |
+| **71** | Dawson Triplitt · Bengals | 6–10 | Hot Seat. Burrow still ate. |
+| **73** | Javon · Cowboys | 5–11 | Hot Seat. 489 points, five wins. |
+| **74** | Classic Secondline · Vikings | 4–12 | Hot Seat. |
+
+Atlanta never had a desk. Buffalo already changed theirs. Curry is 83 Stable. Swipe is 75 if he misses. Taylor Watermann is 75 in Houston. **Raine Reed is 76 on an 11–5** that is about to host Pittsburgh, which is how you know the board grades the how, not just the math. Slap is 76. Konrad is 76.
+
+The safe list is short on purpose. Ren 99. Chance 96. Petey 94. Big Al 93. Da Truth 93. Curry 83. Oliver Cardenas is 91 on an 8–8, which is the board saying the Chargers offense was the story even when the record was not.
+
+## Stamp it
+
+Gibbs is the player of the year. Maye is the quarterback of the year if you only count volume. Love is the quarterback of the year if you count the 16 picks. Oweh is the rusher. Mendoza is the rookie. New England is the team.
+
+The disappointment of the year is not 1–15. Everybody saw 1–15 coming once it started. The disappointment of the year is a 1-pick that went 44–3 in Week 7 and still made January.
+
+The first coaching change of the offseason is already on the graphic. Puddin is 60. Jbone is 66. That is the chair.
+
+Week 18 can still move a seed. It cannot move the hardware. It might move a chair.
+
+Stamp Gibbs. Stamp Ren. Watch Detroit. Somebody in that building is getting a trophy. The meeting in Green Bay is for a seed, not a job.`,
+    isFeatured: true,
+    sortOrder: -200,
+    week: 18,
+  },
+  {
+    slug: "season-1-playoff-preview",
+    category: StoryCategory.LEAGUE,
+    title: "Playoff preview: Foxborough and Green Bay have the bye. Detroit still has to go back to Green Bay.",
+    eyebrow: "League desk · Week 18 playoff preview",
+    summary:
+      "Seven on each side if Sunday holds. Ren and Chance sit at 13–3. CHI 12–4 would go on the road to Tampa. Curry’s Lions are the 7-seed at 83 Stable, and they play the 44–3 rematch in Green Bay.",
+    body: `![KML Playoffs — Week 18 Preview](${STORY_ASSETS.playoffHero})
+
+The regular year has one Sunday left. Sixteen games. None of them are in the book.
+
+The field is already loud enough to preview.
+
+**Renzo King** is 13–3 in Foxborough with a 99 and the plus-241. **Chance Allred** is 13–3 in Green Bay with a 96 and five straight. Those are the 1-seeds if they cash Week 18. Everybody else is playing for a seed, a plane ticket, or a stay of execution.
+
+## The field if Sunday holds
+
+![KML January field](${STORY_ASSETS.playoffSeeds})
+
+Seven in. Four division seats. Three wild cards. One-seed bye. Then 2-vs-7, 3-vs-6, 4-vs-5.
+
+### AFC
+
+| Seed | Desk | Record | Week 18 | If it holds |
+| --- | --- | --- | --- | --- |
+| **1** | Ren · Patriots | 13–3 · 590-349 | vs Mease · Dolphins | Bye |
+| **2** | Trent · Chiefs | 13–3 | vs Da Truth · Raiders | 2 vs 7 Chargers |
+| **3** | Big Al · Steelers | 13–3 | at Raine · Ravens | North rematch, 3 vs 6 |
+| **4** | Quon · Colts | 12–3 · 318 PA | vs Dawkins · Jaguars | 4 vs 5 Raiders |
+| **5** | Da Truth · Raiders | 11–5 · WWWWW | at Kansas City | On the road to Trent |
+| **6** | Raine · Ravens | 11–5 · 76 | vs Pittsburgh | Pressured and in |
+| **7** | Oli · Chargers | 8–8 | at Puddin · Broncos | CLE 7–9 is hunting |
+
+Quon has a game in hand. If New England slips and Indianapolis beats Jacksonville, the 1-seed argument leaves Foxborough. Herbert’s Chargers are the last in as an 8–8. Jgold’s Browns are 7–9 and play Cincinnati. If Oli dies in Denver and Cleveland cashes, the 7-seed becomes a coin.
+
+### NFC
+
+| Seed | Desk | Record | Week 18 | If it holds |
+| --- | --- | --- | --- | --- |
+| **1** | Chance · Packers | 13–3 · WWWWW | vs Curry · Lions | Bye if he cashes the rematch |
+| **2** | Jordan Stowe · Rams | 12–4 · 565 PF | vs Petey · Seahawks | 2 vs 7 Lions |
+| **3** | Lefty · Eagles | 12–4 | at Lojorian · Giants | 3 vs 6 Seahawks |
+| **4** | Tha Don · Bucs | 10–6 | at Slap · Saints | 4 vs 5 Bears |
+| **5** | Jaylen Stowe · Bears | 12–4 | at Classic · Vikings | 12–4 on the road to a 10–6 |
+| **6** | Petey · Seahawks | 11–5 · 94 | at Los Angeles | Elite and on the road |
+| **7** | Curry · Lions | 11–5 · 83 | at Green Bay | SF 10–6 is the bubble |
+
+Jaylen at 12–4 as a 5-seed is the crime on the graphic. The Bears have a better record than Tampa, Philadelphia’s wild-card math, and half the AFC field. They still go on the road because Chance won the North. Detroit is the 7 with the MVP and an 83. Swipe is 10–6 in Arizona. Jerm is 9–7 with five straight and needs chaos.
+
+## Week 18 still moves it
+
+![KML Week 18 games that still move a seed](${STORY_ASSETS.playoffWeek18})
+
+These are the ones the desk cares about.
+
+**Miami at New England.** Ren vs Mease. A Patriots win is 14–3 and the 1-seed. A Patriots loss gives Quon a runway.
+
+**Detroit at Green Bay.** Chance vs Curry. 1-seed on one sideline. The 44–3 rematch on the other. If Curry wins, Green Bay is 13–4 and the Lions lock 12–5. If Chance wins, he sits the wild-card round and Curry’s 11–6 still has to hold off Swipe.
+
+**Seattle at the Rams.** Petey vs Jordan Stowe. NFC West. The 2-seed. A Seahawks win jumbles the 2 and the 6.
+
+**San Francisco at Arizona.** Swipe’s 20-point window. Win and stay alive. Lose and the Simmons haul becomes an offseason argument.
+
+**Pittsburgh at Baltimore.** Big Al vs Raine. The AFC North in January clothing. This is a 2-seed, a 3-seed, and a 6-seed in one building.
+
+**Las Vegas at Kansas City.** Da Truth’s five-game heater walks into Trent. The 2 and the 5 can swap personalities in three hours.
+
+**Chargers at Denver.** Oli vs Puddin. The last AFC ticket. Cleveland is watching from Cincinnati. Puddin is 60. This is a playoff game for one desk and a last snap for the other.
+
+**Tampa at New Orleans.** Dre vs Slap. The South is 10–6. If Tampa dies and the bubble hits, the 4-seed gets messy. Chicago is already 12–4 and lurking.
+
+The rest of the card still prints: Jacksonville at Indianapolis is Quon’s 13–3. Dallas at Washington is Jerm’s six-game. Chicago at Minnesota should be Jaylen cashing. Philadelphia at the Giants should be Lefty cashing. Jets at Buffalo is two desks that already lost the year.
+
+## If the seeds hold
+
+AFC wild-card weekend is mean.
+
+**Bye: Ren.** Foxborough waits.
+**2 vs 7: Trent vs Oli.** Mahomes at 43 and 11 versus Herbert’s 4,472 on an 8–8.
+**3 vs 6: Big Al vs Raine.** AFC North, first round, no excuses.
+**4 vs 5: Quon vs Da Truth.** Stingiest defense in the league versus a five-game Raiders heater and the Rookie of the Year.
+
+NFC wild-card weekend is louder.
+
+**Bye: Chance.** Green Bay waits — if he beats Curry.
+**2 vs 7: Jordan Stowe vs Curry.** 565 points versus the MVP. The 7-seed is 83 and still wearing Week 7.
+**3 vs 6: Lefty vs Petey.** Saquon versus JSN. Pressured 82 versus Elite 94.
+**4 vs 5: Tha Don vs Jaylen.** A 10–6 hosts a 12–4. That is the game the league will argue if Chicago loses it.
+
+## Who gets hunted
+
+Swipe is the hunted man in the NFC. Ten-and-six after a 20-for-10. Arizona is not a freebie. If Detroit wins in Green Bay, the door slams anyway.
+
+Oli is the hunted man in the AFC. Eight-and-eight, Stable 91, still the loudest offense that might not get a second Sunday.
+
+Curry is hunted by Chance. The 44–3 rematch is the game. An 11–5 with Gibbs and an 83 is a 7-seed, not a job story.
+
+## The take
+
+Lock Foxborough if you think 590–349 was the year. Lock Green Bay if you think 44–3 was the year. Fade both if you think Quon’s 318 or Jaylen’s 12–4 is about to become a first-round problem.
+
+The hardware article already stamped Gibbs. This one stamps the building. New England and Green Bay have the byes if they finish it. Everybody else has to win a Sunday that still is not in the book.
+
+Play the 1-seeds. Watch Detroit. If Curry wins in Green Bay, the 44–3 and the bracket explode on the same night.`,
+    isFeatured: false,
+    sortOrder: -195,
+    week: 18,
+  },
   {
     slug: "season-1-week-9-hot-seat",
     category: StoryCategory.FEATURE,
@@ -125,7 +356,7 @@ Then there is the other list. Puddin is 61 on an 86. Jbone is 0–8 and 67. Curr
 Stamp the Patriots. Watch Denver. Curry got the streak from 4–0. It did not save him.
 
 Week 9 is Chance vs Ren. If Green Bay wins, the show has a new argument. If they do not, Stephen A. gets to say he told you so.`,
-    isFeatured: true,
+    isFeatured: false,
     sortOrder: -100,
     week: 9,
   },

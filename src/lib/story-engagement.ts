@@ -106,6 +106,74 @@ type DefaultStoryPoll = {
 
 const DEFAULT_STORY_POLLS: DefaultStoryPoll[] = [
   {
+    storySlug: "season-1-year-end-recap",
+    key: "season-1-year-end",
+    title: "Season 1 year-end lock-in",
+    questions: [
+      {
+        prompt: "Who is the Season 1 MVP?",
+        options: [
+          { label: "Jahmyr Gibbs · Lions", franchiseAbbr: "DET" },
+          { label: "Drake Maye · Patriots", franchiseAbbr: "NE" },
+          { label: "Saquon Barkley · Eagles", franchiseAbbr: "PHI" },
+          { label: "Jordan Love · Packers", franchiseAbbr: "GB" },
+        ],
+      },
+      {
+        prompt: "First coach the commissioner moves?",
+        options: [
+          { label: "Puddin · Broncos · 60", franchiseAbbr: "DEN" },
+          { label: "Jbone · Jets · 66", franchiseAbbr: "NYJ" },
+          { label: "Coach Q · Titans · 70", franchiseAbbr: "TEN" },
+          { label: "Dawson · Bengals · 71", franchiseAbbr: "CIN" },
+        ],
+      },
+      {
+        prompt: "Team of the year?",
+        options: [
+          { label: "Ren · Patriots · 13-3 · 99", franchiseAbbr: "NE" },
+          { label: "Chance · Packers · 13-3 · 96", franchiseAbbr: "GB" },
+          { label: "Big Al · Steelers · 13-3 · 93", franchiseAbbr: "PIT" },
+          { label: "Quon · Colts · 12-3 · 318 PA", franchiseAbbr: "IND" },
+        ],
+      },
+    ],
+  },
+  {
+    storySlug: "season-1-playoff-preview",
+    key: "season-1-playoff-preview",
+    title: "Playoff preview lock-in",
+    questions: [
+      {
+        prompt: "AFC 1-seed when Week 18 lands?",
+        options: [
+          { label: "Ren · Patriots", franchiseAbbr: "NE" },
+          { label: "Quon · Colts", franchiseAbbr: "IND" },
+          { label: "Trent · Chiefs", franchiseAbbr: "KC" },
+          { label: "Big Al · Steelers", franchiseAbbr: "PIT" },
+        ],
+      },
+      {
+        prompt: "NFC 1-seed when Week 18 lands?",
+        options: [
+          { label: "Chance · Packers", franchiseAbbr: "GB" },
+          { label: "Jordan Stowe · Rams", franchiseAbbr: "LAR" },
+          { label: "Lefty · Eagles", franchiseAbbr: "PHI" },
+          { label: "Jaylen Stowe · Bears", franchiseAbbr: "CHI" },
+        ],
+      },
+      {
+        prompt: "Who is out of the field after Sunday?",
+        options: [
+          { label: "Swipe · 49ers · 10-6 bubble", franchiseAbbr: "SF" },
+          { label: "Curry · Lions · 11-5", franchiseAbbr: "DET" },
+          { label: "Oli · Chargers · 8-8", franchiseAbbr: "LAC" },
+          { label: "Tha Don · Bucs · 10-6 South", franchiseAbbr: "TB" },
+        ],
+      },
+    ],
+  },
+  {
     storySlug: "season-1-week-1-primetime",
     key: "week-1-primetime",
     title: "Week 1 Primetime lock-in",
