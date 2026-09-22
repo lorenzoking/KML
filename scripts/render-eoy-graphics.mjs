@@ -89,7 +89,7 @@ const hardware = chrome({
 const standouts = chrome({
   title: "STAND OUTS &amp; LETDOWNS",
   kicker: "TEAM TAPE FROM THE COMMISSIONER BOARD · PF / PA / REP",
-  footer: "NEW ENGLAND BUILT THE YEAR. DETROIT SCORED IT AND STILL SAT IN THE CHAIR.",
+  footer: "NEW ENGLAND BUILT THE YEAR. DENVER WAS THE PICK-10 THAT DIED.",
   body: `
     <text x="48" y="210" fill="${GOLD}" font-family="Arial Black, Helvetica, sans-serif" font-size="22" letter-spacing="3">TEAM STANDOUTS</text>
     ${row(48, 230, 730, "1", "PATRIOTS · REN", "13-3 · 590-349 · +241", "ELITE 99", "#002244")}
@@ -98,28 +98,31 @@ const standouts = chrome({
     ${row(48, 440, 730, "4", "STEELERS · BIG AL", "13-3 · last pick of the draft", "ELITE 93", "#FFB612")}
     ${row(48, 510, 730, "5", "RAIDERS · DA TRUTH", "11-5 · Mendoza + WWWWW", "ELITE 93", "#A5ACAF")}
     <text x="822" y="210" fill="#E11D48" font-family="Arial Black, Helvetica, sans-serif" font-size="22" letter-spacing="3">DISAPPOINTMENTS</text>
-    ${row(822, 230, 730, "1", "LIONS · CURRY", "11-5 · 571 PF · 44-3 scar", "STABLE 83", "#0076B6")}
-    ${row(822, 300, 730, "2", "BRONCOS · PUDDIN", "3-13 · pick-10 win-now", "EXTREME 60", "#FB4F14")}
-    ${row(822, 370, 730, "3", "JETS · JBONE", "1-15 · 280 PF · 533 PA", "FIRING 66", "#125740")}
-    ${row(822, 440, 730, "4", "TITANS · COACH Q", "4-12 · 594 PA after Simmons", "HOT SEAT 70", "#4B92DB")}
-    ${row(822, 510, 730, "5", "49ERS · SWIPE", "10-6 · 20-point deadline", "BUBBLE 75", "#AA0000")}
-    ${row(48, 600, 1504, "—", "LEFTY 12-4 at 82", "JAVON 5-11 with 489 PF", "BILLS DESK ALREADY FLIPPED", "#8B1E3F")}
+    ${row(822, 230, 730, "1", "BRONCOS · PUDDIN", "3-13 · pick-10 win-now", "EXTREME 60", "#FB4F14")}
+    ${row(822, 300, 730, "2", "JETS · JBONE", "1-15 · 280 PF · 533 PA", "FIRING 66", "#125740")}
+    ${row(822, 370, 730, "3", "TITANS · COACH Q", "4-12 · 594 PA after Simmons", "HOT SEAT 70", "#4B92DB")}
+    ${row(822, 440, 730, "4", "49ERS · SWIPE", "10-6 · 20-point deadline", "BUBBLE 75", "#AA0000")}
+    ${row(822, 510, 730, "5", "COWBOYS · JAVON", "5-11 · 489 PF", "HOT SEAT 73", "#869397")}
+    ${row(48, 600, 1504, "—", "LEFTY 12-4 at 82", "LIONS 11-5 · 83 · 44-3 is a scar", "BILLS DESK ALREADY FLIPPED", "#8B1E3F")}
   `,
 });
 
 const chair = chrome({
   title: "THE CHAIR",
   kicker: "70-74 HOT SEAT · 65-69 FIRING ELIGIBLE · BELOW 65 EXTREME RISK",
-  footer: "TWO DESKS ARE ALREADY IN RANGE. CURRY IS 11-5 AND OFF THE LINE.",
+  footer: "PUDDIN AND JBONE ARE IN RANGE. EVERYBODY ELSE IS STILL ON THE CLOCK.",
   body: `
-    ${row(48, 210, 1504, "60", "PUDDIN · michael richard II · BRONCOS", "3-13 · 303-515 · pick 10", "EXTREME RISK · MOVE NOW", "#E11D48")}
-    ${row(48, 286, 1504, "66", "JBONE · JETS", "1-15 · 280-533 · one win all year", "FIRING ELIGIBLE", "#E11D48")}
-    ${row(48, 362, 1504, "70", "COACH Q · TITANS", "4-12 · 594 PA · cashed Simmons and still burned", "HOT SEAT", "#F59E0B")}
-    ${row(48, 438, 1504, "71", "DAWSON TRIPLITT · BENGALS", "6-10 · Burrow 4,379 / 39 · no January", "HOT SEAT", "#F59E0B")}
-    ${row(48, 514, 1504, "73", "JAVON · COWBOYS", "5-11 · 489 PF", "HOT SEAT", "#F59E0B")}
-    ${row(48, 590, 734, "74", "CLASSIC · VIKINGS", "4-12 · 313 PF", "HOT SEAT", "#F59E0B")}
-    ${row(818, 590, 734, "83", "CURRY · LIONS", "11-5 · off the line", "STABLE", "#16A34A")}
-    <text x="48" y="710" fill="${MUTED}" font-family="Arial, Helvetica, sans-serif" font-size="20">Already vacant: Atlanta. Already flipped: Buffalo (Pryor out, Bobby Brown in). Watched: Swipe 75, Taylor 75, Raine 76, Slap 76. Curry 11-5 · 83 Stable.</text>
+    <text x="48" y="210" fill="#E11D48" font-family="Arial Black, Helvetica, sans-serif" font-size="22" letter-spacing="3">IN RANGE</text>
+    ${row(48, 230, 730, "60", "PUDDIN · BRONCOS", "3-13 · pick-10 win-now", "EXTREME RISK", "#E11D48")}
+    ${row(48, 300, 730, "66", "JBONE · JETS", "1-15 · one win all year", "FIRING ELIGIBLE", "#E11D48")}
+    <text x="822" y="210" fill="#F59E0B" font-family="Arial Black, Helvetica, sans-serif" font-size="22" letter-spacing="3">HOT SEAT</text>
+    ${row(822, 230, 730, "70", "COACH Q · TITANS", "4-12 · 594 PA after Simmons", "HOT SEAT", "#F59E0B")}
+    ${row(822, 300, 730, "71", "DAWSON · BENGALS", "6-10 · Burrow still ate", "HOT SEAT", "#F59E0B")}
+    ${row(822, 370, 730, "73", "JAVON · COWBOYS", "5-11 · 489 PF", "HOT SEAT", "#F59E0B")}
+    ${row(822, 440, 730, "74", "CLASSIC · VIKINGS", "4-12 · 313 PF", "HOT SEAT", "#F59E0B")}
+    ${row(48, 370, 730, "—", "VACANT", "Atlanta never had a desk", "BILLS DESK FLIPPED", "#A39B88")}
+    ${row(48, 530, 1504, "—", "WATCHED", "Swipe 75 · Taylor 75 · Raine 76 · Slap 76 · Konrad 76", "PRESSURED", "#A39B88")}
+    ${row(48, 600, 1504, "—", "SAFE", "Ren 99 · Chance 96 · Petey 94 · Big Al 93 · Da Truth 93", "OLIVER 91", "#16A34A")}
   `,
 });
 

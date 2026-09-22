@@ -105,9 +105,7 @@ The rest of the room that earned a sentence: **Phillip Reaves** is 11–5 and 94
 
 ## The disappointments
 
-The Lions are first. That is the fight — the scar, not the chair.
-
-**Curry is 11–5 and 83 Stable.** Detroit scored **571 points**, second only to New England. Gibbs is the MVP. The Lions are the 7-seed if Week 18 holds. The 44–3 is still the loudest loss of the year. A 1-pick that goes into Green Bay as a wild card is a disappointment. It is not a firing. The 1-pick still has to live with Chance. He does not have to live with a pink slip.
+Denver is first. That is not a debate.
 
 **michael richard II is 3–13 and 60.** Puddin. Pick 10. Win-now club. 303 points scored, 515 allowed. Below 65 is Extreme Risk. The commissioner can move now. Kansas City blanked them in the middle of the year and the year never came back.
 
@@ -115,11 +113,13 @@ The Lions are first. That is the fight — the scar, not the chair.
 
 **Coach Q is 4–12.** Tennessee allowed **594 points**, last in the league. He cashed Swipe’s 20-point Simmons haul in Week 8 and the Titans still could not get off the field. Carnell Tate was real. The building was not. 70 is the Hot Seat. It is also a meeting.
 
-**xLeftsideee is 12–4 and Pressured at 82.** Lefty still has Saquon. He still has a division lead. He still has the 61–35 Javon hung on him in Week 7, and the board never gave the 92 back. A 12-win club wearing a C is the other fight in this league.
-
 **RoyalxSwipa is 10–6 and 75.** Twenty points of draft capital for Jeffery Simmons. The Morning Show said it then: the move might not move the needle in January, and it would be a backlash if it did not. San Francisco is on the bubble. Arizona is Sunday. That is the needle.
 
-The rest of the letdown pile: **Coach Javon Smith** scored 489 points and won five games. **Classic Secondline** is 4–12 in Minnesota. Atlanta is vacant and 3–13. Buffalo is 5–11, and the chair already flipped — Pryor is not the name on the standings anymore. **Bobby Brown** is.
+**Coach Javon Smith** scored 489 points and won five games. That is a 5–11 with toys. The 61–35 over Lefty was the loudest Sunday he had. It did not become a season.
+
+The rest of the letdown pile: **xLeftsideee** is 12–4 and still Pressured at 82 because the board never gave the 92 back after 61–35. **Classic Secondline** is 4–12 in Minnesota. Atlanta is vacant and 3–13. Buffalo is 5–11, and the chair already flipped — Pryor is not the name on the standings anymore. **Bobby Brown** is.
+
+**Curry is 11–5 and 83 Stable.** Detroit scored **571 points**, second only to New England. Gibbs is the MVP. The Lions are the 7-seed if Week 18 holds. The 44–3 is still the loudest loss of the year. That is a scar on a playoff club. It is not the letdown of Season 1.
 
 ## The chair
 
@@ -146,7 +146,7 @@ The safe list is short on purpose. Ren 99. Chance 96. Petey 94. Big Al 93. Da Tr
 
 Gibbs is the player of the year. Maye is the quarterback of the year if you only count volume. Love is the quarterback of the year if you count the 16 picks. Oweh is the rusher. Mendoza is the rookie. New England is the team.
 
-The disappointment of the year is not 1–15. Everybody saw 1–15 coming once it started. The disappointment of the year is a 1-pick that went 44–3 in Week 7 and still made January.
+The disappointment of the year is not an 11–5 with the MVP. Everybody who watched Denver coming out of the draft saw a pick-10 win-now club. Three wins is the letdown. One win in New York is the other one.
 
 The first coaching change of the offseason is already on the graphic. Puddin is 60. Jbone is 66. That is the chair.
 
