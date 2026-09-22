@@ -97,11 +97,18 @@ async function indexLeagueTeams(payload: unknown) {
     const maddenTeamId = teamIdOf(row);
     if (!maddenTeamId) continue;
     const abbr = canonAbbr(str(row, "abbrName"));
+    const franchiseId = abbrMap.get(abbr) ?? null;
+    if (franchiseId) {
+      await prisma.maddenTeam.updateMany({
+        where: { franchiseId, maddenTeamId: { not: maddenTeamId } },
+        data: { franchiseId: null },
+      });
+    }
     await prisma.maddenTeam.upsert({
       where: { maddenTeamId },
       create: {
         maddenTeamId,
-        franchiseId: abbrMap.get(abbr) ?? null,
+        franchiseId,
         abbr,
         city: str(row, "cityName"),
         nickName: str(row, "nickName"),
@@ -112,7 +119,7 @@ async function indexLeagueTeams(payload: unknown) {
         userName: str(row, "userName") || null,
       },
       update: {
-        franchiseId: abbrMap.get(abbr) ?? null,
+        franchiseId,
         abbr,
         city: str(row, "cityName"),
         nickName: str(row, "nickName"),

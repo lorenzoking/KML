@@ -86,8 +86,12 @@ export async function ensurePlayedGameXp(scheduleIds?: string[]) {
   const games = await prisma.maddenGame.findMany({
     where: scheduleIds?.length ? { scheduleId: { in: scheduleIds } } : undefined,
     include: {
-      homeTeam: { select: { franchiseId: true, abbr: true } },
-      awayTeam: { select: { franchiseId: true, abbr: true } },
+      homeTeam: {
+        select: { franchiseId: true, abbr: true, nickName: true, displayName: true },
+      },
+      awayTeam: {
+        select: { franchiseId: true, abbr: true, nickName: true, displayName: true },
+      },
     },
   });
 

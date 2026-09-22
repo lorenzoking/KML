@@ -11,8 +11,12 @@ export async function findMaddenScoreForMatchup(params: {
   const games = await prisma.maddenGame.findMany({
     where: { weekIndex },
     include: {
-      homeTeam: { select: { franchiseId: true, abbr: true } },
-      awayTeam: { select: { franchiseId: true, abbr: true } },
+      homeTeam: {
+        select: { franchiseId: true, abbr: true, nickName: true, displayName: true },
+      },
+      awayTeam: {
+        select: { franchiseId: true, abbr: true, nickName: true, displayName: true },
+      },
     },
   });
 

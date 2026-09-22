@@ -273,8 +273,12 @@ export async function syncMaddenScoresToOpenGames(
   const games = await prisma.maddenGame.findMany({
     where: { scheduleId: { in: scheduleIds } },
     include: {
-      homeTeam: { select: { franchiseId: true, abbr: true } },
-      awayTeam: { select: { franchiseId: true, abbr: true } },
+      homeTeam: {
+        select: { franchiseId: true, abbr: true, nickName: true, displayName: true },
+      },
+      awayTeam: {
+        select: { franchiseId: true, abbr: true, nickName: true, displayName: true },
+      },
     },
   });
 
@@ -297,63 +301,83 @@ export async function syncMaddenScoresToOpenGames(
     const awayFranchiseId = await franchiseIdForMaddenTeam(game.awayTeam);
     if (!homeFranchiseId || !awayFranchiseId) continue;
 
-    const scheduled = await prisma.scheduledGame.findFirst({
-      where: {
+    try {
+      const scheduled = await prisma.scheduledGame.findFirst({
+        where: {
+          seasonId: season.id,
+          week,
+          OR: [
+            { homeTeamId: homeFranchiseId, awayTeamId: awayFranchiseId },
+            { homeTeamId: awayFranchiseId, awayTeamId: homeFranchiseId },
+          ],
+        },
+        select: { isPrimetime: true },
+      });
+      if (!scheduled) continue;
+
+      const existing = await findLiveMatchup({
         seasonId: season.id,
         week,
-        OR: [
-          { homeTeamId: homeFranchiseId, awayTeamId: awayFranchiseId },
-          { homeTeamId: awayFranchiseId, awayTeamId: homeFranchiseId },
-        ],
-      },
-      select: { isPrimetime: true },
-    });
-    if (!scheduled) continue;
-
-    const existing = await findLiveMatchup({
-      seasonId: season.id,
-      week,
-      homeFranchiseId,
-      awayFranchiseId,
-    });
-
-    if (existing) {
-      if (hasFinalScores(existing)) continue;
-      const mapped = scoresForSiteSubmitter({
-        userTeamId: existing.userTeamId,
         homeFranchiseId,
-        homeScore: game.homeScore,
-        awayScore: game.awayScore,
+        awayFranchiseId,
       });
-      if (existing.isForceWin && mapped.userScore <= mapped.opponentScore) {
+
+      if (existing) {
+        if (hasFinalScores(existing)) continue;
+        const mapped = scoresForSiteSubmitter({
+          userTeamId: existing.userTeamId,
+          homeFranchiseId,
+          homeScore: game.homeScore,
+          awayScore: game.awayScore,
+        });
+        if (existing.isForceWin && mapped.userScore <= mapped.opponentScore) {
+          continue;
+        }
+        await fillOpenSubmissionScores({
+          submission: existing,
+          userScore: mapped.userScore,
+          opponentScore: mapped.opponentScore,
+          actorId,
+          scheduleId: game.scheduleId,
+        });
+        updated += 1;
         continue;
       }
-      await fillOpenSubmissionScores({
-        submission: existing,
-        userScore: mapped.userScore,
-        opponentScore: mapped.opponentScore,
-        actorId,
-        scheduleId: game.scheduleId,
-      });
-      updated += 1;
-      continue;
-    }
 
-    const filed = await fileMissingGameFromMadden({
-      seasonId: season.id,
-      week,
-      scheduleId: game.scheduleId,
-      homeFranchiseId,
-      awayFranchiseId,
-      homeScore: game.homeScore,
-      awayScore: game.awayScore,
-      simulated: kind === "simulated",
-      isPrimetime: scheduled.isPrimetime,
-      actorId,
-    });
-    if (filed) updated += 1;
+      const filed = await fileMissingGameFromMadden({
+        seasonId: season.id,
+        week,
+        scheduleId: game.scheduleId,
+        homeFranchiseId,
+        awayFranchiseId,
+        homeScore: game.homeScore,
+        awayScore: game.awayScore,
+        simulated: kind === "simulated",
+        isPrimetime: scheduled.isPrimetime,
+        actorId,
+      });
+      if (filed) updated += 1;
+    } catch (error) {
+      console.error(
+        "Madden score sync skipped game",
+        game.scheduleId,
+        `W${week}`,
+        error
+      );
+    }
   }
 
   if (updated > 0) revalidateLeagueBoard();
   return updated;
+}
+
+export async function resyncMaddenScoresFromWeek(fromWeek: number) {
+  const games = await prisma.maddenGame.findMany({
+    where: { weekIndex: { gte: Math.max(0, fromWeek - 1) } },
+    select: { scheduleId: true },
+  });
+  return syncMaddenScoresToOpenGames(
+    games.map((game) => game.scheduleId),
+    { weekType: "reg" }
+  );
 }

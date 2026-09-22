@@ -55,8 +55,12 @@ export async function awardUndeclaredForceWinXp(scheduleIds: string[]) {
       scheduleId: { in: scheduleIds },
     },
     include: {
-      homeTeam: { select: { franchiseId: true, abbr: true } },
-      awayTeam: { select: { franchiseId: true, abbr: true } },
+      homeTeam: {
+        select: { franchiseId: true, abbr: true, nickName: true, displayName: true },
+      },
+      awayTeam: {
+        select: { franchiseId: true, abbr: true, nickName: true, displayName: true },
+      },
     },
   });
 

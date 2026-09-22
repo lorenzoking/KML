@@ -106,18 +106,20 @@ function lineFromStat(row: {
   };
 }
 
-async function maddenTeamForFranchise(franchiseId: string, abbr: string) {
-  const byFranchise = await prisma.maddenTeam.findFirst({
-    where: { franchiseId },
-  });
-  if (byFranchise) return byFranchise;
-  const aliases = [...new Set([canonAbbr(abbr), abbr.toUpperCase()])];
-  return prisma.maddenTeam.findFirst({
+async function maddenTeamsForFranchise(franchiseId: string, abbr: string) {
+  const aliases = [...new Set([canonAbbr(abbr), abbr.toUpperCase()])].filter(
+    (value) => value && value !== "UNK"
+  );
+  return prisma.maddenTeam.findMany({
     where: {
-      OR: aliases.map((value) => ({
-        abbr: { equals: value, mode: "insensitive" as const },
-      })),
+      OR: [
+        { franchiseId },
+        ...aliases.map((value) => ({
+          abbr: { equals: value, mode: "insensitive" as const },
+        })),
+      ],
     },
+    select: { maddenTeamId: true },
   });
 }
 
@@ -223,36 +225,31 @@ export async function getGameBoxScore(input: {
   opponentColor?: string;
 }): Promise<GameBoxScore | null> {
   const weekIndex = input.week - 1;
-  const [userTeam, opponentTeam] = await Promise.all([
-    maddenTeamForFranchise(input.userTeamId, input.userAbbr),
-    maddenTeamForFranchise(input.opponentTeamId, input.opponentAbbr),
+  const [userTeams, opponentTeams] = await Promise.all([
+    maddenTeamsForFranchise(input.userTeamId, input.userAbbr),
+    maddenTeamsForFranchise(input.opponentTeamId, input.opponentAbbr),
   ]);
-  if (!userTeam && !opponentTeam) return null;
+  const userIds = userTeams.map((team) => team.maddenTeamId);
+  const opponentIds = opponentTeams.map((team) => team.maddenTeamId);
+  if (userIds.length === 0 && opponentIds.length === 0) return null;
 
-  const teamIds = [userTeam?.maddenTeamId, opponentTeam?.maddenTeamId].filter(
-    (id): id is string => Boolean(id)
-  );
+  const teamIds = [...new Set([...userIds, ...opponentIds])];
+  const matchupFilter =
+    userIds.length > 0 && opponentIds.length > 0
+      ? {
+          weekIndex,
+          OR: [
+            { homeTeamId: { in: userIds }, awayTeamId: { in: opponentIds } },
+            { homeTeamId: { in: opponentIds }, awayTeamId: { in: userIds } },
+          ],
+        }
+      : {
+          weekIndex,
+          OR: teamIds.flatMap((id) => [{ homeTeamId: id }, { awayTeamId: id }]),
+        };
   const [maddenGame, playerStats, teamWeek] = await Promise.all([
     prisma.maddenGame.findFirst({
-      where:
-        userTeam && opponentTeam
-          ? {
-              weekIndex,
-              OR: [
-                {
-                  homeTeamId: userTeam.maddenTeamId,
-                  awayTeamId: opponentTeam.maddenTeamId,
-                },
-                {
-                  homeTeamId: opponentTeam.maddenTeamId,
-                  awayTeamId: userTeam.maddenTeamId,
-                },
-              ],
-            }
-          : {
-              weekIndex,
-              OR: teamIds.flatMap((id) => [{ homeTeamId: id }, { awayTeamId: id }]),
-            },
+      where: matchupFilter,
       include: {
         homeTeam: { select: { abbr: true } },
         awayTeam: { select: { abbr: true } },
@@ -273,20 +270,34 @@ export async function getGameBoxScore(input: {
   ]);
 
   const totalsByTeam = new Map(teamWeek.map((row) => [row.maddenTeamId, row]));
+  const userTeamId = maddenGame
+    ? userIds.includes(maddenGame.homeTeamId)
+      ? maddenGame.homeTeamId
+      : userIds.includes(maddenGame.awayTeamId)
+        ? maddenGame.awayTeamId
+        : userIds[0] ?? ""
+    : userIds[0] ?? "";
+  const opponentTeamId = maddenGame
+    ? opponentIds.includes(maddenGame.homeTeamId)
+      ? maddenGame.homeTeamId
+      : opponentIds.includes(maddenGame.awayTeamId)
+        ? maddenGame.awayTeamId
+        : opponentIds[0] ?? ""
+    : opponentIds[0] ?? "";
   const userSide = sideFromRows(
     input.userAbbr,
     input.userName,
-    userTeam?.maddenTeamId ?? "",
+    userTeamId,
     playerStats,
-    userTeam ? totalsByTeam.get(userTeam.maddenTeamId) : undefined,
+    userTeamId ? totalsByTeam.get(userTeamId) : undefined,
     input.userColor
   );
   const opponentSide = sideFromRows(
     input.opponentAbbr,
     input.opponentName,
-    opponentTeam?.maddenTeamId ?? "",
+    opponentTeamId,
     playerStats,
-    opponentTeam ? totalsByTeam.get(opponentTeam.maddenTeamId) : undefined,
+    opponentTeamId ? totalsByTeam.get(opponentTeamId) : undefined,
     input.opponentColor
   );
 
