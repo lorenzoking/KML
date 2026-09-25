@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, ReputationBadge } from "@/components/status-badge";
 import { SubmissionForm } from "@/components/forms/submission-form";
-import { GamesTabs } from "@/components/games/games-tabs";
+import { GamesTabs, type GamesTab } from "@/components/games/games-tabs";
+import { PlayoffBracketView } from "@/components/games/playoff-bracket";
 import {
   BoardHero,
   GamesHero,
@@ -47,6 +48,14 @@ import {
   NFL_REGULAR_SEASON_WEEKS,
   safeEnsureSeasonSchedule,
 } from "@/lib/schedule";
+import {
+  displayLeagueWeek,
+  PLAYOFF_START_WEEK,
+  SUPER_BOWL_WEEK,
+  weekChip,
+} from "@/lib/league-week";
+import { getPlayoffField, safeEnsurePlayoffSchedule } from "@/lib/playoff-schedule";
+import { seedPlayoffs } from "@/lib/playoffs";
 
 const franchiseSelect = {
   id: true,
@@ -68,12 +77,6 @@ export default async function GamesPage({
   }>;
 }) {
   const params = await searchParams;
-  const tab =
-    params.tab === "standings"
-      ? "standings"
-      : params.tab === "schedule"
-        ? "schedule"
-        : "week";
   const [user, active, seasons, pulse] = await Promise.all([
     getSessionUser(),
     getActiveSeason(),
@@ -87,8 +90,23 @@ export default async function GamesPage({
     : activeSeason.number;
   const season =
     seasons.find((s) => s.number === selectedSeasonNumber) ?? activeSeason;
+  const inPlayoffs =
+    season.id === activeSeason.id &&
+    settings.currentWeek > NFL_REGULAR_SEASON_WEEKS;
+  const tab: GamesTab =
+    params.tab === "standings" ||
+    params.tab === "schedule" ||
+    params.tab === "playoffs" ||
+    params.tab === "week"
+      ? params.tab
+      : inPlayoffs
+        ? "playoffs"
+        : "week";
 
   await safeEnsureSeasonSchedule(season.id);
+  if (season.id === activeSeason.id && settings.currentWeek >= PLAYOFF_START_WEEK) {
+    await safeEnsurePlayoffSchedule(season.id, settings.currentWeek);
+  }
 
   const selectedWeek = params.week
     ? Number(params.week)
@@ -203,21 +221,46 @@ export default async function GamesPage({
               },
             },
           }),
+          prisma.gameResult.findMany({
+            where: {
+              seasonId: season.id,
+              isVoided: false,
+              week: { lte: NFL_REGULAR_SEASON_WEEKS },
+            },
+            select: {
+              homeTeamId: true,
+              awayTeamId: true,
+              winnerTeamId: true,
+            },
+          }),
         ])
-      : Promise.resolve([[], []] as const);
+      : Promise.resolve([[], [], []] as const);
+
+  const playoffDataPromise =
+    tab === "playoffs"
+      ? getPlayoffField(
+          season.id,
+          season.id === activeSeason.id
+            ? settings.currentWeek
+            : SUPER_BOWL_WEEK,
+          season.id === activeSeason.id
+        )
+      : Promise.resolve(null);
 
   const [
     membership,
     franchises,
     [weekGames, myHistory, scheduledWeek],
     [teamScheduled, teamSubmissions],
-    [rawStandings, memberships],
+    [rawStandings, memberships, standingsResults],
+    playoffField,
   ] = await Promise.all([
     membershipPromise,
     franchisesPromise,
     weekDataPromise,
     scheduleDataPromise,
     standingsDataPromise,
+    playoffDataPromise,
   ]);
 
   // Public viewers only see approved/voided history; coaches see games they're in.
@@ -363,6 +406,13 @@ export default async function GamesPage({
   const scheduleTies = playedSchedule.filter(
     (row) => !row.bye && row.myScore === row.oppScore
   ).length;
+  const playoffSeeds = seedPlayoffs([...rawStandings], [...standingsResults]);
+  const seedByFranchise = Object.fromEntries(
+    [...playoffSeeds.afc, ...playoffSeeds.nfc].map((seed) => [
+      seed.franchiseId,
+      seed,
+    ])
+  );
   const standingsLeader = standings[0];
   const gamesCounted =
     standings.reduce(
@@ -423,6 +473,39 @@ export default async function GamesPage({
             },
           ]}
         />
+      ) : tab === "playoffs" && playoffField ? (
+        <BoardHero
+          kicker={`Season ${season.number} · ${playoffField.projected ? "projected field" : playoffField.currentRound.label}`}
+          title="Playoffs"
+          subtitle="Seven teams per conference. The 1-seed gets a bye. Higher seed hosts until the Super Bowl."
+          watermark="NFL"
+          tiles={[
+            {
+              label: "Round",
+              value: playoffField.projected
+                ? "Preview"
+                : playoffField.currentRound.short,
+            },
+            {
+              label: "Field",
+              value: String(playoffField.field.afc.length + playoffField.field.nfc.length),
+            },
+            {
+              label: "Finals",
+              value: String(
+                [
+                  ...playoffField.bracket.afc.wildCard,
+                  ...playoffField.bracket.afc.divisional,
+                  playoffField.bracket.afc.championship,
+                  ...playoffField.bracket.nfc.wildCard,
+                  ...playoffField.bracket.nfc.divisional,
+                  playoffField.bracket.nfc.championship,
+                  playoffField.bracket.superBowl,
+                ].filter((slot) => slot.status === "final").length
+              ),
+            },
+          ]}
+        />
       ) : (
         <BoardHero
           kicker={`Season ${season.number} · approved results only`}
@@ -463,7 +546,7 @@ export default async function GamesPage({
         ) : null}
       </div>
 
-      <GamesTabs active={tab} query={tabQuery} />
+      <GamesTabs active={tab} query={tabQuery} inPlayoffs={inPlayoffs} />
 
       <form className="flex flex-wrap gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-3">
         <input type="hidden" name="tab" value={tab} />
@@ -485,9 +568,9 @@ export default async function GamesPage({
             defaultValue={String(selectedWeek)}
             className={filterControlClass}
           >
-            {Array.from({ length: 22 }, (_, i) => i + 1).map((week) => (
+            {Array.from({ length: SUPER_BOWL_WEEK }, (_, i) => i + 1).map((week) => (
               <option key={week} value={week}>
-                Week {week}
+                {displayLeagueWeek(week)}
                 {season.id === activeSeason.id && week === settings.currentWeek
                   ? " (current)"
                   : ""}
@@ -507,7 +590,7 @@ export default async function GamesPage({
               </option>
             ))}
           </select>
-        ) : (
+        ) : tab === "playoffs" ? null : (
           <>
             <input
               name="q"
@@ -543,7 +626,7 @@ export default async function GamesPage({
                   Scoreboard
                 </p>
                 <h2 className="font-[family-name:var(--font-display)] text-2xl uppercase tracking-wide">
-                  Week {selectedWeek} slate
+                  {displayLeagueWeek(selectedWeek)} slate
                 </h2>
               </div>
               {commissionerUi && missingThisWeek > 0 ? (
@@ -581,7 +664,7 @@ export default async function GamesPage({
                 <CardDescription>
                   {myWeekGame
                     ? `This Week ${myWeekGame.week} matchup is already on the board. Rate your opponent — the Companion export already posted the score and XP.`
-                    : `Season ${settings.currentSeason} · Week ${settings.currentWeek}. Rate your opponent — Madden scores and coach XP come from the Companion export. If the game cut out or your opponent could not play, mark a force win instead.`}
+                    : `Season ${settings.currentSeason} · ${displayLeagueWeek(settings.currentWeek)}. Rate your opponent — Madden scores and coach XP come from the Companion export. If the game cut out or your opponent could not play, mark a force win instead.`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -697,7 +780,7 @@ export default async function GamesPage({
                             />
                             <div className="min-w-0 flex-1">
                               <p className="truncate font-[family-name:var(--font-display)] uppercase tracking-wide">
-                                S{s.season.number} W{s.week} · {formatMatchupScore(s)}
+                                S{s.season.number} {weekChip(s.week)} · {formatMatchupScore(s)}
                               </p>
                               <p className="truncate text-xs text-[var(--muted-foreground)]">
                                 {formatBothSimScores(s)}
@@ -723,6 +806,13 @@ export default async function GamesPage({
         ) : (
           <TeamSchedule rows={teamScheduleRows} />
         )
+      ) : tab === "playoffs" && playoffField ? (
+        <PlayoffBracketView
+          bracket={playoffField.bracket}
+          field={playoffField.field}
+          projected={playoffField.projected}
+          currentRoundLabel={playoffField.currentRound.label}
+        />
       ) : (
         <>
           {standings.every((s) => s.wins + s.losses + s.ties === 0) ? (
@@ -760,6 +850,9 @@ export default async function GamesPage({
                         </p>
                         <p className="truncate text-xs text-[var(--muted-foreground)]">
                           {row.name} · {row.conference} {row.division}
+                          {seedByFranchise[row.franchiseId]
+                            ? ` · ${row.conference} ${seedByFranchise[row.franchiseId].seed}`
+                            : ""}
                           {coach ? ` · ${coach.name}` : ""}
                         </p>
                       </div>

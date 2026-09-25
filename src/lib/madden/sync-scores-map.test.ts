@@ -6,13 +6,13 @@ import {
   shouldSyncCompanionWeekType,
 } from "./sync-scores-map";
 
-test("only regular-season Companion weeks sync onto the site slate", () => {
+test("regular-season and playoff Companion weeks sync onto the site slate", () => {
   assert.equal(shouldSyncCompanionWeekType(null), true);
   assert.equal(shouldSyncCompanionWeekType(""), true);
   assert.equal(shouldSyncCompanionWeekType("reg"), true);
+  assert.equal(shouldSyncCompanionWeekType("playoff"), true);
+  assert.equal(shouldSyncCompanionWeekType("post"), true);
   assert.equal(shouldSyncCompanionWeekType("pre"), false);
-  assert.equal(shouldSyncCompanionWeekType("playoff"), false);
-  assert.equal(shouldSyncCompanionWeekType("post"), false);
 });
 
 test("maps Madden home/away onto the site submitter’s team", () => {

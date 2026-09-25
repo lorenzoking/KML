@@ -1,6 +1,7 @@
 import type { HotSeatStatus } from "@/generated/prisma/client";
 import { AT_RISK_JOB_STATUSES, formatJobStatus } from "@/lib/coach/job-security";
 import { getReputationGrade, getReputationGradeLabel } from "@/lib/coach/grades";
+import { displayLeagueWeek } from "@/lib/league-week";
 
 type PulseGame = {
   status: string;
@@ -58,7 +59,7 @@ export function coachHonorific(name: string | null | undefined): string {
 
 export function buildDashboardPulse(input: DashboardPulseInput): DashboardPulse {
   const coach = coachHonorific(input.displayName);
-  const week = input.currentWeek;
+  const week = displayLeagueWeek(input.currentWeek);
   const grade = getReputationGrade(input.reputationScore);
   const gradeLabel = getReputationGradeLabel(grade);
   const headline = buildHeadline(input, {
@@ -98,7 +99,7 @@ function buildHeadline(
   input: DashboardPulseInput,
   ctx: {
     coach: string;
-    week: number;
+    week: string;
     grade: string;
     gradeLabel: string;
     hasLedger: boolean;
@@ -119,20 +120,20 @@ function buildHeadline(
       const bothXp = input.weekGame.forceWinReason === "GAME_CUT_OUT";
       if (input.weekGame.status === "PENDING") {
         return bothXp
-          ? `I saw your Week ${week} force win claim against ${them} after the game cut out. I’m waiting for the desk to make it official.`
-          : `I saw your Week ${week} force win claim against ${them}. I’m waiting for the desk to make it official.`;
+          ? `I saw your ${week} force win claim against ${them} after the game cut out. I’m waiting for the desk to make it official.`
+          : `I saw your ${week} force win claim against ${them}. I’m waiting for the desk to make it official.`;
       }
       if (myScore == null || theirScore == null) {
         return bothXp
-          ? `Week ${week} is a force win against ${them} after the game cut out. Post the simulated score after the league advances — both coaches already get game-played XP.`
-          : `Week ${week} is a force win against ${them}. Post the simulated score after the league advances — you’ll already get game-played XP.`;
+          ? `${week} is a force win against ${them} after the game cut out. Post the simulated score after the league advances — both coaches already get game-played XP.`
+          : `${week} is a force win against ${them}. Post the simulated score after the league advances — you’ll already get game-played XP.`;
       }
-      return `Week ${week} was a force win against ${them}. The sim score is in (${myScore}–${theirScore}) for standings only.`;
+      return `${week} was a force win against ${them}. The sim score is in (${myScore}–${theirScore}) for standings only.`;
     }
 
     if (myScore == null || theirScore == null) {
       if (input.weekGame.status === "PENDING") {
-        return `I saw your Week ${week} submission against ${them}. I’m just waiting for the desk to make it official.`;
+        return `I saw your ${week} submission against ${them}. I’m just waiting for the desk to make it official.`;
       }
     } else {
       const margin = Math.abs(myScore - theirScore);
@@ -140,9 +141,9 @@ function buildHeadline(
       if (input.weekGame.status === "APPROVED") {
         if (myScore > theirScore) {
           if (margin >= 14) {
-            return `Good to see you. That Week ${week} game was a statement — you took down ${them} ${myScore}–${theirScore}.`;
+            return `Good to see you. That ${week} game was a statement — you took down ${them} ${myScore}–${theirScore}.`;
           }
-          return `Good to see you. Week ${week} is in the books: you beat ${them} ${myScore}–${theirScore}.`;
+          return `Good to see you. ${week} is in the books: you beat ${them} ${myScore}–${theirScore}.`;
         }
         if (myScore < theirScore) {
           if (margin >= 14) {
@@ -154,11 +155,11 @@ function buildHeadline(
             ? `Hey. Tough one this week — ${them} got you ${theirScore}–${myScore}.`
             : `Hey. Tough one this week — ${them} got you ${theirScore}–${myScore}. You’re still a ${grade} (${gradeLabel.toLowerCase()}).`;
         }
-        return `Hey. Week ${week} ended even with ${them}, ${myScore}–${theirScore}. Split it and move on.`;
+        return `Hey. ${week} ended even with ${them}, ${myScore}–${theirScore}. Split it and move on.`;
       }
 
       if (input.weekGame.status === "PENDING") {
-        return `I saw your Week ${week} score come in against ${them} (${myScore}–${theirScore}). I’m just waiting for the desk to make it official.`;
+        return `I saw your ${week} score come in against ${them} (${myScore}–${theirScore}). I’m just waiting for the desk to make it official.`;
       }
     }
   }
@@ -168,14 +169,14 @@ function buildHeadline(
   }
 
   if (AT_RISK_JOB_STATUSES.has(input.jobStatus as HotSeatStatus)) {
-    return `Quick heads-up: your job’s sitting in ${formatJobStatus(String(input.jobStatus)).toLowerCase()} territory. Week ${week} is a chance to change that.`;
+    return `Quick heads-up: your job’s sitting in ${formatJobStatus(String(input.jobStatus)).toLowerCase()} territory. ${week} is a chance to change that.`;
   }
 
   if (input.teamName) {
     if (input.reputationScore >= 93) {
-      return `Good to see you. ${input.teamName} are in elite air right now. I’ll be here when Week ${week} is ready.`;
+      return `Good to see you. ${input.teamName} are in elite air right now. I’ll be here when ${week} is ready.`;
     }
-    return `Good to see you. Week ${week} is still open whenever you’re ready — I’ll take it from there once the ${input.teamName} result is in.`;
+    return `Good to see you. ${week} is still open whenever you’re ready — I’ll take it from there once the ${input.teamName} result is in.`;
   }
 
   return `Good to see you. Once you request a franchise, I can start tracking your week, your reputation, and whatever the league writes about you.`;

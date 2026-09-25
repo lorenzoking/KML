@@ -92,7 +92,7 @@ async function syncScheduledPrimetime(
   }>
 ) {
   await prisma.scheduledGame.updateMany({
-    where: { seasonId, isPrimetime: true },
+    where: { seasonId, isPrimetime: true, week: { lte: NFL_REGULAR_SEASON_WEEKS } },
     data: { isPrimetime: false },
   });
   await Promise.all(
@@ -113,7 +113,9 @@ async function syncScheduledPrimetime(
 }
 
 export async function ensureSeasonSchedule(seasonId: string) {
-  const existing = await prisma.scheduledGame.count({ where: { seasonId } });
+  const existing = await prisma.scheduledGame.count({
+    where: { seasonId, week: { lte: NFL_REGULAR_SEASON_WEEKS } },
+  });
   const franchises = await prisma.franchise.findMany({
     select: { id: true, abbreviation: true },
   });
@@ -133,7 +135,9 @@ export async function ensureSeasonSchedule(seasonId: string) {
   }
 
   if (existing > 0) {
-    await prisma.scheduledGame.deleteMany({ where: { seasonId } });
+    await prisma.scheduledGame.deleteMany({
+      where: { seasonId, week: { lte: NFL_REGULAR_SEASON_WEEKS } },
+    });
   }
 
   await prisma.scheduledGame.createMany({ data: rows });
@@ -243,6 +247,40 @@ export function buildTeamSchedule(
       rows.push({ week, bye: true });
       continue;
     }
+    const isHome = game.homeTeamId === franchiseId;
+    const opponent = isHome ? game.awayTeam : game.homeTeam;
+    const submission = liveSubmission(
+      game.homeTeamId,
+      game.awayTeamId,
+      submissions
+    );
+    const scores = scoresForScheduledHome(game.homeTeamId, submission);
+    const myScore = isHome ? scores.homeScore : scores.awayScore;
+    const oppScore = isHome ? scores.awayScore : scores.homeScore;
+    rows.push({
+      week,
+      bye: false,
+      scheduledId: game.id,
+      isHome,
+      opponent,
+      isPrimetime: game.isPrimetime,
+      status: submission
+        ? submission.status === "APPROVED"
+          ? "approved"
+          : "pending"
+        : "missing",
+      submissionId: submission?.id ?? null,
+      myScore,
+      oppScore,
+      isForceWin: Boolean(submission?.isForceWin),
+    });
+  }
+  const playoffWeeks = [...new Set(scheduled.map((game) => game.week))]
+    .filter((week) => week > NFL_REGULAR_SEASON_WEEKS)
+    .sort((a, b) => a - b);
+  for (const week of playoffWeeks) {
+    const game = byWeek.get(week);
+    if (!game) continue;
     const isHome = game.homeTeamId === franchiseId;
     const opponent = isHome ? game.awayTeam : game.homeTeam;
     const submission = liveSubmission(

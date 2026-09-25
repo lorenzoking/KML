@@ -22,6 +22,7 @@ import {
   getUserMembership,
   getXpTotal,
 } from "@/lib/league";
+import { displayLeagueWeek } from "@/lib/league-week";
 import { getUserCareerStats } from "@/lib/career";
 import { computeGmReputationScore } from "@/lib/reputation";
 import { getReputationGrade, getReputationGradeLabel } from "@/lib/coach/grades";
@@ -420,7 +421,7 @@ export default async function DashboardPage({
 
       <header className="relative animate-rise space-y-3 pt-1">
         <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[var(--primary)]">
-          Season {settings.currentSeason} · Week {settings.currentWeek}
+          Season {settings.currentSeason} · {displayLeagueWeek(settings.currentWeek)}
         </p>
         <h1 className="font-[family-name:var(--font-display)] text-[2.15rem] font-semibold leading-[1.02] tracking-[0.03em] sm:text-[2.55rem]">
           <span className="text-[var(--primary)]">Coach</span> {coachName}

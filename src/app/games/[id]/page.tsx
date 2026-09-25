@@ -22,6 +22,7 @@ import { GAME_TYPE_LABELS, forceWinReasonLabel, forceWinXpBlurb } from "@/lib/co
 import { formatLeagueDate } from "@/lib/datetime";
 import { hasFinalScores } from "@/lib/game-score";
 import { getActiveSeason, getUserMembership } from "@/lib/league";
+import { displayLeagueWeek } from "@/lib/league-week";
 import { getGameBoxScore } from "@/lib/madden/box-score";
 import { prisma } from "@/lib/prisma";
 import {
@@ -194,7 +195,7 @@ export default async function GameDetailPage({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button asChild variant="outline" size="sm">
           <Link href={`/games?tab=week&season=${game.season.number}&week=${game.week}`}>
-            ← Week {game.week}
+            ← {displayLeagueWeek(game.week)}
           </Link>
         </Button>
         <StatusBadge status={game.status} />

@@ -33,12 +33,22 @@ import {
   safeEnsureSeasonSchedule,
   safeGetMissingScheduledGames,
 } from "@/lib/schedule";
+import {
+  advanceWeekLabel,
+  displayLeagueWeek,
+  PLAYOFF_START_WEEK,
+  weekChip,
+} from "@/lib/league-week";
+import { safeEnsurePlayoffSchedule } from "@/lib/playoff-schedule";
 import { CommissionerFileMissingGameForm } from "@/components/forms/commissioner-file-missing-game-form";
 
 export default async function AdminSeasonPage() {
   const { season, settings } = await getActiveSeason();
   const seasons = await listSeasons();
   await safeEnsureSeasonSchedule(season.id);
+  if (settings.currentWeek >= PLAYOFF_START_WEEK) {
+    await safeEnsurePlayoffSchedule(season.id, settings.currentWeek);
+  }
 
   const [approvedGames, pendingCount, voidedCount, missingScores] = await Promise.all([
     prisma.gameSubmission.findMany({
@@ -84,7 +94,7 @@ export default async function AdminSeasonPage() {
             <CardTitle className="text-3xl">S{settings.currentSeason}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-[var(--muted-foreground)]">
-            Week {settings.currentWeek}
+            {displayLeagueWeek(settings.currentWeek)}
           </CardContent>
         </Card>
         <Card>
@@ -111,7 +121,8 @@ export default async function AdminSeasonPage() {
         <CardHeader>
           <CardTitle>Scheduled games missing scores</CardTitle>
           <CardDescription>
-            2026 NFL regular-season slate through week {settings.currentWeek}.
+            2026 NFL slate through {displayLeagueWeek(settings.currentWeek)}.
+            After Week 18 the league opens the playoffs instead of Week 19.
             Advance even if games are still open — they stay on this list until
             a result is filed. Companion schedule exports fill these automatically
             when Madden already has the score. You can still file a missing score
@@ -122,7 +133,7 @@ export default async function AdminSeasonPage() {
           <div className="grid gap-3 sm:grid-cols-3">
             <p className="rounded-xl border border-[var(--border)] px-3 py-2 text-sm">
               <span className="block text-xs text-[var(--muted-foreground)]">
-                Week {settings.currentWeek} open
+                {displayLeagueWeek(settings.currentWeek)} open
               </span>
               <span className="text-lg font-semibold">{currentMissing.length}</span>
             </p>
@@ -138,8 +149,11 @@ export default async function AdminSeasonPage() {
                 await advanceLeagueWeek();
               }}
             >
-              <SubmitButton className="w-full">
-                Advance to week {settings.currentWeek + 1}
+              <SubmitButton
+                className="w-full"
+                disabled={!advanceWeekLabel(settings.currentWeek)}
+              >
+                {advanceWeekLabel(settings.currentWeek) ?? "Season complete"}
               </SubmitButton>
             </form>
           </div>
@@ -157,7 +171,7 @@ export default async function AdminSeasonPage() {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-medium">
-                      W{row.week} · {row.away.abbreviation} @ {row.home.abbreviation}
+                      {weekChip(row.week)} · {row.away.abbreviation} @ {row.home.abbreviation}
                     </span>
                     <span className="text-xs text-[var(--muted-foreground)]">
                       {row.away.name} at {row.home.name}

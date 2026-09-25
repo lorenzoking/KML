@@ -5,6 +5,7 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { APP_NAME } from "@/lib/constants";
+import { displayLeagueWeek } from "@/lib/league-week";
 import { ArrowRight, Crown, Shield, Trophy } from "lucide-react";
 
 export default async function HomePage() {
@@ -51,7 +52,7 @@ export default async function HomePage() {
             {settings ? (
               <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-medium text-white/80">
                 <span>Season {settings.currentSeason}</span>
-                <span>Week {settings.currentWeek}</span>
+                <span>{displayLeagueWeek(settings.currentWeek)}</span>
                 <span>32 franchises</span>
               </div>
             ) : null}

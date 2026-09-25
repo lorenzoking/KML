@@ -17,6 +17,8 @@ import {
 import { writeAuditLog } from "@/lib/audit";
 import { reverseAutomaticReputation } from "@/lib/coach/reputation-from-game";
 import { safeEnsureSeasonSchedule, safeGetMissingScheduledGames } from "@/lib/schedule";
+import { displayLeagueWeek, nextLeagueWeek } from "@/lib/league-week";
+import { safeEnsurePlayoffSchedule } from "@/lib/playoff-schedule";
 
 async function voidSubmissionInTx(
   tx: Prisma.TransactionClient,
@@ -331,11 +333,15 @@ export async function advanceLeagueWeek() {
   const commissioner = await requireCommissioner();
   const { season, settings } = await getActiveSeason();
 
-  if (settings.currentWeek >= 30) {
-    return { error: "Already at week 30." };
+  const fromWeek = settings.currentWeek;
+  const toWeek = nextLeagueWeek(fromWeek);
+  if (toWeek == null) {
+    return {
+      error:
+        "Already at the Super Bowl. Archive the season to start the next one.",
+    };
   }
 
-  const fromWeek = settings.currentWeek;
   const missing = await safeGetMissingScheduledGames(
     season.id,
     fromWeek,
@@ -344,8 +350,10 @@ export async function advanceLeagueWeek() {
 
   await prisma.leagueSetting.update({
     where: { key: "default" },
-    data: { currentWeek: fromWeek + 1 },
+    data: { currentWeek: toWeek },
   });
+
+  await safeEnsurePlayoffSchedule(season.id, toWeek);
 
   await writeAuditLog({
     actorId: commissioner.id,
@@ -354,7 +362,9 @@ export async function advanceLeagueWeek() {
     entityId: "default",
     metadata: {
       fromWeek,
-      toWeek: fromWeek + 1,
+      toWeek,
+      fromLabel: displayLeagueWeek(fromWeek),
+      toLabel: displayLeagueWeek(toWeek),
       missingCount: missing.length,
       missing: missing.map(
         (row) => `${row.away.abbreviation}@${row.home.abbreviation}`
@@ -367,7 +377,7 @@ export async function advanceLeagueWeek() {
   return {
     success: true,
     fromWeek,
-    toWeek: fromWeek + 1,
+    toWeek,
     missingCount: missing.length,
   };
 }

@@ -20,6 +20,7 @@ import { StoryEngagement } from "@/components/stories/story-engagement";
 import { getSessionUser, isCommissioner } from "@/lib/auth";
 import { getCoachStoryLinks } from "@/lib/coach/story-links";
 import { getActiveSeason } from "@/lib/league";
+import { displayLeagueWeek } from "@/lib/league-week";
 import { buildShareMetadata } from "@/lib/site";
 import { safeGetStoryEngagement } from "@/lib/story-engagement";
 import {
@@ -106,7 +107,9 @@ export default async function StorylineDetailPage({
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline">{STORY_CATEGORY_LABELS[story.category]}</Badge>
             {story.isFeatured ? <Badge variant="elite">Featured</Badge> : null}
-            {story.week ? <Badge variant="default">Week {story.week}</Badge> : null}
+            {story.week ? (
+              <Badge variant="default">{displayLeagueWeek(story.week)}</Badge>
+            ) : null}
           </div>
           {story.eyebrow ? (
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--primary)]">

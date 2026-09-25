@@ -8,6 +8,7 @@ import { RulesTabs, resolveRulesTab } from "@/components/rules/rules-tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLeagueSettings } from "@/lib/league";
+import { displayLeagueWeek } from "@/lib/league-week";
 
 export default async function RulesPage({
   searchParams,
@@ -43,7 +44,7 @@ export default async function RulesPage({
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Info label="Current season" value={String(settings.currentSeason)} />
-        <Info label="Current week" value={String(settings.currentWeek)} />
+        <Info label="Current week" value={displayLeagueWeek(settings.currentWeek)} />
         <Info
           label="XP rules"
           value={`${settings.xpGamePlayed} played / ${settings.xpWinBonus} win`}

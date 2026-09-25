@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { NFL_REGULAR_SEASON_WEEKS } from "@/lib/league-week";
 import { computeStandings } from "@/lib/standings";
 import { sumXp } from "@/lib/xp";
 import {
@@ -67,7 +68,11 @@ export async function getSeasonStandings(seasonId: string) {
   const [franchises, results] = await Promise.all([
     prisma.franchise.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.gameResult.findMany({
-      where: { seasonId, isVoided: false },
+      where: {
+        seasonId,
+        isVoided: false,
+        week: { lte: NFL_REGULAR_SEASON_WEEKS },
+      },
     }),
   ]);
   return computeStandings(franchises, results);
@@ -82,6 +87,7 @@ export async function getFranchiseSeasonRecord(
     where: {
       seasonId,
       isVoided: false,
+      week: { lte: NFL_REGULAR_SEASON_WEEKS },
       OR: [{ homeTeamId: franchiseId }, { awayTeamId: franchiseId }],
     },
     orderBy: [{ week: "desc" }, { createdAt: "desc" }],

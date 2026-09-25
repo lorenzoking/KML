@@ -13,7 +13,7 @@ const optionalSimScore = z.preprocess(
 export const gameSubmissionSchema = z
   .object({
     seasonNumber: z.coerce.number().int().min(1).max(50),
-    week: z.coerce.number().int().min(1).max(30),
+    week: z.coerce.number().int().min(1).max(22),
     gameType: z.enum([
       "REGULAR_SEASON",
       "PLAYOFF",
@@ -92,7 +92,7 @@ export const approvalSchema = z.object({
 export const commissionerFileGameSchema = z
   .object({
     seasonNumber: z.coerce.number().int().min(1).max(50),
-    week: z.coerce.number().int().min(1).max(30),
+    week: z.coerce.number().int().min(1).max(22),
     gameType: z.enum([
       "REGULAR_SEASON",
       "PLAYOFF",
@@ -133,7 +133,7 @@ export const requestTeamSchema = z.object({
 export const settingsSchema = z.object({
   leagueName: z.string().min(2).max(80),
   currentSeason: z.coerce.number().int().min(1).max(50),
-  currentWeek: z.coerce.number().int().min(1).max(30),
+  currentWeek: z.coerce.number().int().min(1).max(22),
   xpGamePlayed: z.coerce.number().int().min(0).max(100),
   xpWinBonus: z.coerce.number().int().min(0).max(100),
   startingRepScore: z.coerce.number().int().min(0).max(100),
@@ -214,7 +214,7 @@ export const coachLedgerEntrySchema = z.object({
     "SIM_SCORE",
   ]),
   reason: z.string().min(2).max(300),
-  week: z.coerce.number().int().min(1).max(30).optional(),
+  week: z.coerce.number().int().min(1).max(22).optional(),
   evidenceUrl: z.string().url().optional().or(z.literal("")),
 });
 
@@ -321,7 +321,7 @@ export const createLeagueStorySchema = z.object({
     "DRAFT",
     "LEAGUE",
   ]),
-  week: z.coerce.number().int().min(1).max(30).optional(),
+  week: z.coerce.number().int().min(1).max(22).optional(),
   isFeatured: z.coerce.boolean().default(false),
   isPublished: z.coerce.boolean().default(true),
   sortOrder: z.coerce.number().int().min(0).max(999).default(0),

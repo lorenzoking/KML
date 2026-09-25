@@ -4,6 +4,7 @@ import { Activity, CalendarDays, Radio, Trophy, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { isLightHex } from "@/lib/madden/display";
 import type { WeekSlateRow } from "@/lib/schedule";
+import { displayLeagueWeek, playoffRound } from "@/lib/league-week";
 import { cn } from "@/lib/utils";
 
 export function teamColor(color?: string | null) {
@@ -82,7 +83,7 @@ export function GamesHero({
       <div className="absolute inset-0 bg-[radial-gradient(900px_420px_at_8%_-10%,rgba(212,175,55,0.28),transparent_55%),linear-gradient(135deg,#050505_0%,#121212_48%,#050505_100%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_92%_18%,rgba(212,175,55,0.16),transparent_40%)]" />
       <div className="pointer-events-none absolute -right-4 top-0 font-[family-name:var(--font-display)] text-[8rem] font-bold leading-none text-white/5 sm:text-[11rem]">
-        {week}
+        {playoffRound(week)?.short ?? week}
       </div>
       <div className="relative space-y-6 p-6 sm:p-8 lg:p-10">
         <div className="flex flex-wrap items-center gap-2">
@@ -101,7 +102,7 @@ export function GamesHero({
             Season {seasonNumber} · the board
           </p>
           <h1 className="mt-2 font-[family-name:var(--font-display)] text-5xl font-semibold uppercase leading-[0.85] tracking-[0.04em] text-white sm:text-7xl">
-            Week {week}
+            {displayLeagueWeek(week)}
           </h1>
           <p className="mt-3 max-w-xl text-sm text-white/70 sm:text-base">
             {liveLabel} Scores and XP land from Companion. Coaches still drop
@@ -413,7 +414,7 @@ export function GameScoreHero({
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="elite" className="gap-1.5">
             <CalendarDays className="size-3.5" />
-            Week {week}
+            {displayLeagueWeek(week)}
           </Badge>
           <Badge variant="outline" className="border-white/20 bg-black/30 text-white">
             Season {seasonNumber} · {statusLabel}

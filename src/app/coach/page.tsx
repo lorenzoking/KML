@@ -23,6 +23,7 @@ import {
 import { getCoachBoardRows } from "@/lib/coach/coach-board";
 import { AT_RISK_JOB_STATUSES, JOB_STATUS_BANDS } from "@/lib/coach/job-security";
 import { getActiveSeason } from "@/lib/league";
+import { displayLeagueWeek } from "@/lib/league-week";
 
 type SearchParams = Promise<{
   q?: string;
@@ -67,7 +68,7 @@ export default async function CoachOverviewPage({
     <div className="space-y-6">
       <div className="flex flex-col gap-1">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--primary)]">
-          Season {settings.currentSeason} · Week {settings.currentWeek}
+          Season {settings.currentSeason} · {displayLeagueWeek(settings.currentWeek)}
         </p>
         <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">League pulse</h2>
         <p className="text-sm text-[var(--muted-foreground)]">

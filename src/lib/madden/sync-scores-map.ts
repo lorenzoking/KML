@@ -1,7 +1,7 @@
 /** Madden Companion weekType from the export path. Null means the dump had no path. */
 export function shouldSyncCompanionWeekType(weekType: string | null | undefined) {
   if (weekType == null || weekType === "") return true;
-  return weekType === "reg";
+  return weekType === "reg" || weekType === "playoff" || weekType === "post";
 }
 
 export function scoresForSiteSubmitter(params: {

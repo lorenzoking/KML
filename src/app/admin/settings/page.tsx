@@ -68,9 +68,14 @@ export default async function SettingsAdminPage() {
                   id="currentWeek"
                   name="currentWeek"
                   type="number"
+                  min={1}
+                  max={22}
                   defaultValue={settings.currentWeek}
                   required
                 />
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  1–18 regular season, then Wild Card (19) through Super Bowl (22).
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="xpGamePlayed">XP for game played</Label>

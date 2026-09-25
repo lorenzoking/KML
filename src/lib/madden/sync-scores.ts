@@ -16,6 +16,7 @@ import {
   scoresForSiteSubmitter,
   shouldSyncCompanionWeekType,
 } from "@/lib/madden/sync-scores-map";
+import { gameTypeForLeagueWeek } from "@/lib/league-week";
 
 const COMPANION_FILE_NOTE = "Auto-filed from Madden Companion export.";
 
@@ -199,7 +200,7 @@ async function fileMissingGameFromMadden(params: {
     data: {
       seasonId: params.seasonId,
       week: params.week,
-      gameType: GameType.REGULAR_SEASON,
+      gameType: gameTypeForLeagueWeek(params.week),
       submitterId,
       userTeamId: sides.userTeamId,
       opponentTeamId: sides.opponentTeamId,

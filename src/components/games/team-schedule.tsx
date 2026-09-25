@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { TeamMark } from "@/components/games/scoreboard";
 import type { TeamScheduleRow } from "@/lib/schedule";
+import { weekChip } from "@/lib/league-week";
 import { cn } from "@/lib/utils";
 
 export function TeamSchedule({ rows }: { rows: TeamScheduleRow[] }) {
@@ -15,7 +16,7 @@ export function TeamSchedule({ rows }: { rows: TeamScheduleRow[] }) {
               className="flex items-center gap-3 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3"
             >
               <span className="w-10 shrink-0 font-[family-name:var(--font-display)] text-sm uppercase tracking-wide text-[var(--muted-foreground)]">
-                W{row.week}
+                {weekChip(row.week)}
               </span>
               <span className="flex-1 text-sm font-medium">Bye week</span>
               <Badge variant="outline">Bye</Badge>
@@ -34,7 +35,7 @@ export function TeamSchedule({ rows }: { rows: TeamScheduleRow[] }) {
         const inner = (
           <div className="flex items-center gap-3 px-4 py-3">
             <span className="w-10 shrink-0 font-[family-name:var(--font-display)] text-sm uppercase tracking-wide text-[var(--muted-foreground)]">
-              W{row.week}
+              {weekChip(row.week)}
             </span>
             <TeamMark
               abbr={row.opponent.abbreviation}

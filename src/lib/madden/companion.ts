@@ -1,5 +1,6 @@
 import { randomBytes } from "crypto";
 import { MaddenExportKind } from "@/generated/prisma/client";
+import { displayLeagueWeek, NFL_REGULAR_SEASON_WEEKS } from "@/lib/league-week";
 import { getSiteUrl } from "@/lib/site";
 
 export const MADDEN_EXPORT_KIND_LABELS: Record<MaddenExportKind, string> = {
@@ -163,16 +164,17 @@ export function displayCompanionWeek(
   weekNumber: number | null
 ) {
   if (weekNumber == null) return null;
+  if (weekType === "playoff" || weekType === "post") {
+    return displayLeagueWeek(NFL_REGULAR_SEASON_WEEKS + weekNumber + 1);
+  }
   const stage =
     weekType === "reg"
       ? "Regular season"
       : weekType === "pre"
         ? "Preseason"
-        : weekType === "playoff" || weekType === "post"
-          ? "Playoffs"
-          : weekType
-            ? weekType
-            : "Week";
+        : weekType
+          ? weekType
+          : "Week";
   return `${stage} week ${weekNumber + 1}`;
 }
 

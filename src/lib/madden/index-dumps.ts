@@ -14,6 +14,7 @@ import {
 import { awardUndeclaredForceWinXp } from "@/lib/madden/undeclared-force-win-xp";
 import { ensurePlayedGameXp } from "@/lib/madden/played-game-xp";
 import { syncMaddenScoresToOpenGames } from "@/lib/madden/sync-scores";
+import { siteWeekIndexFromCompanion } from "@/lib/league-week";
 
 async function franchiseByAbbr() {
   const franchises = await prisma.franchise.findMany({
@@ -322,11 +323,15 @@ async function indexSchedule(payload: unknown, weekType: string | null = null) {
     if (!scheduleId || !homeTeamId || !awayTeamId) continue;
     await ensureTeam(homeTeamId);
     await ensureTeam(awayTeamId);
+    const weekIndex = siteWeekIndexFromCompanion(
+      Math.round(num(row, "weekIndex")),
+      weekType
+    );
     await prisma.maddenGame.upsert({
       where: { scheduleId },
       create: {
         scheduleId,
-        weekIndex: Math.round(num(row, "weekIndex")),
+        weekIndex,
         homeTeamId,
         awayTeamId,
         homeScore: Math.round(num(row, "homeScore")),
@@ -335,7 +340,7 @@ async function indexSchedule(payload: unknown, weekType: string | null = null) {
         isGameOfTheWeek: flag(row, "isGameOfTheWeek"),
       },
       update: {
-        weekIndex: Math.round(num(row, "weekIndex")),
+        weekIndex,
         homeTeamId,
         awayTeamId,
         homeScore: Math.round(num(row, "homeScore")),

@@ -12,6 +12,7 @@ import { formatMatchupScore } from "@/lib/game-score";
 import { EmptyState } from "@/components/ui/empty-state";
 import { prisma } from "@/lib/prisma";
 import { getActiveSeason } from "@/lib/league";
+import { displayLeagueWeek } from "@/lib/league-week";
 import { addXpAdjustment, addReputationAdjustment } from "@/actions/adjustments";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -68,7 +69,7 @@ export default async function AdminPage() {
         <Metric
           title="Teams assigned"
           value={`${assignedCount}/32`}
-          hint={`Season ${settings.currentSeason} · Week ${settings.currentWeek}`}
+          hint={`Season ${settings.currentSeason} · ${displayLeagueWeek(settings.currentWeek)}`}
         />
       </div>
 

@@ -1,19 +1,32 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-const tabs = [
+const regularTabs = [
+  { id: "week", label: "This week" },
+  { id: "playoffs", label: "Playoffs" },
+  { id: "schedule", label: "Schedule" },
+  { id: "standings", label: "Standings" },
+] as const;
+
+const playoffTabs = [
+  { id: "playoffs", label: "Playoffs" },
   { id: "week", label: "This week" },
   { id: "schedule", label: "Schedule" },
   { id: "standings", label: "Standings" },
 ] as const;
 
+export type GamesTab = "week" | "playoffs" | "schedule" | "standings";
+
 export function GamesTabs({
   active,
   query,
+  inPlayoffs = false,
 }: {
-  active: "week" | "schedule" | "standings";
+  active: GamesTab;
   query: Record<string, string | undefined>;
+  inPlayoffs?: boolean;
 }) {
+  const tabs = inPlayoffs ? playoffTabs : regularTabs;
   return (
     <div className="flex gap-1 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--surface-raised)] p-1">
       {tabs.map((tab) => {
