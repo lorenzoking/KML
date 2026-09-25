@@ -9,6 +9,7 @@ import {
 import {
   buildPlayoffBracket,
   seedConference,
+  seedFromWildCardGames,
   winnerOf,
   type PlayoffSeed,
 } from "./playoffs";
@@ -81,6 +82,45 @@ test("seeds four division winners then three wild cards", () => {
   assert.equal(seeds[0].divisionWinner, true);
   assert.equal(seeds[4].abbreviation, "BUF");
   assert.equal(seeds[4].divisionWinner, false);
+});
+
+test("Madden Wild Card games set the field even when standings pick different wild cards", () => {
+  const standings = [
+    row({ franchiseId: "ne", abbreviation: "NE", division: "East", wins: 14, losses: 3 }),
+    row({ franchiseId: "pit", abbreviation: "PIT", division: "North", wins: 14, losses: 3 }),
+    row({ franchiseId: "ind", abbreviation: "IND", division: "South", wins: 13, losses: 3, pointsFor: 504, pointsAgainst: 328 }),
+    row({ franchiseId: "kc", abbreviation: "KC", division: "West", wins: 13, losses: 3, pointsFor: 513, pointsAgainst: 365 }),
+    row({ franchiseId: "lv", abbreviation: "LV", division: "West", wins: 11, losses: 5 }),
+    row({ franchiseId: "bal", abbreviation: "BAL", division: "North", wins: 11, losses: 6 }),
+    row({ franchiseId: "cle", abbreviation: "CLE", division: "North", wins: 8, losses: 9 }),
+    row({ franchiseId: "lac", abbreviation: "LAC", division: "West", wins: 8, losses: 9 }),
+  ];
+  const seeds = seedFromWildCardGames("AFC", standings, [], [
+    { week: 19, homeTeamId: "pit", awayTeamId: "lac", homeScore: null, awayScore: null, winnerTeamId: null, submissionId: null, status: null },
+    { week: 19, homeTeamId: "ind", awayTeamId: "bal", homeScore: null, awayScore: null, winnerTeamId: null, submissionId: null, status: null },
+    { week: 19, homeTeamId: "kc", awayTeamId: "lv", homeScore: null, awayScore: null, winnerTeamId: null, submissionId: null, status: null },
+  ]);
+  assert.ok(seeds);
+  assert.deepEqual(
+    seeds.map((s) => s.abbreviation),
+    ["NE", "PIT", "IND", "KC", "LV", "BAL", "LAC"]
+  );
+  const withH2h = seedFromWildCardGames(
+    "AFC",
+    standings,
+    [{ homeTeamId: "kc", awayTeamId: "ind", winnerTeamId: "kc" }],
+    [
+      { week: 19, homeTeamId: "pit", awayTeamId: "lac", homeScore: null, awayScore: null, winnerTeamId: null, submissionId: null, status: null },
+      { week: 19, homeTeamId: "ind", awayTeamId: "bal", homeScore: null, awayScore: null, winnerTeamId: null, submissionId: null, status: null },
+      { week: 19, homeTeamId: "kc", awayTeamId: "lv", homeScore: null, awayScore: null, winnerTeamId: null, submissionId: null, status: null },
+    ]
+  );
+  assert.ok(withH2h);
+  const byAbbr = Object.fromEntries(withH2h.map((s) => [s.abbreviation, s.seed]));
+  assert.equal(byAbbr.KC, 3);
+  assert.equal(byAbbr.LV, 6);
+  assert.equal(byAbbr.IND, 4);
+  assert.equal(byAbbr.BAL, 5);
 });
 
 test("head-to-head breaks a two-team seed tie", () => {

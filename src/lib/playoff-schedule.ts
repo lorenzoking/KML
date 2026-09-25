@@ -1,5 +1,7 @@
 import { SubmissionStatus } from "@/generated/prisma/client";
 import { NFL_REGULAR_SEASON_WEEKS, PLAYOFF_START_WEEK } from "@/lib/league-week";
+import { franchiseIdForMaddenTeam } from "@/lib/madden/franchises";
+import { isMaddenFinal } from "@/lib/madden/game-status";
 import { prisma } from "@/lib/prisma";
 import {
   buildPlayoffBracket,
@@ -23,8 +25,8 @@ function isMissingScheduleTable(error: unknown) {
 export async function ensurePlayoffSchedule(seasonId: string, currentWeek: number) {
   if (currentWeek < PLAYOFF_START_WEEK) return;
 
-  const field = await loadColoredField(seasonId);
   const games = await loadPlayoffGames(seasonId);
+  const field = await loadColoredField(seasonId, games);
   const bracket = buildPlayoffBracket(field, games);
 
   if (currentWeek >= 19) {
@@ -79,8 +81,8 @@ export async function getPlayoffField(
   if (writeSchedule) {
     await safeEnsurePlayoffSchedule(seasonId, currentWeek);
   }
-  const field = await loadColoredField(seasonId);
   const games = await loadPlayoffGames(seasonId);
+  const field = await loadColoredField(seasonId, games);
   return {
     field,
     bracket: buildPlayoffBracket(field, games),
@@ -89,7 +91,10 @@ export async function getPlayoffField(
   };
 }
 
-async function loadColoredField(seasonId: string): Promise<PlayoffField> {
+async function loadColoredField(
+  seasonId: string,
+  games: PlayoffGameInput[] = []
+): Promise<PlayoffField> {
   const [franchises, results] = await Promise.all([
     prisma.franchise.findMany({
       orderBy: { sortOrder: "asc" },
@@ -122,7 +127,7 @@ async function loadColoredField(seasonId: string): Promise<PlayoffField> {
   const colorById = Object.fromEntries(
     franchises.map((row) => [row.id, row.primaryColor])
   );
-  const field = seedPlayoffs(standings, results);
+  const field = seedPlayoffs(standings, results, games);
   return {
     afc: paint(field.afc, colorById),
     nfc: paint(field.nfc, colorById),
@@ -137,7 +142,8 @@ function paint(seeds: PlayoffSeed[], colorById: Record<string, string | null>) {
 }
 
 async function loadPlayoffGames(seasonId: string): Promise<PlayoffGameInput[]> {
-  const [scheduled, submissions] = await Promise.all([
+  const [madden, scheduled, submissions] = await Promise.all([
+    loadMaddenPlayoffMatchups(),
     prisma.scheduledGame.findMany({
       where: { seasonId, week: { gte: PLAYOFF_START_WEEK } },
       select: { week: true, homeTeamId: true, awayTeamId: true },
@@ -161,23 +167,77 @@ async function loadPlayoffGames(seasonId: string): Promise<PlayoffGameInput[]> {
     }),
   ]);
 
+  const maddenWeeks = new Set(madden.map((game) => game.week));
   const used = new Set<string>();
-  const fromSchedule = scheduled.map((game) => {
-    const sub = liveSubmission(game.homeTeamId, game.awayTeamId, submissions);
-    if (sub) used.add(sub.id);
-    return toGameInput(
-      game.week,
-      game.homeTeamId,
-      game.awayTeamId,
-      sub
-    );
-  });
+  const fromSchedule = scheduled
+    .filter((game) => {
+      if (!maddenWeeks.has(game.week)) return true;
+      return madden.some(
+        (row) =>
+          row.week === game.week &&
+          pairKey(row.homeTeamId, row.awayTeamId) ===
+            pairKey(game.homeTeamId, game.awayTeamId)
+      );
+    })
+    .map((game) => {
+      const sub = liveSubmission(game.homeTeamId, game.awayTeamId, submissions);
+      if (sub) used.add(sub.id);
+      return toGameInput(game.week, game.homeTeamId, game.awayTeamId, sub);
+    });
   const orphans = submissions
     .filter((sub) => !used.has(sub.id))
     .map((sub) =>
       toGameInput(sub.week, sub.userTeamId, sub.opponentTeamId, sub)
     );
-  return [...fromSchedule, ...orphans];
+  return [...fromSchedule, ...orphans, ...madden];
+}
+
+async function loadMaddenPlayoffMatchups(): Promise<PlayoffGameInput[]> {
+  const rows = await prisma.maddenGame.findMany({
+    where: { weekIndex: { gte: NFL_REGULAR_SEASON_WEEKS } },
+    include: {
+      homeTeam: {
+        select: {
+          franchiseId: true,
+          abbr: true,
+          nickName: true,
+          displayName: true,
+        },
+      },
+      awayTeam: {
+        select: {
+          franchiseId: true,
+          abbr: true,
+          nickName: true,
+          displayName: true,
+        },
+      },
+    },
+  });
+
+  const out: PlayoffGameInput[] = [];
+  for (const game of rows) {
+    const homeTeamId = await franchiseIdForMaddenTeam(game.homeTeam);
+    const awayTeamId = await franchiseIdForMaddenTeam(game.awayTeam);
+    if (!homeTeamId || !awayTeamId) continue;
+    const final = isMaddenFinal(game.status);
+    out.push({
+      week: game.weekIndex + 1,
+      homeTeamId,
+      awayTeamId,
+      homeScore: final ? game.homeScore : null,
+      awayScore: final ? game.awayScore : null,
+      winnerTeamId:
+        final && game.homeScore !== game.awayScore
+          ? game.homeScore > game.awayScore
+            ? homeTeamId
+            : awayTeamId
+          : null,
+      submissionId: null,
+      status: final ? "approved" : null,
+    });
+  }
+  return out;
 }
 
 function liveSubmission(
@@ -271,16 +331,19 @@ async function replacePlayoffWeek(
 
   const existing = await prisma.scheduledGame.findMany({
     where: { seasonId, week },
-    select: { homeTeamId: true, awayTeamId: true },
+    select: { id: true, homeTeamId: true, awayTeamId: true },
   });
-  const live = await prisma.gameSubmission.count({
+  const liveSubs = await prisma.gameSubmission.findMany({
     where: {
       seasonId,
       week,
       status: { in: [SubmissionStatus.PENDING, SubmissionStatus.APPROVED] },
     },
+    select: { userTeamId: true, opponentTeamId: true },
   });
-  if (live > 0) return;
+  const liveKeys = new Set(
+    liveSubs.map((row) => pairKey(row.userTeamId, row.opponentTeamId))
+  );
 
   const desired = new Set(
     matchups.map((slot) => pairKey(slot.home.franchiseId, slot.away.franchiseId))
@@ -292,17 +355,33 @@ async function replacePlayoffWeek(
     return;
   }
 
+  const staleIds = existing
+    .filter((game) => {
+      const key = pairKey(game.homeTeamId, game.awayTeamId);
+      return !desired.has(key) && !liveKeys.has(key);
+    })
+    .map((game) => game.id);
+  const toCreate = matchups.filter(
+    (slot) => !have.has(pairKey(slot.home.franchiseId, slot.away.franchiseId))
+  );
+
+  if (staleIds.length === 0 && toCreate.length === 0) return;
+
   await prisma.$transaction(async (tx) => {
-    await tx.scheduledGame.deleteMany({ where: { seasonId, week } });
-    await tx.scheduledGame.createMany({
-      data: matchups.map((slot) => ({
-        seasonId,
-        week,
-        homeTeamId: slot.home.franchiseId,
-        awayTeamId: slot.away.franchiseId,
-        isPrimetime,
-      })),
-    });
+    if (staleIds.length > 0) {
+      await tx.scheduledGame.deleteMany({ where: { id: { in: staleIds } } });
+    }
+    if (toCreate.length > 0) {
+      await tx.scheduledGame.createMany({
+        data: toCreate.map((slot) => ({
+          seasonId,
+          week,
+          homeTeamId: slot.home.franchiseId,
+          awayTeamId: slot.away.franchiseId,
+          isPrimetime,
+        })),
+      });
+    }
   });
 }
 

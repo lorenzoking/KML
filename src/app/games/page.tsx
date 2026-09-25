@@ -237,7 +237,7 @@ export default async function GamesPage({
       : Promise.resolve([[], [], []] as const);
 
   const playoffDataPromise =
-    tab === "playoffs"
+    tab === "playoffs" || tab === "standings"
       ? getPlayoffField(
           season.id,
           season.id === activeSeason.id
@@ -406,7 +406,7 @@ export default async function GamesPage({
   const scheduleTies = playedSchedule.filter(
     (row) => !row.bye && row.myScore === row.oppScore
   ).length;
-  const playoffSeeds = seedPlayoffs([...rawStandings], [...standingsResults]);
+  const playoffSeeds = playoffField?.field ?? seedPlayoffs([...rawStandings], [...standingsResults]);
   const seedByFranchise = Object.fromEntries(
     [...playoffSeeds.afc, ...playoffSeeds.nfc].map((seed) => [
       seed.franchiseId,

@@ -90,11 +90,16 @@ export function formatSeedRecord(seed: Pick<PlayoffSeed, "wins" | "losses" | "ti
 
 export function seedPlayoffs(
   standings: StandingRow[],
-  results: ResultLike[] = []
+  results: ResultLike[] = [],
+  games: PlayoffGameInput[] = []
 ): PlayoffField {
   return {
-    afc: seedConference("AFC", standings, results),
-    nfc: seedConference("NFC", standings, results),
+    afc:
+      seedFromWildCardGames("AFC", standings, results, games) ??
+      seedConference("AFC", standings, results),
+    nfc:
+      seedFromWildCardGames("NFC", standings, results, games) ??
+      seedConference("NFC", standings, results),
   };
 }
 
@@ -104,26 +109,80 @@ export function seedConference(
   results: ResultLike[] = []
 ): PlayoffSeed[] {
   const conferenceRows = standings.filter((row) => row.conference === conference);
-  const byDivision = new Map<string, StandingRow[]>();
-  for (const row of conferenceRows) {
-    const list = byDivision.get(row.division) ?? [];
-    list.push(row);
-    byDivision.set(row.division, list);
-  }
-
-  const divisionWinners = [...byDivision.values()]
-    .map((group) => [...group].sort((a, b) => compareTeams(a, b, results))[0])
-    .filter(Boolean)
-    .sort((a, b) => compareTeams(a, b, results));
-
+  const divisionWinners = divisionWinnersOf(conferenceRows, results);
   const winnerIds = new Set(divisionWinners.map((row) => row.franchiseId));
   const wildCards = conferenceRows
     .filter((row) => !winnerIds.has(row.franchiseId))
     .sort((a, b) => compareTeams(a, b, results))
     .slice(0, 3);
 
-  return [...divisionWinners, ...wildCards].map((row, index) => ({
-    seed: index + 1,
+  return [...divisionWinners, ...wildCards].map((row, index) =>
+    toSeed(row, index + 1, index < divisionWinners.length && index < 4)
+  );
+}
+
+/**
+ * When Madden already exported Wild Card games, those pairings are the field.
+ * Home teams become seeds 2–4 (by record), their opponents 7–5.
+ */
+export function seedFromWildCardGames(
+  conference: "AFC" | "NFC",
+  standings: StandingRow[],
+  results: ResultLike[],
+  games: PlayoffGameInput[]
+): PlayoffSeed[] | null {
+  const conferenceRows = standings.filter((row) => row.conference === conference);
+  const byId = new Map(conferenceRows.map((row) => [row.franchiseId, row]));
+  const seen = new Set<string>();
+  const wcGames = games.filter((game) => {
+    if (game.week !== 19) return false;
+    if (!byId.has(game.homeTeamId) || !byId.has(game.awayTeamId)) return false;
+    const key = [game.homeTeamId, game.awayTeamId].sort().join(":");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  if (wcGames.length < 3) return null;
+
+  const playing = new Set(
+    wcGames.flatMap((game) => [game.homeTeamId, game.awayTeamId])
+  );
+  const winners = divisionWinnersOf(conferenceRows, results);
+  const bye = winners.find((row) => !playing.has(row.franchiseId));
+  const homes = wcGames
+    .map((game) => byId.get(game.homeTeamId))
+    .filter((row): row is StandingRow => Boolean(row))
+    .sort((a, b) => compareTeams(a, b, results));
+
+  const seeds: PlayoffSeed[] = [];
+  if (bye) seeds.push(toSeed(bye, 1, true));
+  homes.forEach((home, index) => {
+    const game = wcGames.find((row) => row.homeTeamId === home.franchiseId);
+    const away = game ? byId.get(game.awayTeamId) : null;
+    if (!away) return;
+    seeds.push(toSeed(home, index + 2, winners.some((row) => row.franchiseId === home.franchiseId)));
+    seeds.push(toSeed(away, 7 - index, false));
+  });
+  if (seeds.length < 7) return null;
+  return seeds.sort((a, b) => a.seed - b.seed);
+}
+
+function divisionWinnersOf(conferenceRows: StandingRow[], results: ResultLike[]) {
+  const byDivision = new Map<string, StandingRow[]>();
+  for (const row of conferenceRows) {
+    const list = byDivision.get(row.division) ?? [];
+    list.push(row);
+    byDivision.set(row.division, list);
+  }
+  return [...byDivision.values()]
+    .map((group) => [...group].sort((a, b) => compareTeams(a, b, results))[0])
+    .filter(Boolean)
+    .sort((a, b) => compareTeams(a, b, results));
+}
+
+function toSeed(row: StandingRow, seed: number, divisionWinner: boolean): PlayoffSeed {
+  return {
+    seed,
     franchiseId: row.franchiseId,
     name: row.name,
     abbreviation: row.abbreviation,
@@ -134,8 +193,8 @@ export function seedConference(
     ties: row.ties,
     pointsFor: row.pointsFor,
     pointsAgainst: row.pointsAgainst,
-    divisionWinner: index < divisionWinners.length && index < 4,
-  }));
+    divisionWinner,
+  };
 }
 
 export function buildPlayoffBracket(
