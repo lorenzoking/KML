@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { CalendarDays, ClipboardCheck, FileSignature, Flag, ListOrdered, Send, Shirt, Star, Trophy, User, UserRound, Vote } from "lucide-react";
+import { CalendarDays, ClipboardCheck, Flag, ListOrdered, Send, Shirt, Star, Trophy, User, UserRound, Vote } from "lucide-react";
 import { CoachAvatar } from "@/components/coach/coach-avatar";
 import { JobStatusBadge } from "@/components/coach/job-status-badge";
 import { NeedsYouSection } from "@/components/dashboard/add-to-home-screen";
@@ -573,7 +573,6 @@ export default async function DashboardPage({
           icon={ListOrdered}
           tone="soft"
         />
-        <Shortcut href="/contracts" label="Contracts" icon={FileSignature} tone="gold" />
         {membership ? (
           <Shortcut
             href={`/coach/profiles/${user.id}`}

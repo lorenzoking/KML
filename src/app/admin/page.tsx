@@ -97,9 +97,6 @@ export default async function AdminPage() {
           <Link href="/admin/stories">Primetime polls</Link>
         </Button>
         <Button asChild variant="outline">
-          <Link href="/admin/contracts">Contract comps</Link>
-        </Button>
-        <Button asChild variant="outline">
           <Link href="/admin/madden">Madden export</Link>
         </Button>
         <Button asChild variant="outline">

@@ -26,7 +26,6 @@ export function SiteHeader({
         { href: "/games", label: "Games" },
         { href: "/champions", label: "Hall" },
         { href: "/league", label: "League" },
-        { href: "/contracts", label: "Contracts" },
         { href: "/storylines", label: "Storylines" },
         { href: "/coach", label: "Coach" },
         { href: "/rules", label: "Rules" },
@@ -37,7 +36,6 @@ export function SiteHeader({
         { href: "/games", label: "Games" },
         { href: "/champions", label: "Hall" },
         { href: "/league", label: "League" },
-        { href: "/contracts", label: "Contracts" },
         { href: "/storylines", label: "Storylines" },
         { href: "/rules", label: "Rules" },
       ];
