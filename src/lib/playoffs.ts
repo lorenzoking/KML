@@ -206,6 +206,14 @@ export function buildPlayoffBracket(
   const afcChamp = winnerOf(afc.championship);
   const nfcChamp = winnerOf(nfc.championship);
   const sbHomeAway = superBowlSides(afcChamp, nfcChamp);
+  const teams = [...field.afc, ...field.nfc];
+  const tape = games.find((game) => game.week === SUPER_BOWL_WEEK);
+  const tapeHome = tape
+    ? teams.find((team) => team.franchiseId === tape.homeTeamId) ?? null
+    : null;
+  const tapeAway = tape
+    ? teams.find((team) => team.franchiseId === tape.awayTeamId) ?? null
+    : null;
   return {
     afc,
     nfc,
@@ -216,8 +224,8 @@ export function buildPlayoffBracket(
         round: "superbowl",
         conference: "NFL",
         label: "Super Bowl",
-        home: sbHomeAway.home,
-        away: sbHomeAway.away,
+        home: sbHomeAway.home ?? tapeHome,
+        away: sbHomeAway.away ?? tapeAway,
       },
       games
     ),
@@ -362,14 +370,17 @@ function fillSlot(
   >,
   games: PlayoffGameInput[]
 ): BracketSlot {
-  const game =
+  const matches =
     slot.home && slot.away
-      ? games.find(
+      ? games.filter(
           (row) =>
             row.week === slot.week &&
             teamsMatch(row, slot.home!.franchiseId, slot.away!.franchiseId)
         )
-      : undefined;
+      : [];
+  const game =
+    matches.find((row) => row.homeScore != null && row.awayScore != null) ??
+    matches[0];
 
   if (!game) {
     return {

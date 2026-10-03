@@ -3,6 +3,11 @@ import { MaddenExportKind } from "@/generated/prisma/client";
 import { displayLeagueWeek, NFL_REGULAR_SEASON_WEEKS } from "@/lib/league-week";
 import { getSiteUrl } from "@/lib/site";
 
+export function isReleasedCompanionPayload(payload: unknown) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
+  return (payload as { released?: unknown }).released === true;
+}
+
 export const MADDEN_EXPORT_KIND_LABELS: Record<MaddenExportKind, string> = {
   LEAGUE_TEAMS: "League teams",
   STANDINGS: "Standings",

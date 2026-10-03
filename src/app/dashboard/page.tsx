@@ -23,6 +23,7 @@ import {
   getXpTotal,
 } from "@/lib/league";
 import { displayLeagueWeek } from "@/lib/league-week";
+import { getHallOfChampions } from "@/lib/champions";
 import { getUserCareerStats } from "@/lib/career";
 import { computeGmReputationScore } from "@/lib/reputation";
 import { getReputationGrade, getReputationGradeLabel } from "@/lib/coach/grades";
@@ -65,6 +66,7 @@ export default async function DashboardPage({
     stories,
     teamRequestUser,
     standings,
+    champion,
   ] = await Promise.all([
     getUserMembership(user.id, season.id),
     getXpTotal(user.id),
@@ -85,6 +87,7 @@ export default async function DashboardPage({
       include: { requestedFranchise: true },
     }),
     getSeasonStandings(season.id),
+    getHallOfChampions().then((rows) => rows[0] ?? null),
   ]);
 
   const gmRepScore = computeGmReputationScore(
@@ -423,6 +426,12 @@ export default async function DashboardPage({
         <p className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[var(--primary)]">
           Season {settings.currentSeason} · {displayLeagueWeek(settings.currentWeek)}
         </p>
+        {champion ? (
+          <Link href="/champions" className="inline-flex text-sm text-[var(--muted-foreground)]">
+            Defending champs · {champion.championAbbr} {champion.championScore}–
+            {champion.runnerUpScore}
+          </Link>
+        ) : null}
         <h1 className="font-[family-name:var(--font-display)] text-[2.15rem] font-semibold leading-[1.02] tracking-[0.03em] sm:text-[2.55rem]">
           <span className="text-[var(--primary)]">Coach</span> {coachName}
         </h1>

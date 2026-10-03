@@ -9,6 +9,7 @@ export async function getMaddenWeekContext() {
     (await prisma.maddenGame.count({
       where: {
         weekIndex: currentWeek - 1,
+        seasonNumber: settings.currentSeason,
         status: MaddenScheduleStatus.UNPLAYED,
       },
     })) > 0;

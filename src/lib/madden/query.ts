@@ -1,44 +1,52 @@
 import { MaddenStatCategory } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import { liveMaddenSeason } from "@/lib/madden/live-season";
 
 export { ensureMaddenLeague } from "@/lib/madden/index-dumps";
 
-const teamInclude = {
-  franchise: {
-    include: {
-      memberships: {
-        where: { isActive: true, user: { deletedAt: null } },
-        include: { user: { select: { id: true, name: true } } },
-        take: 1,
-      },
+function coachOnSeason(seasonId: string) {
+  return {
+    where: {
+      isActive: true,
+      seasonId,
+      user: { deletedAt: null },
     },
-  },
-  _count: { select: { players: true } },
-} as const;
+    include: { user: { select: { id: true, name: true } } },
+    take: 1,
+  };
+}
 
 export async function getMaddenTeams() {
+  const season = await liveMaddenSeason();
   return prisma.maddenTeam.findMany({
     where: { NOT: { abbr: "UNK" } },
     orderBy: [{ conference: "asc" }, { division: "asc" }, { abbr: "asc" }],
-    include: teamInclude,
+    include: {
+      franchise: { include: { memberships: coachOnSeason(season.id) } },
+      _count: { select: { players: true } },
+    },
   });
 }
 
 export async function getMaddenTeam(abbr: string) {
+  const season = await liveMaddenSeason();
   return prisma.maddenTeam.findFirst({
     where: { abbr: { equals: abbr, mode: "insensitive" } },
     include: {
-      ...teamInclude,
+      franchise: { include: { memberships: coachOnSeason(season.id) } },
+      _count: { select: { players: true } },
       players: {
         orderBy: [{ overall: "desc" }, { lastName: "asc" }],
-        include: { stats: true },
+        include: { stats: { where: { seasonNumber: season.number } } },
       },
     },
   });
 }
 
 export async function latestStatWeek() {
+  const season = await liveMaddenSeason();
   const row = await prisma.maddenPlayerStat.findFirst({
+    where: { seasonNumber: season.number },
     orderBy: { weekIndex: "desc" },
     select: { weekIndex: true },
   });
@@ -62,7 +70,9 @@ export async function getMaddenLivePulse() {
 }
 
 export async function listStatWeeks() {
+  const season = await liveMaddenSeason();
   const rows = await prisma.maddenPlayerStat.findMany({
+    where: { seasonNumber: season.number },
     distinct: ["weekIndex"],
     select: { weekIndex: true },
     orderBy: { weekIndex: "desc" },
@@ -71,15 +81,16 @@ export async function listStatWeeks() {
 }
 
 export async function getWeekGames(weekIndex: number) {
+  const season = await liveMaddenSeason();
   return prisma.maddenGame.findMany({
-    where: { weekIndex },
+    where: { weekIndex, seasonNumber: season.number },
     include: {
       homeTeam: {
         include: {
           franchise: {
             include: {
               memberships: {
-                where: { isActive: true, user: { deletedAt: null } },
+                where: { isActive: true, seasonId: season.id, user: { deletedAt: null } },
                 include: { user: { select: { name: true } } },
                 take: 1,
               },
@@ -92,7 +103,7 @@ export async function getWeekGames(weekIndex: number) {
           franchise: {
             include: {
               memberships: {
-                where: { isActive: true, user: { deletedAt: null } },
+                where: { isActive: true, seasonId: season.id, user: { deletedAt: null } },
                 include: { user: { select: { name: true } } },
                 take: 1,
               },
@@ -134,8 +145,9 @@ export async function getLeaders(
             ? { OR: [{ defSacks: { gt: 0 } }, { defInts: { gt: 0 } }, { defTackles: { gt: 0 } }] }
             : { kickPts: { gt: 0 } };
 
+  const season = await liveMaddenSeason();
   return prisma.maddenPlayerStat.findMany({
-    where: { weekIndex, category, ...minWhere },
+    where: { seasonNumber: season.number, weekIndex, category, ...minWhere },
     include: {
       player: true,
       team: {
@@ -145,7 +157,7 @@ export async function getLeaders(
               abbreviation: true,
               primaryColor: true,
               memberships: {
-                where: { isActive: true, user: { deletedAt: null } },
+                where: { isActive: true, seasonId: season.id, user: { deletedAt: null } },
                 include: { user: { select: { name: true } } },
                 take: 1,
               },
@@ -159,19 +171,25 @@ export async function getLeaders(
   });
 }
 
-const weekTeamInclude = {
-  franchise: {
-    select: {
-      abbreviation: true,
-      primaryColor: true,
-      memberships: {
-        where: { isActive: true, user: { deletedAt: null } },
-        include: { user: { select: { name: true } } },
-        take: 1,
+function weekTeamInclude(seasonId: string) {
+  return {
+    franchise: {
+      select: {
+        abbreviation: true,
+        primaryColor: true,
+        memberships: {
+          where: {
+            isActive: true,
+            seasonId,
+            user: { deletedAt: null },
+          },
+          include: { user: { select: { name: true } } },
+          take: 1,
+        },
       },
     },
-  },
-} as const;
+  };
+}
 
 export type WeekPlayerTotal = {
   rosterId: string;
@@ -201,11 +219,16 @@ export type WeekPlayerTotal = {
 
 /** Merge every Companion category row for a week so a back’s rush + rec live on one card. */
 export async function getWeekPlayerTotals(weekIndex: number): Promise<WeekPlayerTotal[]> {
+  const season = await liveMaddenSeason();
   const stats = await prisma.maddenPlayerStat.findMany({
-    where: { weekIndex, team: { NOT: { abbr: "UNK" } } },
+    where: {
+      seasonNumber: season.number,
+      weekIndex,
+      team: { NOT: { abbr: "UNK" } },
+    },
     include: {
       player: true,
-      team: { include: weekTeamInclude },
+      team: { include: weekTeamInclude(season.id) },
     },
   });
 
@@ -278,8 +301,9 @@ export async function getTeamWeekStats(
   maddenTeamId: string,
   weekIndex: number
 ) {
+  const season = await liveMaddenSeason();
   return prisma.maddenPlayerStat.findMany({
-    where: { maddenTeamId, weekIndex },
+    where: { maddenTeamId, weekIndex, seasonNumber: season.number },
     include: { player: true },
     orderBy: [{ category: "asc" }, { passYds: "desc" }, { rushYds: "desc" }, { recYds: "desc" }],
   });
@@ -319,8 +343,9 @@ export type SeasonPlayerTotal = {
 };
 
 export async function getSeasonPlayerTotals() {
+  const season = await liveMaddenSeason();
   const stats = await prisma.maddenPlayerStat.findMany({
-    where: { team: { NOT: { abbr: "UNK" } } },
+    where: { seasonNumber: season.number, team: { NOT: { abbr: "UNK" } } },
     include: {
       player: true,
       team: {
@@ -416,8 +441,9 @@ export async function getSeasonPlayerTotals() {
 }
 
 export async function getSeasonLeaders(category: MaddenStatCategory, take = 10) {
+  const season = await liveMaddenSeason();
   const stats = await prisma.maddenPlayerStat.findMany({
-    where: { category },
+    where: { category, seasonNumber: season.number },
     include: { player: true, team: true },
   });
   const byPlayer = new Map<
@@ -482,8 +508,10 @@ export type TeamStatTotal = {
 };
 
 export async function getTeamStatTotals(weekIndex?: number | null) {
+  const season = await liveMaddenSeason();
   const stats = await prisma.maddenTeamWeekStat.findMany({
     where: {
+      seasonNumber: season.number,
       ...(weekIndex != null ? { weekIndex } : {}),
       team: { NOT: { abbr: "UNK" } },
     },

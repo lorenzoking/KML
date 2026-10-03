@@ -6,15 +6,23 @@ import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { APP_NAME } from "@/lib/constants";
 import { displayLeagueWeek } from "@/lib/league-week";
+import { getHallOfChampions } from "@/lib/champions";
 import { ArrowRight, Crown, Shield, Trophy } from "lucide-react";
 
 export default async function HomePage() {
   const user = await getSessionUser();
   let settings = null;
+  let champion = null;
   try {
     settings = await prisma.leagueSetting.findUnique({ where: { key: "default" } });
   } catch {
     settings = null;
+  }
+  try {
+    const hall = await getHallOfChampions();
+    champion = hall[0] ?? null;
+  } catch {
+    champion = null;
   }
 
   return (
@@ -74,12 +82,32 @@ export default async function HomePage() {
                 <Link href="/games">Games & standings</Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-white/25 bg-black/30 text-white hover:bg-white/10">
-                <Link href="/league">Award races</Link>
+                <Link href="/champions">Hall of Champions</Link>
               </Button>
             </div>
           </div>
         </div>
       </section>
+
+      {champion ? (
+        <Link
+          href="/champions"
+          className="flex items-center gap-4 rounded-3xl border border-[color-mix(in_srgb,var(--primary)_40%,var(--border))] bg-[var(--surface-raised)] px-4 py-4 transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_8%,var(--surface-raised))] sm:px-5"
+        >
+          <span className="flex size-11 items-center justify-center rounded-2xl bg-[var(--primary)]/15 text-[var(--primary)]">
+            <Trophy className="size-5" />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
+              Hall of Champions
+            </span>
+            <span className="block truncate font-[family-name:var(--font-display)] text-lg uppercase tracking-wide">
+              Season {champion.seasonNumber} · {champion.championName}{" "}
+              {champion.championScore}–{champion.runnerUpScore}
+            </span>
+          </span>
+        </Link>
+      ) : null}
 
       <section className="stagger grid gap-3 sm:gap-4 md:grid-cols-3">
         {[

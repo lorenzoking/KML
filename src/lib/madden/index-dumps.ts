@@ -2,7 +2,6 @@ import { MaddenExportKind, MaddenStatCategory } from "@/generated/prisma/client"
 import { prisma } from "@/lib/prisma";
 import {
   flag,
-  jsonValue,
   num,
   payloadList,
   rosterIdOf,
@@ -15,6 +14,9 @@ import { awardUndeclaredForceWinXp } from "@/lib/madden/undeclared-force-win-xp"
 import { ensurePlayedGameXp } from "@/lib/madden/played-game-xp";
 import { syncMaddenScoresToOpenGames } from "@/lib/madden/sync-scores";
 import { siteWeekIndexFromCompanion } from "@/lib/league-week";
+import { liveMaddenSeason } from "@/lib/madden/live-season";
+
+const RELEASED_PAYLOAD = { released: true };
 
 async function franchiseByAbbr() {
   const franchises = await prisma.franchise.findMany({
@@ -211,7 +213,7 @@ function kickPoints(row: Record<string, unknown>) {
   return Math.round(num(row, "fGMade")) * 3 + Math.round(num(row, "xPMade"));
 }
 
-async function indexPlayerStats(payload: unknown) {
+async function indexPlayerStats(payload: unknown, seasonNumber: number) {
   for (const list of STAT_LISTS) {
     for (const row of payloadList(payload, list.key)) {
       const rosterId = rosterIdOf(row);
@@ -222,16 +224,18 @@ async function indexPlayerStats(payload: unknown) {
       await ensurePlayer(rosterId, maddenTeamId, fullName);
       await prisma.maddenPlayerStat.upsert({
         where: {
-          rosterId_weekIndex_category: {
+          rosterId_weekIndex_category_seasonNumber: {
             rosterId,
             weekIndex,
             category: list.category,
+            seasonNumber,
           },
         },
         create: {
           rosterId,
           maddenTeamId,
           weekIndex,
+          seasonNumber,
           category: list.category,
           fullName,
           passYds: Math.round(num(row, "passYds")),
@@ -250,7 +254,7 @@ async function indexPlayerStats(payload: unknown) {
           defSacks: num(row, "defSacks"),
           defInts: Math.round(num(row, "defInts")),
           kickPts: kickPoints(row),
-          payload: jsonValue(row),
+          payload: {},
         },
         update: {
           maddenTeamId,
@@ -271,24 +275,27 @@ async function indexPlayerStats(payload: unknown) {
           defSacks: num(row, "defSacks"),
           defInts: Math.round(num(row, "defInts")),
           kickPts: kickPoints(row),
-          payload: jsonValue(row),
+          payload: {},
         },
       });
     }
   }
 }
 
-async function indexTeamWeekStats(payload: unknown) {
+async function indexTeamWeekStats(payload: unknown, seasonNumber: number) {
   for (const row of payloadList(payload, "teamStatInfoList")) {
     const maddenTeamId = teamIdOf(row);
     const weekIndex = Math.round(num(row, "weekIndex"));
     if (!maddenTeamId) continue;
     await ensureTeam(maddenTeamId);
     await prisma.maddenTeamWeekStat.upsert({
-      where: { maddenTeamId_weekIndex: { maddenTeamId, weekIndex } },
+      where: {
+        maddenTeamId_weekIndex_seasonNumber: { maddenTeamId, weekIndex, seasonNumber },
+      },
       create: {
         maddenTeamId,
         weekIndex,
+        seasonNumber,
         offPassYds: Math.round(num(row, "offPassYds")),
         offRushYds: Math.round(num(row, "offRushYds")),
         offPassTDs: Math.round(num(row, "offPassTDs")),
@@ -297,7 +304,7 @@ async function indexTeamWeekStats(payload: unknown) {
         defTotalYds: Math.round(num(row, "defTotalYds")),
         defSacks: num(row, "defSacks"),
         defPtsPerGame: num(row, "defPtsPerGame"),
-        payload: jsonValue(row),
+        payload: {},
       },
       update: {
         offPassYds: Math.round(num(row, "offPassYds")),
@@ -308,13 +315,17 @@ async function indexTeamWeekStats(payload: unknown) {
         defTotalYds: Math.round(num(row, "defTotalYds")),
         defSacks: num(row, "defSacks"),
         defPtsPerGame: num(row, "defPtsPerGame"),
-        payload: jsonValue(row),
+        payload: {},
       },
     });
   }
 }
 
-async function indexSchedule(payload: unknown, weekType: string | null = null) {
+async function indexSchedule(
+  payload: unknown,
+  weekType: string | null = null,
+  seasonNumber = 1
+) {
   const scheduleIds: string[] = [];
   for (const row of payloadList(payload, "gameScheduleInfoList")) {
     const scheduleId = str(row, "scheduleId") || String(row.scheduleId ?? "");
@@ -338,6 +349,7 @@ async function indexSchedule(payload: unknown, weekType: string | null = null) {
         awayScore: Math.round(num(row, "awayScore")),
         status: Math.round(num(row, "status")),
         isGameOfTheWeek: flag(row, "isGameOfTheWeek"),
+        seasonNumber,
       },
       update: {
         weekIndex,
@@ -347,6 +359,7 @@ async function indexSchedule(payload: unknown, weekType: string | null = null) {
         awayScore: Math.round(num(row, "awayScore")),
         status: Math.round(num(row, "status")),
         isGameOfTheWeek: flag(row, "isGameOfTheWeek"),
+        seasonNumber,
       },
     });
     scheduleIds.push(scheduleId);
@@ -379,33 +392,49 @@ export async function indexMaddenDump(dump: {
   payload: unknown;
 }) {
   if (dump.success === false) {
-    await prisma.maddenExportDump.update({
-      where: { id: dump.id },
-      data: { indexedAt: new Date() },
-    });
+    await markDumpIndexed(dump.id);
     return;
   }
+
+  const seasonNumber = (await liveMaddenSeason()).number;
 
   if (dump.kind === MaddenExportKind.LEAGUE_TEAMS) await indexLeagueTeams(dump.payload);
   else if (dump.kind === MaddenExportKind.STANDINGS) await indexStandings(dump.payload);
   else if (dump.kind === MaddenExportKind.TEAM_ROSTER) {
     await indexRoster(dump.payload, dump.teamId);
   } else if (dump.kind === MaddenExportKind.SCHEDULE || dump.dataType === "schedules") {
-    await indexSchedule(dump.payload, dump.weekType ?? null);
+    await indexSchedule(dump.payload, dump.weekType ?? null, seasonNumber);
   } else if (
     dump.kind === MaddenExportKind.TEAM_STATS ||
     dump.dataType === "team" ||
     dump.dataType === "teamstats"
   ) {
-    await indexTeamWeekStats(dump.payload);
+    await indexTeamWeekStats(dump.payload, seasonNumber);
   } else if (dump.kind === MaddenExportKind.PLAYER_STATS) {
-    await indexPlayerStats(dump.payload);
+    await indexPlayerStats(dump.payload, seasonNumber);
   }
 
+  await markDumpIndexed(dump.id);
+}
+
+async function markDumpIndexed(id: string) {
   await prisma.maddenExportDump.update({
-    where: { id: dump.id },
-    data: { indexedAt: new Date() },
+    where: { id },
+    data: { indexedAt: new Date(), payload: RELEASED_PAYLOAD },
   });
+}
+
+/** Drop raw JSON once it has been copied into the typed tables. */
+export async function releaseIndexedCompanionPayloads() {
+  const [dumps, players, teams] = await Promise.all([
+    prisma.maddenExportDump.updateMany({
+      where: { indexedAt: { not: null } },
+      data: { payload: RELEASED_PAYLOAD },
+    }),
+    prisma.maddenPlayerStat.updateMany({ data: { payload: {} } }),
+    prisma.maddenTeamWeekStat.updateMany({ data: { payload: {} } }),
+  ]);
+  return { dumps: dumps.count, players: players.count, teams: teams.count };
 }
 
 export async function indexPendingMaddenDumps(take = 40) {

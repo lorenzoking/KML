@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
-import { displayCompanionWeek, MADDEN_EXPORT_KIND_LABELS, weekIndexFromPayload } from "@/lib/madden/companion";
+import { isReleasedCompanionPayload, displayCompanionWeek, MADDEN_EXPORT_KIND_LABELS, weekIndexFromPayload } from "@/lib/madden/companion";
 
 export default async function MaddenDumpPage({
   params,
@@ -30,6 +30,7 @@ export default async function MaddenDumpPage({
       ? Object.entries(dump.listCounts as Record<string, number>)
       : [];
 
+  const released = isReleasedCompanionPayload(dump.payload);
   const pretty = JSON.stringify(dump.payload, null, 2);
   const truncated = pretty.length > 80_000;
   const shown = truncated ? `${pretty.slice(0, 80_000)}\n… truncated` : pretty;
@@ -139,13 +140,22 @@ export default async function MaddenDumpPage({
         <CardHeader>
           <CardTitle>Raw JSON</CardTitle>
           <CardDescription>
-            Stored as sent by the app. Use this to map Madden 27 fields.
+            {released
+              ? "Indexed into the league tables, then released so the database stays small."
+              : "Stored as sent by the app. Use this to map Madden 27 fields."}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <pre className="max-h-[32rem] overflow-auto rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 p-3 text-xs leading-relaxed">
-            {shown}
-          </pre>
+          {released ? (
+            <p className="text-sm text-[var(--muted-foreground)]">
+              Scores, rosters, and stat lines from this export are already on
+              the league pages. The original payload is no longer stored.
+            </p>
+          ) : (
+            <pre className="max-h-[32rem] overflow-auto rounded-lg border border-[var(--border)] bg-[var(--muted)]/30 p-3 text-xs leading-relaxed">
+              {shown}
+            </pre>
+          )}
         </CardContent>
       </Card>
     </div>

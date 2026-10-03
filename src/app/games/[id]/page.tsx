@@ -135,6 +135,7 @@ export default async function GameDetailPage({
 
   const boxScore = await getGameBoxScore({
     week: game.week,
+    seasonNumber: game.season.number,
     userTeamId: game.userTeamId,
     opponentTeamId: game.opponentTeamId,
     userAbbr: game.userTeam.abbreviation,

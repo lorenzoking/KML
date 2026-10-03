@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { franchiseIdForMaddenTeam } from "@/lib/madden/franchises";
+import { liveMaddenSeason } from "@/lib/madden/live-season";
 import { scoresForSiteSubmitter } from "@/lib/madden/sync-scores-map";
 
 export async function findMaddenScoreForMatchup(params: {
@@ -8,8 +9,9 @@ export async function findMaddenScoreForMatchup(params: {
   opponentTeamId: string;
 }) {
   const weekIndex = params.week - 1;
+  const season = await liveMaddenSeason();
   const games = await prisma.maddenGame.findMany({
-    where: { weekIndex },
+    where: { weekIndex, seasonNumber: season.number },
     include: {
       homeTeam: {
         select: { franchiseId: true, abbr: true, nickName: true, displayName: true },

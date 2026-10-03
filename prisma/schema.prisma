@@ -204,6 +204,8 @@ model Franchise {
   scheduledAway                 ScheduledGame[]       @relation("ScheduledAway")
   contractSignings              PlayerContractSigning[]
   maddenTeam                    MaddenTeam?
+  titlesWon                     SeasonTitle[] @relation("SeasonChampion")
+  titlesLost                    SeasonTitle[] @relation("SeasonRunnerUp")
 }
 
 model Season {
@@ -227,6 +229,20 @@ model Season {
   scheduledGames        ScheduledGame[]
   contractSignings      PlayerContractSigning[]
   maddenExports         MaddenExportDump[]
+}
+
+/// Engraved when a season is archived. The Super Bowl result is the source.
+model SeasonTitle {
+  id                  String   @id @default(cuid())
+  seasonNumber        Int      @unique
+  championFranchiseId String
+  runnerUpFranchiseId String?
+  championScore       Int
+  runnerUpScore       Int
+  createdAt           DateTime @default(now())
+
+  champion Franchise  @relation("SeasonChampion", fields: [championFranchiseId], references: [id])
+  runnerUp Franchise? @relation("SeasonRunnerUp", fields: [runnerUpFranchiseId], references: [id])
 }
 
 model ScheduledGame {
@@ -824,8 +840,8 @@ model PlayerContractSigning {
   @@index([seasonId, playerName])
 }
 
-/// Raw JSON posted by the Madden Companion App. Kept intact so M27 field
-/// changes can be inspected before we map them into league pages.
+/// Companion JSON is indexed into the typed tables, then released.
+/// payloadKeys, listCounts, and byteSize stay so the export log still reads.
 model MaddenExportDump {
   id          String           @id @default(cuid())
   seasonId    String?
@@ -936,14 +952,16 @@ model MaddenPlayerStat {
   defSacks      Float              @default(0)
   defInts       Int                @default(0)
   kickPts       Int                @default(0)
+  /// Counting stats live in the columns above. Payload stays empty.
   payload       Json
+  seasonNumber  Int                @default(1)
   updatedAt     DateTime           @updatedAt
 
   player MaddenPlayer @relation(fields: [rosterId], references: [rosterId], onDelete: Cascade)
   team   MaddenTeam   @relation(fields: [maddenTeamId], references: [maddenTeamId], onDelete: Cascade)
 
-  @@unique([rosterId, weekIndex, category])
-  @@index([weekIndex, category])
+  @@unique([rosterId, weekIndex, category, seasonNumber])
+  @@index([seasonNumber, weekIndex, category])
   @@index([maddenTeamId, weekIndex])
 }
 
@@ -959,13 +977,15 @@ model MaddenTeamWeekStat {
   defTotalYds   Int    @default(0)
   defSacks      Float  @default(0)
   defPtsPerGame Float  @default(0)
+  /// Counting stats live in the columns above. Payload stays empty.
   payload       Json
+  seasonNumber  Int      @default(1)
   updatedAt     DateTime @updatedAt
 
   team MaddenTeam @relation(fields: [maddenTeamId], references: [maddenTeamId], onDelete: Cascade)
 
-  @@unique([maddenTeamId, weekIndex])
-  @@index([weekIndex])
+  @@unique([maddenTeamId, weekIndex, seasonNumber])
+  @@index([seasonNumber, weekIndex])
 }
 
 model MaddenGame {
@@ -978,10 +998,11 @@ model MaddenGame {
   awayScore        Int     @default(0)
   status           Int     @default(0)
   isGameOfTheWeek  Boolean @default(false)
+  seasonNumber     Int     @default(1)
   updatedAt        DateTime @updatedAt
 
   homeTeam MaddenTeam @relation("MaddenHome", fields: [homeTeamId], references: [maddenTeamId], onDelete: Cascade)
   awayTeam MaddenTeam @relation("MaddenAway", fields: [awayTeamId], references: [maddenTeamId], onDelete: Cascade)
 
-  @@index([weekIndex])
+  @@index([seasonNumber, weekIndex])
 }

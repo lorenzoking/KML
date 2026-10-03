@@ -98,6 +98,7 @@ export async function ensurePlayedGameXp(scheduleIds?: string[]) {
   let granted = 0;
 
   for (const game of games) {
+    if (game.seasonNumber !== ctx.settings.currentSeason) continue;
     const week = game.weekIndex + 1;
     const kind = maddenResultKind({
       status: game.status,

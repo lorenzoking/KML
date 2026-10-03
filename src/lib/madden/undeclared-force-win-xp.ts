@@ -67,6 +67,7 @@ export async function awardUndeclaredForceWinXp(scheduleIds: string[]) {
   let granted = 0;
 
   for (const game of games) {
+    if (game.seasonNumber !== ctx.settings.currentSeason) continue;
     const week = game.weekIndex + 1;
     if (
       maddenResultKind({

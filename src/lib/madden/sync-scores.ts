@@ -16,7 +16,7 @@ import {
   scoresForSiteSubmitter,
   shouldSyncCompanionWeekType,
 } from "@/lib/madden/sync-scores-map";
-import { gameTypeForLeagueWeek } from "@/lib/league-week";
+import { gameTypeForLeagueWeek, siteWeekFromMaddenIndex } from "@/lib/league-week";
 
 const COMPANION_FILE_NOTE = "Auto-filed from Madden Companion export.";
 
@@ -287,7 +287,8 @@ export async function syncMaddenScoresToOpenGames(
   let updated = 0;
 
   for (const game of games) {
-    const week = game.weekIndex + 1;
+    const week = siteWeekFromMaddenIndex(game.weekIndex);
+    if (game.seasonNumber !== season.number) continue;
     const kind = maddenResultKind({
       status: game.status,
       homeScore: game.homeScore,

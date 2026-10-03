@@ -215,6 +215,7 @@ export function hasBoxScoreLines(side: BoxScoreSide) {
 
 export async function getGameBoxScore(input: {
   week: number;
+  seasonNumber: number;
   userTeamId: string;
   opponentTeamId: string;
   userAbbr: string;
@@ -225,6 +226,7 @@ export async function getGameBoxScore(input: {
   opponentColor?: string;
 }): Promise<GameBoxScore | null> {
   const weekIndex = input.week - 1;
+  const seasonNumber = input.seasonNumber;
   const [userTeams, opponentTeams] = await Promise.all([
     maddenTeamsForFranchise(input.userTeamId, input.userAbbr),
     maddenTeamsForFranchise(input.opponentTeamId, input.opponentAbbr),
@@ -237,6 +239,7 @@ export async function getGameBoxScore(input: {
   const matchupFilter =
     userIds.length > 0 && opponentIds.length > 0
       ? {
+          seasonNumber,
           weekIndex,
           OR: [
             { homeTeamId: { in: userIds }, awayTeamId: { in: opponentIds } },
@@ -244,6 +247,7 @@ export async function getGameBoxScore(input: {
           ],
         }
       : {
+          seasonNumber,
           weekIndex,
           OR: teamIds.flatMap((id) => [{ homeTeamId: id }, { awayTeamId: id }]),
         };
@@ -256,7 +260,7 @@ export async function getGameBoxScore(input: {
       },
     }),
     prisma.maddenPlayerStat.findMany({
-      where: { weekIndex, maddenTeamId: { in: teamIds } },
+      where: { weekIndex, seasonNumber, maddenTeamId: { in: teamIds } },
       include: {
         player: {
           select: { firstName: true, lastName: true, position: true, jerseyNum: true },
@@ -265,7 +269,7 @@ export async function getGameBoxScore(input: {
       },
     }),
     prisma.maddenTeamWeekStat.findMany({
-      where: { weekIndex, maddenTeamId: { in: teamIds } },
+      where: { weekIndex, seasonNumber, maddenTeamId: { in: teamIds } },
     }),
   ]);
 

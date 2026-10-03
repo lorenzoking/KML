@@ -55,6 +55,20 @@ test("status 3 with a score after the week is closed is a CPU sim", () => {
   );
 });
 
+test("Super Bowl status 3 with a score is a played title game, not a CPU sim", () => {
+  assert.equal(
+    maddenResultKind({
+      status: 3,
+      homeScore: 23,
+      awayScore: 13,
+      week: 22,
+      currentWeek: 22,
+      currentWeekStillOpen: false,
+    }),
+    "played"
+  );
+});
+
 test("status 1 at 0-0 is unplayed", () => {
   assert.equal(
     maddenResultKind({

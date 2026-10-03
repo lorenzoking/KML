@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import {
   Prisma,
-  SeasonStatus,
   SubmissionStatus,
 } from "@/generated/prisma/client";
 import { requireCommissioner } from "@/lib/auth";
@@ -19,6 +18,7 @@ import { reverseAutomaticReputation } from "@/lib/coach/reputation-from-game";
 import { safeEnsureSeasonSchedule, safeGetMissingScheduledGames } from "@/lib/schedule";
 import { displayLeagueWeek, nextLeagueWeek } from "@/lib/league-week";
 import { safeEnsurePlayoffSchedule } from "@/lib/playoff-schedule";
+import { rollLeagueToNextSeason } from "@/lib/season-roll";
 
 async function voidSubmissionInTx(
   tx: Prisma.TransactionClient,
@@ -194,7 +194,6 @@ export async function resetCurrentSeasonGames(formData: FormData) {
 
 export async function advanceToNextSeason(formData: FormData) {
   const commissioner = await requireCommissioner();
-  const { season, settings } = await getActiveSeason();
 
   const parsed = advanceSeasonSchema.safeParse({
     confirm: formData.get("confirm"),
@@ -207,115 +206,16 @@ export async function advanceToNextSeason(formData: FormData) {
     };
   }
 
-  const nextNumber = season.number + 1;
-  const existingNext = await prisma.season.findUnique({
-    where: { number: nextNumber },
-  });
-  if (existingNext) {
-    return {
-      error: `Season ${nextNumber} already exists. Update league settings carefully or void games instead.`,
-    };
-  }
-
-  const activeMemberships = parsed.data.carryMemberships
-    ? await prisma.leagueMembership.findMany({
-        where: {
-          seasonId: season.id,
-          isActive: true,
-          user: { isActive: true, deletedAt: null },
-        },
-      })
-    : [];
-
-  const result = await prisma.$transaction(async (tx) => {
-    // Reject leftover pending submissions on the closing season
-    await tx.gameSubmission.updateMany({
-      where: { seasonId: season.id, status: SubmissionStatus.PENDING },
-      data: {
-        status: SubmissionStatus.REJECTED,
-        reviewedById: commissioner.id,
-        reviewedAt: new Date(),
-        decisionNote: "Rejected automatically when season was archived",
-      },
-    });
-
-    await tx.season.update({
-      where: { id: season.id },
-      data: {
-        isActive: false,
-        status: SeasonStatus.ARCHIVED,
-        archivedAt: new Date(),
-      },
-    });
-
-    const nextSeason = await tx.season.create({
-      data: {
-        number: nextNumber,
-        name: `Season ${nextNumber}`,
-        isActive: true,
-        status: SeasonStatus.ACTIVE,
-      },
-    });
-
-    if (activeMemberships.length > 0) {
-      await tx.leagueMembership.createMany({
-        data: activeMemberships.map((m) => ({
-          userId: m.userId,
-          franchiseId: m.franchiseId,
-          seasonId: nextSeason.id,
-          isActive: true,
-          startedWeek: 1,
-        })),
-      });
-
-      await tx.coachProfile.updateMany({
-        where: { userId: { in: activeMemberships.map((m) => m.userId) } },
-        data: {
-          contractYearsLeft: {
-            decrement: 1,
-          },
-        },
-      });
-      await tx.coachProfile.updateMany({
-        where: {
-          userId: { in: activeMemberships.map((m) => m.userId) },
-          contractYearsLeft: { lt: 0 },
-        },
-        data: { contractYearsLeft: 0 },
-      });
-    }
-
-    await tx.leagueSetting.update({
-      where: { key: "default" },
-      data: {
-        currentSeason: nextNumber,
-        currentWeek: 1,
-      },
-    });
-
-    return nextSeason;
-  });
-
-  await safeEnsureSeasonSchedule(result.id);
-
-  await writeAuditLog({
+  const result = await rollLeagueToNextSeason({
     actorId: commissioner.id,
-    action: "ADVANCE_SEASON",
-    entityType: "Season",
-    entityId: result.id,
-    metadata: {
-      fromSeason: season.number,
-      toSeason: nextNumber,
-      carriedMemberships: activeMemberships.length,
-      previousSeasonId: season.id,
-      leagueName: settings.leagueName,
-    },
+    carryMemberships: parsed.data.carryMemberships,
   });
+  if ("error" in result) return result;
 
   revalidateSeasonPaths();
   revalidatePath("/admin/users");
   revalidatePath("/admin/teams");
-  return { success: true, nextSeason: result.number };
+  return { success: true, nextSeason: result.nextSeason };
 }
 
 function revalidateSeasonPaths() {
@@ -324,6 +224,8 @@ function revalidateSeasonPaths() {
   revalidatePath("/admin/approvals");
   revalidatePath("/dashboard");
   revalidatePath("/games");
+  revalidatePath("/champions");
+  revalidatePath("/");
   revalidatePath("/standings");
   revalidatePath("/submissions");
   revalidatePath("/rules");

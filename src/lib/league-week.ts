@@ -53,6 +53,10 @@ export function gameTypeForLeagueWeek(week: number) {
 /**
  * Madden playoff dumps use weekIndex 0–3 (Wild Card through Super Bowl).
  * Offset them so site week stays weekIndex + 1 (19–22).
+ *
+ * Franchise exports often keep playoffs on the regular-season calendar
+ * instead: week 19–21 are WC/DIV/CONF, week 22 is the Pro Bowl, and the
+ * Super Bowl arrives as `week/reg/23` (weekIndex 22).
  */
 export function siteWeekIndexFromCompanion(
   rawWeekIndex: number,
@@ -61,5 +65,12 @@ export function siteWeekIndexFromCompanion(
   if (weekType === "playoff" || weekType === "post") {
     return NFL_REGULAR_SEASON_WEEKS + rawWeekIndex;
   }
+  if (rawWeekIndex >= 22) return SUPER_BOWL_WEEK - 1;
   return rawWeekIndex;
+}
+
+/** Convert a stored Madden weekIndex into the site week number. */
+export function siteWeekFromMaddenIndex(weekIndex: number) {
+  if (weekIndex >= SUPER_BOWL_WEEK - 1) return SUPER_BOWL_WEEK;
+  return weekIndex + 1;
 }

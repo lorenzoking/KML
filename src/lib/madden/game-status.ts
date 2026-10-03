@@ -1,3 +1,5 @@
+import { SUPER_BOWL_WEEK } from "@/lib/league-week";
+
 /**
  * Madden Companion `gameScheduleInfoList.status`.
  * The export has no separate force-win flag — CPU sims and in-game
@@ -41,7 +43,14 @@ export function maddenResultKind(input: {
   if (!isMaddenFinal(input.status) && !hasScore) return "unplayed";
   if (isMaddenPlayed(input.status)) return "played";
   if (isMaddenSimulated(input.status)) {
-    if (input.week === input.currentWeek && input.currentWeekStillOpen && hasScore) {
+    // Super Bowl sits on Madden weekIndex 22 after a Pro Bowl gap, so the
+    // "current week still open" check looks at the empty week and would
+    // otherwise treat a finished title game as a CPU sim.
+    if (
+      hasScore &&
+      (input.week >= SUPER_BOWL_WEEK ||
+        (input.week === input.currentWeek && input.currentWeekStillOpen))
+    ) {
       return "played";
     }
     return hasScore ? "simulated" : "unplayed";

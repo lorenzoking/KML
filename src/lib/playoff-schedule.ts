@@ -1,5 +1,10 @@
 import { SubmissionStatus } from "@/generated/prisma/client";
-import { NFL_REGULAR_SEASON_WEEKS, PLAYOFF_START_WEEK } from "@/lib/league-week";
+import {
+  NFL_REGULAR_SEASON_WEEKS,
+  PLAYOFF_START_WEEK,
+  SUPER_BOWL_WEEK,
+  siteWeekFromMaddenIndex,
+} from "@/lib/league-week";
 import { franchiseIdForMaddenTeam } from "@/lib/madden/franchises";
 import { isMaddenFinal } from "@/lib/madden/game-status";
 import { prisma } from "@/lib/prisma";
@@ -53,8 +58,13 @@ export async function ensurePlayoffSchedule(seasonId: string, currentWeek: numbe
       true
     );
   }
-  if (currentWeek >= 22) {
-    await replacePlayoffWeek(seasonId, 22, completeMatchups([bracket.superBowl]), true);
+  if (currentWeek >= SUPER_BOWL_WEEK) {
+    await replacePlayoffWeek(
+      seasonId,
+      SUPER_BOWL_WEEK,
+      completeMatchups([bracket.superBowl]),
+      true
+    );
   }
 }
 
@@ -142,8 +152,12 @@ function paint(seeds: PlayoffSeed[], colorById: Record<string, string | null>) {
 }
 
 async function loadPlayoffGames(seasonId: string): Promise<PlayoffGameInput[]> {
+  const season = await prisma.season.findUnique({
+    where: { id: seasonId },
+    select: { number: true },
+  });
   const [madden, scheduled, submissions] = await Promise.all([
-    loadMaddenPlayoffMatchups(),
+    loadMaddenPlayoffMatchups(season?.number ?? 1),
     prisma.scheduledGame.findMany({
       where: { seasonId, week: { gte: PLAYOFF_START_WEEK } },
       select: { week: true, homeTeamId: true, awayTeamId: true },
@@ -189,12 +203,12 @@ async function loadPlayoffGames(seasonId: string): Promise<PlayoffGameInput[]> {
     .map((sub) =>
       toGameInput(sub.week, sub.userTeamId, sub.opponentTeamId, sub)
     );
-  return [...fromSchedule, ...orphans, ...madden];
+  return [...madden, ...fromSchedule, ...orphans];
 }
 
-async function loadMaddenPlayoffMatchups(): Promise<PlayoffGameInput[]> {
+async function loadMaddenPlayoffMatchups(seasonNumber: number): Promise<PlayoffGameInput[]> {
   const rows = await prisma.maddenGame.findMany({
-    where: { weekIndex: { gte: NFL_REGULAR_SEASON_WEEKS } },
+    where: { seasonNumber, weekIndex: { gte: NFL_REGULAR_SEASON_WEEKS } },
     include: {
       homeTeam: {
         select: {
@@ -215,14 +229,16 @@ async function loadMaddenPlayoffMatchups(): Promise<PlayoffGameInput[]> {
     },
   });
 
+  const hasSuperBowlDump = rows.some((game) => game.weekIndex >= 22);
   const out: PlayoffGameInput[] = [];
   for (const game of rows) {
+    if (hasSuperBowlDump && game.weekIndex === 21) continue;
     const homeTeamId = await franchiseIdForMaddenTeam(game.homeTeam);
     const awayTeamId = await franchiseIdForMaddenTeam(game.awayTeam);
     if (!homeTeamId || !awayTeamId) continue;
     const final = isMaddenFinal(game.status);
     out.push({
-      week: game.weekIndex + 1,
+      week: siteWeekFromMaddenIndex(game.weekIndex),
       homeTeamId,
       awayTeamId,
       homeScore: final ? game.homeScore : null,

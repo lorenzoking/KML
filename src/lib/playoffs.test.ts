@@ -4,6 +4,7 @@ import {
   displayLeagueWeek,
   nextLeagueWeek,
   siteWeekIndexFromCompanion,
+  siteWeekFromMaddenIndex,
   weekChip,
 } from "./league-week";
 import {
@@ -60,6 +61,11 @@ test("display helpers name playoff rounds instead of week 19+", () => {
   assert.equal(siteWeekIndexFromCompanion(0, "playoff"), 18);
   assert.equal(siteWeekIndexFromCompanion(3, "post"), 21);
   assert.equal(siteWeekIndexFromCompanion(7, "reg"), 7);
+  assert.equal(siteWeekIndexFromCompanion(22, "reg"), 21);
+  assert.equal(siteWeekFromMaddenIndex(18), 19);
+  assert.equal(siteWeekFromMaddenIndex(20), 21);
+  assert.equal(siteWeekFromMaddenIndex(21), 22);
+  assert.equal(siteWeekFromMaddenIndex(22), 22);
 });
 
 test("seeds four division winners then three wild cards", () => {
@@ -215,6 +221,52 @@ test("divisional re-seeds the 1-seed against the lowest remaining winner", () =>
     [upset.afc.divisional[1].home?.seed, upset.afc.divisional[1].away?.seed],
     [3, 4]
   );
+});
+
+test("Super Bowl dump on Madden weekIndex 22 fills the Super Bowl slot", () => {
+  const afc = [1, 2, 3, 4, 5, 6, 7].map((n) =>
+    seed({ seed: n, franchiseId: `a${n}`, abbreviation: `A${n}` })
+  );
+  const nfc = [1, 2, 3, 4, 5, 6, 7].map((n) =>
+    seed({
+      seed: n,
+      franchiseId: `n${n}`,
+      abbreviation: `N${n}`,
+      conference: "NFC",
+    })
+  );
+  const week = siteWeekFromMaddenIndex(22);
+  const bracket = buildPlayoffBracket(
+    { afc, nfc },
+    [
+      {
+        week,
+        homeTeamId: "n1",
+        awayTeamId: "a2",
+        homeScore: 23,
+        awayScore: 13,
+        winnerTeamId: "n1",
+        submissionId: null,
+        status: "approved",
+      },
+      {
+        week,
+        homeTeamId: "n1",
+        awayTeamId: "a2",
+        homeScore: null,
+        awayScore: null,
+        winnerTeamId: null,
+        submissionId: null,
+        status: null,
+      },
+    ]
+  );
+  assert.equal(week, 22);
+  assert.equal(bracket.superBowl.home?.franchiseId, "n1");
+  assert.equal(bracket.superBowl.away?.franchiseId, "a2");
+  assert.equal(bracket.superBowl.homeScore, 23);
+  assert.equal(bracket.superBowl.awayScore, 13);
+  assert.equal(bracket.superBowl.status, "final");
 });
 
 function wcWin(winnerId: string, loserId: string) {
