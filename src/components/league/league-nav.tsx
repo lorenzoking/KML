@@ -7,13 +7,14 @@ import { cn } from "@/lib/utils";
 const links = [
   { href: "/league", label: "Races", key: "races" },
   { href: "/league/leaders", label: "Leaders", key: "leaders" },
+  { href: "/league/rookies", label: "Rookies", key: "rookies" },
   { href: "/league/teams", label: "Rosters", key: "rosters" },
 ] as const;
 
 export async function LeagueNav({
   active,
 }: {
-  active: "races" | "leaders" | "rosters";
+  active: "races" | "leaders" | "rookies" | "rosters";
 }) {
   const pulse = await getMaddenLivePulse();
 

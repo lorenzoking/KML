@@ -19,7 +19,7 @@ function coachOnSeason(seasonId: string) {
 export async function getMaddenTeams() {
   const season = await liveMaddenSeason();
   return prisma.maddenTeam.findMany({
-    where: { NOT: { abbr: "UNK" } },
+    where: { franchiseId: { not: null }, NOT: { abbr: "UNK" } },
     orderBy: [{ conference: "asc" }, { division: "asc" }, { abbr: "asc" }],
     include: {
       franchise: { include: { memberships: coachOnSeason(season.id) } },
@@ -31,7 +31,10 @@ export async function getMaddenTeams() {
 export async function getMaddenTeam(abbr: string) {
   const season = await liveMaddenSeason();
   return prisma.maddenTeam.findFirst({
-    where: { abbr: { equals: abbr, mode: "insensitive" } },
+    where: {
+      abbr: { equals: abbr, mode: "insensitive" },
+      franchiseId: { not: null },
+    },
     include: {
       franchise: { include: { memberships: coachOnSeason(season.id) } },
       _count: { select: { players: true } },

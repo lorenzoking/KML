@@ -645,7 +645,11 @@ export default async function GamesPage({
             ) : (
               <EmptyState
                 title="No scheduled games this week"
-                description="Playoff or extra games still show after a coach submits."
+                description={
+                  season.id === activeSeason.id && selectedWeek <= NFL_REGULAR_SEASON_WEEKS
+                    ? "This week shows up after the Companion schedule export includes it."
+                    : "Playoff or extra games still show after a coach submits."
+                }
               />
             )}
           </section>

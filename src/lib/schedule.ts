@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { applyCompanionSchedule } from "@/lib/madden/sync-schedule";
 import {
   NFL_2026_BYES,
   NFL_2026_GAMES,
@@ -113,6 +114,12 @@ async function syncScheduledPrimetime(
 }
 
 export async function ensureSeasonSchedule(seasonId: string) {
+  const season = await prisma.season.findUnique({
+    where: { id: seasonId },
+    select: { number: true },
+  });
+  if (season && (await applyCompanionSchedule(seasonId, season.number))) return;
+
   const existing = await prisma.scheduledGame.count({
     where: { seasonId, week: { lte: NFL_REGULAR_SEASON_WEEKS } },
   });
