@@ -2,8 +2,6 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { TeamMark } from "@/components/games/scoreboard";
 import { LeagueNav } from "@/components/league/league-nav";
-import { Badge } from "@/components/ui/badge";
-import { devTraitLabel } from "@/lib/madden/display";
 import { ensureMaddenLeague } from "@/lib/madden/query";
 import { getRookieClass } from "@/lib/madden/rookies";
 import { buildShareMetadata } from "@/lib/site";
@@ -19,9 +17,7 @@ export const metadata: Metadata = buildShareMetadata({
 export default async function RookieWatchPage() {
   await ensureMaddenLeague();
   const rookies = await getRookieClass();
-  const headliners = rookies.players.filter(
-    (player) => player.devTrait >= 2 || player.overall >= 80
-  );
+  const headliners = rookies.players.filter((player) => player.overall >= 80);
   const byTeam = new Map<string, typeof rookies.players>();
   for (const player of rookies.players) {
     const rows = byTeam.get(player.teamAbbr) ?? [];
@@ -72,16 +68,9 @@ export default async function RookieWatchPage() {
                     {player.line ? ` · ${player.line}` : ""}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="font-[family-name:var(--font-display)] text-xl text-[var(--primary)]">
-                    {player.overall}
-                  </p>
-                  {devTraitLabel(player.devTrait) ? (
-                    <Badge variant="elite" className="mt-1">
-                      {devTraitLabel(player.devTrait)}
-                    </Badge>
-                  ) : null}
-                </div>
+                <p className="font-[family-name:var(--font-display)] text-xl text-[var(--primary)]">
+                  {player.overall}
+                </p>
               </Link>
             ))}
           </div>
@@ -127,9 +116,6 @@ export default async function RookieWatchPage() {
                     </span>
                     <span className="shrink-0 tabular-nums text-[var(--muted-foreground)]">
                       {player.overall}
-                      {devTraitLabel(player.devTrait)
-                        ? ` · ${devTraitLabel(player.devTrait)}`
-                        : ""}
                     </span>
                   </li>
                 ))}

@@ -17,6 +17,12 @@ export function devTraitLabel(value: number) {
   return "";
 }
 
+/** Rookie traits stay hidden in Madden until the player unlocks them. */
+export function rosterDevTraitLabel(player: { yearsPro: number; devTrait: number }) {
+  if (player.yearsPro === 0) return "Hidden";
+  return devTraitLabel(player.devTrait);
+}
+
 export function formatHeight(inches: number) {
   if (!inches) return "—";
   const feet = Math.floor(inches / 12);

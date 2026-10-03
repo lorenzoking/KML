@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { LeagueNav } from "@/components/league/league-nav";
 import {
-  devTraitLabel,
+  rosterDevTraitLabel,
   displayWeek,
   formatRecord,
   formatSalary,
@@ -215,7 +215,7 @@ export default async function LeagueTeamPage({
                         {player.age}
                       </TableCell>
                       <TableCell className="hidden lg:table-cell">
-                        {devTraitLabel(player.devTrait) || "—"}
+                        {rosterDevTraitLabel(player) || "—"}
                       </TableCell>
                       <TableCell className="hidden lg:table-cell">
                         {formatSalary(player.contractSalary)}
