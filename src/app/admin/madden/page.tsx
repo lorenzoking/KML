@@ -127,9 +127,15 @@ export default async function AdminMaddenPage() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-[var(--muted-foreground)]">
           <p>
-            Do not use All Weeks. Export one completed regular-season week.
-            Close the Companion App fully, reopen it on the KML franchise, then
-            export Weekly Stats again.
+            Do not use All Weeks. That export replays old seasons and can stamp
+            the whole schedule onto one week, so the slate never moves. Export
+            one completed regular-season week. Close the Companion App fully,
+            reopen it on the KML franchise, then export Weekly Stats again.
+          </p>
+          <p>
+            Week 4 is an EA bug: Weekly Stats stays empty unless League Info is
+            checked too. Export Week 4 with League Info and Weekly Stats
+            together.
           </p>
           <p>
             Team weekly stats and the schedule can succeed while player stats

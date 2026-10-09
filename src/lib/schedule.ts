@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { ensureMaddenLeague } from "@/lib/madden/index-dumps";
 import { applyCompanionSchedule } from "@/lib/madden/sync-schedule";
 import {
   NFL_2026_BYES,
@@ -114,6 +115,11 @@ async function syncScheduledPrimetime(
 }
 
 export async function ensureSeasonSchedule(seasonId: string) {
+  try {
+    await ensureMaddenLeague();
+  } catch (error) {
+    console.error("ensureMaddenLeague failed before schedule sync", error);
+  }
   const season = await prisma.season.findUnique({
     where: { id: seasonId },
     select: { number: true },
