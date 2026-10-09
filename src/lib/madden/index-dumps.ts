@@ -13,8 +13,12 @@ import {
 import { awardUndeclaredForceWinXp } from "@/lib/madden/undeclared-force-win-xp";
 import { ensurePlayedGameXp } from "@/lib/madden/played-game-xp";
 import { syncMaddenScoresToOpenGames } from "@/lib/madden/sync-scores";
-import { siteWeekIndexFromCompanion } from "@/lib/league-week";
+import { NFL_REGULAR_SEASON_WEEKS } from "@/lib/league-week";
 import { liveMaddenSeason } from "@/lib/madden/live-season";
+import {
+  pathWeekFromExportPath,
+  selectCompanionScheduleRows,
+} from "@/lib/madden/schedule-rows";
 
 const RELEASED_PAYLOAD = { released: true };
 
@@ -324,45 +328,56 @@ async function indexTeamWeekStats(payload: unknown, seasonNumber: number) {
 async function indexSchedule(
   payload: unknown,
   weekType: string | null = null,
-  seasonNumber = 1
+  seasonNumber = 1,
+  path: string | null = null
 ) {
+  const chosen = selectCompanionScheduleRows(
+    payloadList(payload, "gameScheduleInfoList"),
+    { weekType, pathWeek: pathWeekFromExportPath(path) }
+  );
   const scheduleIds: string[] = [];
-  for (const row of payloadList(payload, "gameScheduleInfoList")) {
-    const scheduleId = str(row, "scheduleId") || String(row.scheduleId ?? "");
-    const homeTeamId = String(row.homeTeamId ?? "");
-    const awayTeamId = String(row.awayTeamId ?? "");
-    if (!scheduleId || !homeTeamId || !awayTeamId) continue;
-    await ensureTeam(homeTeamId);
-    await ensureTeam(awayTeamId);
-    const weekIndex = siteWeekIndexFromCompanion(
-      Math.round(num(row, "weekIndex")),
-      weekType
-    );
+  const idsByWeek = new Map<number, string[]>();
+  for (const row of chosen) {
+    await ensureTeam(row.homeTeamId);
+    await ensureTeam(row.awayTeamId);
     await prisma.maddenGame.upsert({
-      where: { scheduleId },
+      where: { scheduleId: row.scheduleId },
       create: {
-        scheduleId,
-        weekIndex,
-        homeTeamId,
-        awayTeamId,
-        homeScore: Math.round(num(row, "homeScore")),
-        awayScore: Math.round(num(row, "awayScore")),
-        status: Math.round(num(row, "status")),
-        isGameOfTheWeek: flag(row, "isGameOfTheWeek"),
+        scheduleId: row.scheduleId,
+        weekIndex: row.weekIndex,
+        homeTeamId: row.homeTeamId,
+        awayTeamId: row.awayTeamId,
+        homeScore: row.homeScore,
+        awayScore: row.awayScore,
+        status: row.status,
+        isGameOfTheWeek: row.isGameOfTheWeek,
         seasonNumber,
       },
       update: {
-        weekIndex,
-        homeTeamId,
-        awayTeamId,
-        homeScore: Math.round(num(row, "homeScore")),
-        awayScore: Math.round(num(row, "awayScore")),
-        status: Math.round(num(row, "status")),
-        isGameOfTheWeek: flag(row, "isGameOfTheWeek"),
+        weekIndex: row.weekIndex,
+        homeTeamId: row.homeTeamId,
+        awayTeamId: row.awayTeamId,
+        homeScore: row.homeScore,
+        awayScore: row.awayScore,
+        status: row.status,
+        isGameOfTheWeek: row.isGameOfTheWeek,
         seasonNumber,
       },
     });
-    scheduleIds.push(scheduleId);
+    scheduleIds.push(row.scheduleId);
+    const weekIds = idsByWeek.get(row.weekIndex) ?? [];
+    weekIds.push(row.scheduleId);
+    idsByWeek.set(row.weekIndex, weekIds);
+  }
+  for (const [weekIndex, ids] of idsByWeek) {
+    if (weekIndex >= NFL_REGULAR_SEASON_WEEKS || ids.length < 8) continue;
+    await prisma.maddenGame.deleteMany({
+      where: {
+        seasonNumber,
+        weekIndex,
+        scheduleId: { notIn: ids },
+      },
+    });
   }
   if (scheduleIds.length === 0) return;
   try {
@@ -388,6 +403,7 @@ export async function indexMaddenDump(dump: {
   teamId: string | null;
   dataType: string | null;
   weekType?: string | null;
+  path?: string | null;
   success: boolean | null;
   payload: unknown;
 }) {
@@ -403,7 +419,12 @@ export async function indexMaddenDump(dump: {
   else if (dump.kind === MaddenExportKind.TEAM_ROSTER) {
     await indexRoster(dump.payload, dump.teamId);
   } else if (dump.kind === MaddenExportKind.SCHEDULE || dump.dataType === "schedules") {
-    await indexSchedule(dump.payload, dump.weekType ?? null, seasonNumber);
+    await indexSchedule(
+      dump.payload,
+      dump.weekType ?? null,
+      seasonNumber,
+      dump.path ?? null
+    );
   } else if (
     dump.kind === MaddenExportKind.TEAM_STATS ||
     dump.dataType === "team" ||
@@ -437,21 +458,39 @@ export async function releaseIndexedCompanionPayloads() {
   return { dumps: dumps.count, players: players.count, teams: teams.count };
 }
 
+const PENDING_DUMP_SELECT = {
+  id: true,
+  kind: true,
+  teamId: true,
+  dataType: true,
+  weekType: true,
+  path: true,
+  success: true,
+  payload: true,
+} as const;
+
 export async function indexPendingMaddenDumps(take = 40) {
-  const dumps = await prisma.maddenExportDump.findMany({
-    where: { indexedAt: null },
+  const schedules = await prisma.maddenExportDump.findMany({
+    where: {
+      indexedAt: null,
+      OR: [{ kind: MaddenExportKind.SCHEDULE }, { dataType: "schedules" }],
+    },
+    orderBy: { receivedAt: "asc" },
+    take: 80,
+    select: PENDING_DUMP_SELECT,
+  });
+  const rest = await prisma.maddenExportDump.findMany({
+    where: {
+      indexedAt: null,
+      ...(schedules.length > 0
+        ? { id: { notIn: schedules.map((dump) => dump.id) } }
+        : {}),
+    },
     orderBy: { receivedAt: "asc" },
     take,
-    select: {
-      id: true,
-      kind: true,
-      teamId: true,
-      dataType: true,
-      weekType: true,
-      success: true,
-      payload: true,
-    },
+    select: PENDING_DUMP_SELECT,
   });
+  const dumps = [...schedules, ...rest];
   for (const dump of dumps) {
     try {
       await indexMaddenDump(dump);
